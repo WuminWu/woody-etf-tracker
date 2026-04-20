@@ -23,6 +23,9 @@ from datetime import datetime, timedelta
 import urllib.request
 import urllib.parse
 
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
+
 import pandas as pd
 import yfinance as yf
 from playwright.sync_api import sync_playwright
