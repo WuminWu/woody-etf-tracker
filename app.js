@@ -31,12 +31,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const renderStatus = (holding) => {
+        const prev = holding.prevShares ?? null;
+        const curr = holding.shares;
+        let label = '';
+        let style = '';
+        if (prev === null || prev === undefined) {
+            // No previous data, can't determine
+            label = '-';
+            style = 'color: #6b7280;';
+        } else if (prev === 0 && curr > 0) {
+            label = '新增';
+            style = 'color: #a78bfa; font-weight: bold;';
+        } else if (prev > 0 && curr === 0) {
+            label = '出清';
+            style = 'color: #f97316; font-weight: bold;';
+        } else if (curr > prev) {
+            label = '加碼';
+            style = 'color: #ff4d4d; font-weight: bold;';
+        } else if (curr < prev) {
+            label = '減碼';
+            style = 'color: #4ade80; font-weight: bold;';
+        } else {
+            label = '-';
+            style = 'color: #6b7280;';
+        }
+        return `<span style="${style}">${label}</span>`;
+    };
+
     const renderTable = (holdings) => {
-        tbody.innerHTML = ''; 
-        
+        tbody.innerHTML = '';
+
         holdings.forEach((holding, index) => {
             const tr = document.createElement('tr');
-            
+
             // Animation stagger
             tr.style.animation = `fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) ${Math.min(0.1 + (index * 0.02), 1)}s forwards`;
             tr.style.opacity = '0';
@@ -59,6 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
                 <td class="align-right">
                     <span class="weight-pill">${holding.todayWeight ? holding.todayWeight + '%' : '-'}</span>
+                </td>
+                <td class="align-right">
+                    ${renderStatus(holding)}
                 </td>
                 <td class="align-right">
                     ${renderDiff(holding.diffShares, 0)}
@@ -98,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const etfSelector = document.getElementById('etf-selector');
 
     const loadData = (etfId) => {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding: 2rem;">載入中，請稍候...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding: 2rem;">載入中，請稍候...</td></tr>';
         
         fetch(`data_${etfId}.json`)
             .then(response => {
@@ -129,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(error => {
                 console.error("Error fetching data:", error);
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color: #ef4444; padding: 2rem;">無法載入 ${etfId} 的持股資料。</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color: #ef4444; padding: 2rem;">無法載入 ${etfId} 的持股資料。</td></tr>`;
             });
     };
 

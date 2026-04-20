@@ -16,7 +16,8 @@
             "todayWeight": 8.55,
             "diffShares": 575000,
             "diffAmount": 1164375000.0,
-            "rank": 1
+            "rank": 1,
+            "prevShares": 6556000
         },
         {
             "code": "2383",
@@ -27,7 +28,8 @@
             "todayWeight": 7.15,
             "diffShares": 126000,
             "diffAmount": 485100000.0,
-            "rank": 2
+            "rank": 2,
+            "prevShares": 3012000
         },
         {
             "code": "3653",
@@ -38,7 +40,8 @@
             "todayWeight": 6.27,
             "diffShares": 122000,
             "diffAmount": 612440000.0,
-            "rank": 3
+            "rank": 3,
+            "prevShares": 1986000
         },
         {
             "code": "2308",
@@ -49,7 +52,8 @@
             "todayWeight": 5.98,
             "diffShares": 214000,
             "diffAmount": 406600000.0,
-            "rank": 4
+            "rank": 4,
+            "prevShares": 5103000
         },
         {
             "code": "2368",
@@ -60,7 +64,8 @@
             "todayWeight": 5.29,
             "diffShares": 298000,
             "diffAmount": 360580000.0,
-            "rank": 5
+            "rank": 5,
+            "prevShares": 7091000
         },
         {
             "code": "3665",
@@ -71,7 +76,8 @@
             "todayWeight": 5.26,
             "diffShares": 145000,
             "diffAmount": 356700000.0,
-            "rank": 6
+            "rank": 6,
+            "prevShares": 3467848
         },
         {
             "code": "2345",
@@ -82,7 +88,8 @@
             "todayWeight": 5.26,
             "diffShares": 178000,
             "diffAmount": 356890000.0,
-            "rank": 7
+            "rank": 7,
+            "prevShares": 4253000
         },
         {
             "code": "3017",
@@ -93,7 +100,8 @@
             "todayWeight": 5.23,
             "diffShares": 142000,
             "diffAmount": 353580000.0,
-            "rank": 8
+            "rank": 8,
+            "prevShares": 3405000
         },
         {
             "code": "6223",
@@ -104,7 +112,8 @@
             "todayWeight": 5.01,
             "diffShares": 66000,
             "diffAmount": 338910000.0,
-            "rank": 9
+            "rank": 9,
+            "prevShares": 1582000
         },
         {
             "code": "8046",
@@ -115,7 +124,8 @@
             "todayWeight": 4.06,
             "diffShares": 0,
             "diffAmount": 0.0,
-            "rank": 10
+            "rank": 10,
+            "prevShares": 8609000
         },
         {
             "code": "3037",
@@ -126,7 +136,8 @@
             "todayWeight": 3.73,
             "diffShares": 0,
             "diffAmount": 0.0,
-            "rank": 11
+            "rank": 11,
+            "prevShares": 9287000
         },
         {
             "code": "5274",
@@ -137,7 +148,8 @@
             "todayWeight": 3.0,
             "diffShares": 0,
             "diffAmount": 0.0,
-            "rank": 12
+            "rank": 12,
+            "prevShares": 351000
         },
         {
             "code": "2327",
@@ -148,7 +160,8 @@
             "todayWeight": 2.67,
             "diffShares": 570000,
             "diffAmount": 182115000.0,
-            "rank": 13
+            "rank": 13,
+            "prevShares": 13568000
         },
         {
             "code": "6515",
@@ -159,7 +172,8 @@
             "todayWeight": 2.2,
             "diffShares": 13000,
             "diffAmount": 140335000.0,
-            "rank": 14
+            "rank": 14,
+            "prevShares": 331000
         },
         {
             "code": "2454",
@@ -170,7 +184,8 @@
             "todayWeight": 2.19,
             "diffShares": 78000,
             "diffAmount": 148200000.0,
-            "rank": 15
+            "rank": 15,
+            "prevShares": 1870000
         },
         {
             "code": "3711",
@@ -181,7 +196,8 @@
             "todayWeight": 1.96,
             "diffShares": 288000,
             "diffAmount": 132912000.0,
-            "rank": 16
+            "rank": 16,
+            "prevShares": 6879000
         },
         {
             "code": "6805",
@@ -192,7 +208,8 @@
             "todayWeight": 1.72,
             "diffShares": 62000,
             "diffAmount": 117490000.0,
-            "rank": 17
+            "rank": 17,
+            "prevShares": 1474000
         },
         {
             "code": "6274",
@@ -203,7 +220,8 @@
             "todayWeight": 1.7,
             "diffShares": 0,
             "diffAmount": 0.0,
-            "rank": 18
+            "rank": 18,
+            "prevShares": 3019000
         },
         {
             "code": "6510",
@@ -214,7 +232,8 @@
             "todayWeight": 1.6,
             "diffShares": 28000,
             "diffAmount": 106680000.0,
-            "rank": 19
+            "rank": 19,
+            "prevShares": 683000
         },
         {
             "code": "2449",
@@ -225,7 +244,8 @@
             "todayWeight": 1.59,
             "diffShares": 401000,
             "diffAmount": 108671000.0,
-            "rank": 20
+            "rank": 20,
+            "prevShares": 9529000
         },
         {
             "code": "6669",
@@ -236,7 +256,8 @@
             "todayWeight": 1.37,
             "diffShares": 233000,
             "diffAmount": 927340000.0,
-            "rank": 21
+            "rank": 21,
+            "prevShares": 349000
         },
         {
             "code": "2303",
@@ -247,7 +268,8 @@
             "todayWeight": 1.33,
             "diffShares": 1175000,
             "diffAmount": 90357501.79,
-            "rank": 22
+            "rank": 22,
+            "prevShares": 28030000
         },
         {
             "code": "8358",
@@ -258,7 +280,8 @@
             "todayWeight": 1.32,
             "diffShares": 0,
             "diffAmount": 0.0,
-            "rank": 23
+            "rank": 23,
+            "prevShares": 5508000
         },
         {
             "code": "3211",
@@ -269,7 +292,8 @@
             "todayWeight": 0.84,
             "diffShares": 156000,
             "diffAmount": 57564000.0,
-            "rank": 24
+            "rank": 24,
+            "prevShares": 3703000
         },
         {
             "code": "3661",
@@ -280,7 +304,8 @@
             "todayWeight": 0.75,
             "diffShares": 14000,
             "diffAmount": 50750000.0,
-            "rank": 25
+            "rank": 25,
+            "prevShares": 336000
         },
         {
             "code": "3189",
@@ -291,7 +316,8 @@
             "todayWeight": 0.72,
             "diffShares": 0,
             "diffAmount": 0.0,
-            "rank": 26
+            "rank": 26,
+            "prevShares": 2826000
         },
         {
             "code": "5439",
@@ -302,7 +328,8 @@
             "todayWeight": 0.69,
             "diffShares": 500000,
             "diffAmount": 220750000.0,
-            "rank": 27
+            "rank": 27,
+            "prevShares": 2156000
         },
         {
             "code": "2404",
@@ -313,7 +340,8 @@
             "todayWeight": 0.64,
             "diffShares": 42000,
             "diffAmount": 43050000.0,
-            "rank": 28
+            "rank": 28,
+            "prevShares": 1014000
         },
         {
             "code": "8210",
@@ -324,7 +352,8 @@
             "todayWeight": 0.61,
             "diffShares": 40000,
             "diffAmount": 40800000.0,
-            "rank": 29
+            "rank": 29,
+            "prevShares": 965000
         },
         {
             "code": "6147",
@@ -335,7 +364,8 @@
             "todayWeight": 0.59,
             "diffShares": 0,
             "diffAmount": 0.0,
-            "rank": 30
+            "rank": 30,
+            "prevShares": 7884000
         },
         {
             "code": "3443",
@@ -346,7 +376,8 @@
             "todayWeight": 0.57,
             "diffShares": 0,
             "diffAmount": 0.0,
-            "rank": 31
+            "rank": 31,
+            "prevShares": 271000
         },
         {
             "code": "3264",
@@ -357,7 +388,8 @@
             "todayWeight": 0.52,
             "diffShares": 1360000,
             "diffAmount": 255000000.0,
-            "rank": 32
+            "rank": 32,
+            "prevShares": 3355000
         },
         {
             "code": "4979",
@@ -368,7 +400,8 @@
             "todayWeight": 0.43,
             "diffShares": 0,
             "diffAmount": 0.0,
-            "rank": 33
+            "rank": 33,
+            "prevShares": 1037000
         },
         {
             "code": "1303",
@@ -379,7 +412,8 @@
             "todayWeight": 0.41,
             "diffShares": 1000,
             "diffAmount": 85700.0,
-            "rank": 34
+            "rank": 34,
+            "prevShares": 8012000
         },
         {
             "code": "8996",
@@ -390,7 +424,8 @@
             "todayWeight": 0.38,
             "diffShares": 0,
             "diffAmount": 0.0,
-            "rank": 35
+            "rank": 35,
+            "prevShares": 535000
         },
         {
             "code": "6187",
@@ -401,7 +436,8 @@
             "todayWeight": 0.32,
             "diffShares": 17000,
             "diffAmount": 20825000.0,
-            "rank": 36
+            "rank": 36,
+            "prevShares": 419000
         },
         {
             "code": "6488",
@@ -412,7 +448,8 @@
             "todayWeight": 0.3,
             "diffShares": 37000,
             "diffAmount": 20387000.0,
-            "rank": 37
+            "rank": 37,
+            "prevShares": 886000
         },
         {
             "code": "6191",
@@ -423,7 +460,8 @@
             "todayWeight": 0.26,
             "diffShares": 0,
             "diffAmount": 0.0,
-            "rank": 38
+            "rank": 38,
+            "prevShares": 3814000
         },
         {
             "code": "3583",
@@ -434,7 +472,8 @@
             "todayWeight": 0.25,
             "diffShares": 0,
             "diffAmount": 0.0,
-            "rank": 39
+            "rank": 39,
+            "prevShares": 527000
         },
         {
             "code": "7769",
@@ -445,7 +484,8 @@
             "todayWeight": 0.25,
             "diffShares": 3000,
             "diffAmount": 13335000.0,
-            "rank": 40
+            "rank": 40,
+            "prevShares": 91000
         },
         {
             "code": "2481",
@@ -456,7 +496,8 @@
             "todayWeight": 0.24,
             "diffShares": 1000,
             "diffAmount": 110000.0,
-            "rank": 41
+            "rank": 41,
+            "prevShares": 3648000
         },
         {
             "code": "3376",
@@ -467,7 +508,8 @@
             "todayWeight": 0.19,
             "diffShares": 62000,
             "diffAmount": 12648000.0,
-            "rank": 42
+            "rank": 42,
+            "prevShares": 1498000
         },
         {
             "code": "3324",
@@ -478,7 +520,8 @@
             "todayWeight": 0.1,
             "diffShares": 1000,
             "diffAmount": 1040000.0,
-            "rank": 43
+            "rank": 43,
+            "prevShares": 167000
         },
         {
             "code": "3217",
@@ -489,7 +532,8 @@
             "todayWeight": 0.06,
             "diffShares": 23000,
             "diffAmount": 3795000.0,
-            "rank": 44
+            "rank": 44,
+            "prevShares": 557000
         },
         {
             "code": "2002",
@@ -500,7 +544,8 @@
             "todayWeight": 0.06,
             "diffShares": 1000,
             "diffAmount": 19850.0,
-            "rank": 45
+            "rank": 45,
+            "prevShares": 5157000
         },
         {
             "code": "3008",
@@ -511,7 +556,8 @@
             "todayWeight": 0.02,
             "diffShares": 0,
             "diffAmount": 0.0,
-            "rank": 46
+            "rank": 46,
+            "prevShares": 13000
         },
         {
             "code": "1319",
@@ -522,7 +568,8 @@
             "todayWeight": 0.02,
             "diffShares": 1000,
             "diffAmount": 78000.0,
-            "rank": 47
+            "rank": 47,
+            "prevShares": 505000
         },
         {
             "code": "2313",
@@ -533,7 +580,8 @@
             "todayWeight": 0.02,
             "diffShares": 4000,
             "diffAmount": 1002000.0,
-            "rank": 48
+            "rank": 48,
+            "prevShares": 110000
         },
         {
             "code": "1815",
@@ -544,7 +592,8 @@
             "todayWeight": 0.01,
             "diffShares": 0,
             "diffAmount": 0.0,
-            "rank": 49
+            "rank": 49,
+            "prevShares": 106000
         },
         {
             "code": "2357",
@@ -555,7 +604,8 @@
             "todayWeight": 0.0,
             "diffShares": 1000,
             "diffAmount": 605000.0,
-            "rank": 50
+            "rank": 50,
+            "prevShares": 12000
         },
         {
             "code": "2439",
@@ -566,7 +616,8 @@
             "todayWeight": 0.0,
             "diffShares": 1000,
             "diffAmount": 88000.0,
-            "rank": 51
+            "rank": 51,
+            "prevShares": 12000
         },
         {
             "code": "3045",
@@ -577,7 +628,8 @@
             "todayWeight": 0.0,
             "diffShares": 1000,
             "diffAmount": 113500.0,
-            "rank": 52
+            "rank": 52,
+            "prevShares": 12000
         },
         {
             "code": "5347",
@@ -588,7 +640,8 @@
             "todayWeight": 0.0,
             "diffShares": 0,
             "diffAmount": 0.0,
-            "rank": 53
+            "rank": 53,
+            "prevShares": 10000
         }
     ]
 }
