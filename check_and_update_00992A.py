@@ -18,7 +18,7 @@ import glob
 import subprocess
 import time
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pandas as pd
 import yfinance as yf
@@ -49,9 +49,27 @@ if not os.path.exists(HOLDINGS_DIR):
 
 # --------------- Helpers ---------------
 
-def today_holdings_exist():
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    filepath = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{today_str}.json")
+def next_trading_day(date):
+    """Return the next calendar day, skipping weekends (not holidays).
+    Capital Fund website: selecting date D gives the holdings of the previous trading day.
+    So to fetch today's holdings, we must input tomorrow's date (next trading day).
+    """
+    d = date + timedelta(days=1)
+    while d.weekday() >= 5:  # 5=Sat, 6=Sun
+        d += timedelta(days=1)
+    return d
+
+
+def prev_trading_day(date):
+    """Return the previous trading day (skip weekends)."""
+    d = date - timedelta(days=1)
+    while d.weekday() >= 5:
+        d -= timedelta(days=1)
+    return d
+
+
+def holdings_exist_for(date_str):
+    filepath = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{date_str}.json")
     return os.path.exists(filepath)
 
 
@@ -115,12 +133,11 @@ def parse_holdings_from_xlsx(xlsx_path):
     return holdings
 
 
-def get_previous_holdings():
-    """Find the most recent previous holdings JSON and load it."""
+def get_previous_holdings(exclude_date_str):
+    """Find the most recent holdings JSON excluding the given date."""
     pattern = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_*.json")
     files = sorted(glob.glob(pattern))
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    prev_files = [f for f in files if today_str not in os.path.basename(f) and "_temp" not in f]
+    prev_files = [f for f in files if exclude_date_str not in os.path.basename(f) and "_temp" not in f]
     if prev_files:
         latest = prev_files[-1]
         log.info(f"Previous holdings file: {os.path.basename(latest)}")
@@ -245,38 +262,53 @@ def git_push():
 # --------------- Main ---------------
 
 def main():
-    today = datetime.now().date()
-    today_str = today.strftime("%Y-%m-%d")
-    today_fmt = today.strftime("%Y/%m/%d")
-    log.info(f"=== 00992A Check & Update started. Today: {today_str} ===")
+    # Capital Fund date logic:
+    #   Selecting date D on the website returns holdings from the PREVIOUS trading day.
+    #   So to get today's (trading day T) holdings, we input the next trading day (T+1).
+    #
+    # Script runs on T+1 (the next trading day after market close of T).
+    # - form_date  = today (T+1) → fetches T's holdings
+    # - data_date  = prev_trading_day(today) = T
+    # - save file  = data_date
 
-    if today_holdings_exist():
-        log.info("Today's holdings already downloaded. Nothing to do.")
+    now = datetime.now()
+    run_date = now.date()
+    # The actual holdings date = the previous trading day relative to today
+    data_date = prev_trading_day(run_date)
+    data_date_str = data_date.strftime("%Y-%m-%d")
+    form_date_str = run_date.strftime("%Y/%m/%d")  # input into the website form
+
+    log.info(f"=== 00992A Check & Update started ===")
+    log.info(f"  Run date (today):    {run_date}")
+    log.info(f"  Form date (website): {form_date_str}")
+    log.info(f"  Data date (actual):  {data_date_str}")
+
+    if holdings_exist_for(data_date_str):
+        log.info(f"Holdings for {data_date_str} already exist. Nothing to do.")
         return
 
-    xlsx_path = download_xlsx(today_fmt)
+    xlsx_path = download_xlsx(form_date_str)
     if xlsx_path is None:
         log.error("Download failed. Will retry next hour.")
         return
 
-    # Parse and check if data is valid
     today_holdings = parse_holdings_from_xlsx(xlsx_path)
     if not today_holdings:
         log.error("No holdings parsed from Excel. Will retry next hour.")
         return
 
-    log.info(f"Parsed {len(today_holdings)} stocks from today's holdings")
+    log.info(f"Parsed {len(today_holdings)} stocks for {data_date_str}")
 
-    # Save XLSX and JSON with date
-    final_xlsx = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{today_str}.xlsx")
+    # Save with the ACTUAL data date
+    final_xlsx = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{data_date_str}.xlsx")
     os.rename(xlsx_path, final_xlsx)
 
-    json_path = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{today_str}.json")
+    json_path = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{data_date_str}.json")
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(today_holdings, f, ensure_ascii=False, indent=2)
 
-    prev_holdings = get_previous_holdings()
-    generate_data_json(today_holdings, prev_holdings, today_str)
+    prev_holdings = get_previous_holdings(exclude_date_str=data_date_str)
+    generate_data_json(today_holdings, prev_holdings, data_date_str)
 
     git_push()
     log.info("=== Done! ===")
