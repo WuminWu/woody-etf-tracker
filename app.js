@@ -119,6 +119,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateBadge.textContent = `最新交易日差異比較 (${meta.dataDate})`;
                 }
 
+                const elLastUpdate = document.getElementById('last-update-time');
+                if (elLastUpdate && meta.lastUpdate) {
+                    elLastUpdate.textContent = `最後更新時間：${meta.lastUpdate}`;
+                }
+
                 applySortAndRender();
             })
             .catch(error => {
