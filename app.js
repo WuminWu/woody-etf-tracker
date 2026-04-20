@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             crossData = Array.from(stockMap.values())
-                .filter(s => s.etfs.length >= 1)
+                .filter(s => s.etfs.length >= 2)
                 .sort((a, b) => b.etfs.length - a.etfs.length || b.etfs[0].weight - a.etfs[0].weight);
 
             // Update badge and timestamp
