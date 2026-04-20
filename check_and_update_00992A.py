@@ -20,6 +20,9 @@ import time
 import logging
 from datetime import datetime, timedelta
 
+import urllib.request
+import urllib.parse
+
 import pandas as pd
 import yfinance as yf
 from playwright.sync_api import sync_playwright
@@ -30,6 +33,9 @@ HOLDINGS_DIR = "holdings"
 DATA_FILE = "data_00992A.json"
 ETF_CODE = "00992A"
 MANAGER = "葉薏婷"
+
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -257,6 +263,64 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str):
     return wrapper
 
 
+def send_telegram(message):
+    """Send a Telegram message via Bot API."""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        log.warning("Telegram credentials not set. Skipping notification.")
+        return
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = urllib.parse.urlencode({
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": message,
+            "parse_mode": "HTML",
+        }).encode()
+        req = urllib.request.Request(url, data=payload, method="POST")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read())
+            if result.get("ok"):
+                log.info("Telegram notification sent.")
+            else:
+                log.warning(f"Telegram API error: {result}")
+    except Exception as e:
+        log.warning(f"Failed to send Telegram notification: {e}")
+
+
+def build_notification(wrapper, etf_code="00992A", etf_name="群益科技創新"):
+    """Build a summary notification message from the data wrapper."""
+    meta = wrapper["meta"]
+    holdings = wrapper["holdings"]
+
+    added = [h for h in holdings if h.get("prevShares", 0) == 0 and h["shares"] > 0]
+    removed = [h for h in holdings if h["shares"] == 0 and h.get("prevShares", 0) > 0]
+    increased = [h for h in holdings if h["shares"] > 0 and h.get("diffShares", 0) > 0 and h.get("prevShares", 0) > 0]
+    decreased = [h for h in holdings if h["shares"] > 0 and h.get("diffShares", 0) < 0]
+
+    ytd_sign = "+" if float(meta["ytd"]) >= 0 else ""
+    lines = [
+        f"📊 <b>{etf_code} {etf_name} 持股更新</b>",
+        f"📅 資料日期：{meta['dataDate']}",
+        f"💰 ETF 股價：{meta['etfPrice']}　　YTD：{ytd_sign}{meta['ytd']}%",
+        f"📦 持股數量：{len([h for h in holdings if h['shares'] > 0])} 檔",
+        "",
+        f"🔴 加碼：{len(increased)} 檔　🟢 減碼：{len(decreased)} 檔",
+        f"🟣 新增：{len(added)} 檔　🟠 出清：{len(removed)} 檔",
+    ]
+
+    if added:
+        lines.append("\n✨ <b>新增持股：</b>")
+        for h in added:
+            lines.append(f"  • {h['code']} {h['name']}（{h['todayWeight']}%）")
+    if removed:
+        lines.append("\n🚫 <b>出清持股：</b>")
+        for h in removed:
+            lines.append(f"  • {h['code']} {h['name']}")
+
+    lines.append(f"\n🕐 更新時間：{meta['lastUpdate']}")
+    lines.append("🔗 https://wuminwu.github.io/etf-tracker/")
+    return "\n".join(lines)
+
+
 def git_push():
     try:
         subprocess.run(["git", "add", "-A"], check=True)
@@ -317,9 +381,13 @@ def main():
         json.dump(today_holdings, f, ensure_ascii=False, indent=2)
 
     prev_holdings = get_previous_holdings(exclude_date_str=data_date_str)
-    generate_data_json(today_holdings, prev_holdings, data_date_str)
+    wrapper = generate_data_json(today_holdings, prev_holdings, data_date_str)
 
     git_push()
+
+    msg = build_notification(wrapper, etf_code="00992A", etf_name="群益科技創新")
+    send_telegram(msg)
+
     log.info("=== Done! ===")
 
 
