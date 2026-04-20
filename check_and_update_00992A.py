@@ -92,9 +92,18 @@ def download_xlsx(date_str):
             browser.close()
             return None
 
-        date_input.fill("")
-        date_input.type(date_str)
+        # Angular date picker requires JS to set value and dispatch events correctly.
+        # direct .type() fills each segment incorrectly due to structured input format.
+        page.evaluate(f"""
+            var input = document.getElementById('condition-date');
+            var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+            setter.call(input, '{date_str}');
+            input.dispatchEvent(new Event('input', {{bubbles: true}}));
+            input.dispatchEvent(new Event('change', {{bubbles: true}}));
+        """)
         time.sleep(1)
+        actual = date_input.input_value()
+        log.info(f"Date input set to: {actual}")
 
         btn = page.locator("button.buyback-search-section-btn")
         if btn.count() == 0:
