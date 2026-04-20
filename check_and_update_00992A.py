@@ -35,7 +35,7 @@ FUND_URL = "https://www.capitalfund.com.tw/etf/product/detail/500/portfolio"
 HOLDINGS_DIR = "holdings"
 DATA_FILE = "data_00992A.json"
 ETF_CODE = "00992A"
-MANAGER = "葉薏婷"
+MANAGER = "陳朝政"
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
