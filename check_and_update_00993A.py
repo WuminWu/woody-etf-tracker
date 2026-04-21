@@ -1,8 +1,8 @@
 """
 00993A ETF Holdings Daily Checker & Updater (主動安聯台灣)
 
-Data source: MoneyDJ Basic0007B page
-Columns: 個股名稱(含代碼), 投資比例(%), 持有股數
+Data source: Allianz official site - intercepts GetFundAssets API via Playwright
+https://etf.allianzgi.com.tw/etf-info/E0002?tab=4
 """
 
 import glob
@@ -15,18 +15,19 @@ import sys
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
-from html.parser import HTMLParser
 
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 import yfinance as yf
+from playwright.sync_api import sync_playwright
 
 # --------------- Config ---------------
 ETF_CODE = "00993A"
 ETF_NAME = "主動安聯台灣"
-MANAGER = "TBD"
-MONEYDJ_URL = f"https://www.moneydj.com/ETF/X/Basic/Basic0007B.xdjhtm?etfid={ETF_CODE}.TW"
+MANAGER = "安聯投信"
+PAGE_URL = "https://etf.allianzgi.com.tw/etf-info/E0002?tab=4"
+API_KEYWORD = "GetFundAssets"
 HOLDINGS_DIR = "holdings"
 DATA_FILE = f"data_{ETF_CODE}.json"
 
@@ -49,99 +50,117 @@ if not os.path.exists(HOLDINGS_DIR):
     os.makedirs(HOLDINGS_DIR)
 
 
-# --------------- HTML Parser ---------------
+# --------------- Allianz API Fetcher ---------------
 
-class MoneyDJParser(HTMLParser):
-    """Parse MoneyDJ Basic0007B holdings table.
+def fetch_fund_assets():
+    """Navigate to Allianz ETF page and intercept GetFundAssets API response."""
+    captured = {}
 
-    Column order: 個股名稱(code embedded), 投資比例(%), 持有股數
-    Stock name format: "欣興(3037.TW)"
-    """
+    def handle_response(response):
+        if API_KEYWORD in response.url:
+            try:
+                captured["data"] = response.json()
+                log.info(f"Captured API response from: {response.url}")
+            except Exception as e:
+                log.warning(f"Failed to parse API response: {e}")
 
-    def __init__(self):
-        super().__init__()
-        self.holdings = []
-        self._in_tr = False
-        self._in_td = False
-        self._cells = []
-        self._current = ""
-        self._page_text = ""
-
-    def handle_starttag(self, tag, attrs):
-        if tag == "tr":
-            self._in_tr = True
-            self._cells = []
-        if self._in_tr and tag in ("td", "th"):
-            self._in_td = True
-            self._current = ""
-
-    def handle_endtag(self, tag):
-        if tag in ("td", "th") and self._in_td:
-            self._cells.append(self._current.strip())
-            self._in_td = False
-        if tag == "tr" and self._in_tr:
-            self._process_row(self._cells)
-            self._in_tr = False
-
-    def handle_data(self, data):
-        self._page_text += data
-        if self._in_td:
-            self._current += data
-
-    def _process_row(self, cells):
-        if len(cells) < 3:
-            return
-        name_col = cells[0].strip()
-        # Extract stock code from "(3037.TW)" pattern
-        m = re.search(r'\((\d{4,6}[A-Z0-9]*)\.TW[O]?\)', name_col)
-        if not m:
-            return
-        code = m.group(1)
-        name = name_col[:name_col.rfind("(")].strip()
+    log.info(f"Launching Playwright to fetch {PAGE_URL} ...")
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+            locale="zh-TW",
+        )
+        page = context.new_page()
+        page.on("response", handle_response)
         try:
-            weight = float(cells[1].replace("%", "").replace(",", "").strip())
-            shares = int(float(cells[2].replace(",", "").strip()))
-        except (ValueError, IndexError):
-            return
-        if not re.fullmatch(r'\d{4,6}', code) or weight <= 0:
-            return
-        self.holdings.append({"code": code, "name": name, "shares": shares, "weight": weight})
+            page.goto(PAGE_URL, wait_until="domcontentloaded", timeout=40000)
+            page.wait_for_timeout(8000)
+        except Exception as e:
+            log.warning(f"Page load issue (non-fatal): {e}")
+        browser.close()
+
+    return captured.get("data")
+
+
+def parse_fund_assets(raw_data):
+    """
+    Parse Allianz GetFundAssets response.
+    Returns (holdings_list, aum_ntd, units_zhang, nav, pcf_date_str)
+    """
+    try:
+        entries = raw_data["Entries"]["Data"]
+        fa = entries["FundAsset"]
+        tables = entries["Table"]
+    except (KeyError, TypeError) as e:
+        log.error(f"Unexpected API structure: {e}")
+        return None, 0, 0, 0.0, ""
+
+    # FundAsset fields
+    try:
+        aum_ntd = float(str(fa.get("Aum", "0")).replace(",", ""))
+        units_raw = float(str(fa.get("Units", "0")).replace(",", ""))
+        units_zhang = int(units_raw // 1000)
+        nav = float(fa.get("Nav", 0))
+        pcf_date_str = str(fa.get("PCFDate", fa.get("NavDate", ""))).replace("/", "-")
+        log.info(f"AUM: {aum_ntd:,.0f} NTD, Units: {units_zhang:,}張, NAV: {nav}, PCF Date: {pcf_date_str}")
+    except Exception as e:
+        log.warning(f"FundAsset parse error: {e}")
+        aum_ntd, units_zhang, nav, pcf_date_str = 0, 0, 0.0, ""
+
+    holdings = []
+
+    # Table[1] = stocks: each row is [rank, code, name, shares, weight%]
+    stock_rows = tables[1]["Rows"] if len(tables) > 1 else []
+    for row in stock_rows:
+        try:
+            if len(row) < 5:
+                continue
+            code_raw = str(row[1]).strip()
+            name = str(row[2]).strip()
+            shares = int(float(str(row[3]).replace(",", "")))
+            weight = float(str(row[4]).replace("%", "").replace(",", ""))
+            # Extract numeric stock code (4-6 digits)
+            m = re.match(r'^(\d{4,6})', code_raw)
+            if not m or weight <= 0:
+                continue
+            code = m.group(1)
+            holdings.append({
+                "code": code, "name": name,
+                "shares": shares, "weight": weight,
+                "is_futures": False,
+            })
+        except Exception:
+            continue
+
+    # Table[2] = futures: each row is [rank, code, name, contracts, weight%, expiry]
+    futures_rows = tables[2]["Rows"] if len(tables) > 2 else []
+    for row in futures_rows:
+        try:
+            if len(row) < 5:
+                continue
+            code_raw = str(row[1]).strip()
+            name = str(row[2]).strip()
+            contracts = int(float(str(row[3]).replace(",", "")))
+            weight = float(str(row[4]).replace("%", "").replace(",", ""))
+            if weight <= 0:
+                continue
+            holdings.append({
+                "code": code_raw, "name": name,
+                "shares": contracts, "weight": weight,
+                "is_futures": True,
+            })
+        except Exception:
+            continue
+
+    log.info(f"Parsed {len(holdings)} holdings ({len(stock_rows)} stocks, {len(futures_rows)} futures)")
+    return holdings, aum_ntd, units_zhang, nav, pcf_date_str
 
 
 # --------------- Helpers ---------------
 
-def prev_trading_day(date):
-    d = date - timedelta(days=1)
-    while d.weekday() >= 5:
-        d -= timedelta(days=1)
-    return d
-
-
 def holdings_exist_for(date_str):
     return os.path.exists(os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{date_str}.json"))
-
-
-def fetch_holdings():
-    log.info(f"Fetching {MONEYDJ_URL} ...")
-    try:
-        req = urllib.request.Request(
-            MONEYDJ_URL,
-            headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                "Accept": "text/html,application/xhtml+xml",
-                "Accept-Language": "zh-TW,zh;q=0.9",
-            }
-        )
-        with urllib.request.urlopen(req, timeout=30) as r:
-            html = r.read().decode("utf-8", errors="replace")
-        parser = MoneyDJParser()
-        parser.feed(html)
-        holdings = parser.holdings
-        log.info(f"Parsed {len(holdings)} holdings from MoneyDJ")
-        return holdings
-    except Exception as e:
-        log.error(f"Fetch failed: {e}")
-        return None
 
 
 def get_previous_holdings(exclude_date_str):
@@ -168,44 +187,56 @@ def get_price(code):
     return 0.0
 
 
-def generate_data_json(today_holdings, prev_holdings, data_date_str):
+def generate_data_json(today_holdings, prev_holdings, data_date_str,
+                       aum_ntd, units_zhang):
     prev_dict = {h["code"]: h for h in prev_holdings}
     final_output = []
     total = len(today_holdings)
-    log.info(f"Fetching prices for {total} stocks...")
+    log.info(f"Fetching prices for {total} holdings...")
 
     for i, h in enumerate(today_holdings):
         prev_data = prev_dict.get(h["code"], {})
         shares_prev = prev_data.get("shares", 0)
         diff_shares = h["shares"] - shares_prev
-        price = get_price(h["code"])
+
+        if h.get("is_futures"):
+            price = 0.0
+        else:
+            price = get_price(h["code"])
+
         final_output.append({
             "code": h["code"], "name": h["name"],
             "shares": h["shares"], "prevShares": shares_prev,
             "price": round(price, 2),
-            "yestWeight": prev_data.get("weight", 0.0), "todayWeight": h["weight"],
-            "diffShares": diff_shares, "diffAmount": round(diff_shares * price, 2),
+            "yestWeight": prev_data.get("weight", 0.0),
+            "todayWeight": h["weight"],
+            "diffShares": diff_shares,
+            "diffAmount": round(diff_shares * price, 2),
+            "isFutures": h.get("is_futures", False),
         })
         if (i + 1) % 10 == 0:
             log.info(f"  Progress: {i + 1}/{total}")
 
+    # Stocks that were removed (present in prev but not today)
     today_codes = {h["code"] for h in today_holdings}
     for prev_h in prev_holdings:
         if prev_h["code"] not in today_codes:
-            price = get_price(prev_h["code"])
+            price = 0.0 if prev_h.get("isFutures") else get_price(prev_h["code"])
             diff_shares = -prev_h["shares"]
             final_output.append({
                 "code": prev_h["code"], "name": prev_h["name"],
                 "shares": 0, "prevShares": prev_h["shares"],
                 "price": round(price, 2),
-                "yestWeight": prev_h["weight"], "todayWeight": 0.0,
+                "yestWeight": prev_h.get("weight", 0.0), "todayWeight": 0.0,
                 "diffShares": diff_shares, "diffAmount": round(diff_shares * price, 2),
+                "isFutures": prev_h.get("isFutures", False),
             })
 
     final_output = sorted(final_output, key=lambda x: x["todayWeight"], reverse=True)
     for idx, item in enumerate(final_output):
         item["rank"] = idx + 1
 
+    # ETF price and YTD from yfinance
     ytd_val, etf_price = "0.00", 0.0
     try:
         hist = yf.Ticker(f"{ETF_CODE}.TW").history(period="ytd", timeout=10)
@@ -216,18 +247,23 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str):
     except Exception as e:
         log.warning(f"ETF price fetch failed: {e}")
 
+    # Use Allianz API data for totalShares and totalMarketCap if available
+    total_market_cap = round(aum_ntd / 1e8, 2) if aum_ntd > 0 else 0.0
+    total_shares_zhang = units_zhang if units_zhang > 0 else 0
 
-    # Fetch ETF total assets (AUM) to derive 總股數 & 市值
-    total_shares_raw, prev_total_shares, prev_total_market_cap = 0, 0, 0.0
-    total_market_cap = 0.0
-    try:
-        _info = yf.Ticker(f"{ETF_CODE}.TW").info
-        _assets = float(_info.get("totalAssets") or 0)
-        if _assets > 0 and etf_price > 0:
-            total_shares_raw = round(_assets / etf_price)
-            total_market_cap = round(_assets / 1e8, 2)
-    except Exception:
-        pass
+    # Fallback: derive from yfinance totalAssets
+    if total_shares_zhang == 0:
+        try:
+            _info = yf.Ticker(f"{ETF_CODE}.TW").info
+            _assets = float(_info.get("totalAssets") or 0)
+            if _assets > 0 and etf_price > 0:
+                total_shares_zhang = round(_assets / etf_price) // 1000
+                total_market_cap = round(_assets / 1e8, 2)
+        except Exception:
+            pass
+
+    # Load previous totalShares/totalMarketCap
+    prev_total_shares, prev_total_market_cap = 0, 0.0
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, "r", encoding="utf-8") as _f:
@@ -236,7 +272,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str):
             prev_total_market_cap = _prev.get("meta", {}).get("totalMarketCap", 0.0)
         except Exception:
             pass
-    total_shares_zhang = total_shares_raw // 1000
+
     wrapper = {
         "meta": {
             "manager": MANAGER, "ytd": ytd_val, "etfPrice": etf_price,
@@ -251,7 +287,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str):
     }
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(wrapper, f, ensure_ascii=False, indent=4)
-    log.info(f"{DATA_FILE} updated with {len(final_output)} holdings")
+    log.info(f"{DATA_FILE} updated: {len(final_output)} holdings, {total_shares_zhang:,}張, {total_market_cap}億")
     return wrapper
 
 
@@ -328,30 +364,38 @@ def git_push():
 # --------------- Main ---------------
 
 def main():
-    run_date = datetime.now().date()
-    data_date = prev_trading_day(run_date)
-    data_date_str = data_date.strftime("%Y-%m-%d")
-
     log.info(f"=== {ETF_CODE} Check & Update started ===")
-    log.info(f"  Run date:  {run_date}")
-    log.info(f"  Data date: {data_date_str}")
+
+    raw_data = fetch_fund_assets()
+    if not raw_data:
+        log.error("No data captured from Allianz API. Exiting.")
+        send_telegram(f"⏳ {ETF_CODE} {ETF_NAME} 無法取得持股資料\n🔄 請檢查 Playwright 抓取是否正常")
+        return
+
+    today_holdings, aum_ntd, units_zhang, nav, data_date_str = parse_fund_assets(raw_data)
+
+    if not today_holdings:
+        log.error("No holdings parsed. Exiting.")
+        return
+
+    if not data_date_str:
+        data_date_str = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
+        log.warning(f"PCFDate missing, using today: {data_date_str}")
+
+    log.info(f"Data date: {data_date_str}")
 
     if holdings_exist_for(data_date_str):
         log.info(f"Holdings for {data_date_str} already exist. Nothing to do.")
         return
 
-    today_holdings = fetch_holdings()
-    if not today_holdings:
-        log.error("No holdings fetched. Will retry next hour.")
-        send_telegram(f"⏳ {ETF_CODE} {ETF_NAME} 持股尚未更新\n📅 資料日期：{data_date_str}\n🔄 將於下一個小時再次檢查...")
-        return
-
     json_path = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{data_date_str}.json")
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(today_holdings, f, ensure_ascii=False, indent=2)
+    log.info(f"Saved holdings snapshot: {json_path}")
 
     prev_holdings = get_previous_holdings(exclude_date_str=data_date_str)
-    wrapper = generate_data_json(today_holdings, prev_holdings, data_date_str)
+    wrapper = generate_data_json(today_holdings, prev_holdings, data_date_str,
+                                  aum_ntd, units_zhang)
 
     git_push()
     send_telegram(build_notification(wrapper))
