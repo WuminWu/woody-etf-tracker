@@ -1,0 +1,11 @@
+﻿d:\Gemini\ETF_Tracker\venv\Scripts\python.exe :   File "<string>", line 8
+位於 線路:1 字元:1
++ d:\Gemini\ETF_Tracker\venv\Scripts\python.exe -c "
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (  File "<string>", line 8:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    print(f'{h[''code'']} {h[''name'']}: shares={h[''shares'']:,} weight={h[''todayWeight'']}% diff={h[''diffShares'']:
++,} price={h[''price'']}')
+               ^^^^^^
+SyntaxError: invalid syntax. Perhaps you forgot a comma?

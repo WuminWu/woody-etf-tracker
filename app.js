@@ -164,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00991A', name: '復華未來50' },
         { id: '00992A', name: '群益科技創新' },
         { id: '00982A', name: '群益台灣強棒' },
+        { id: '00987A', name: '台新台灣優勢成長' },
     ];
 
     const loadYtdRanking = () => {
@@ -214,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00991A', name: '復華未來50' },
         { id: '00992A', name: '群益科技創新' },
         { id: '00982A', name: '群益台灣強棒' },
+        { id: '00987A', name: '台新台灣優勢成長' },
     ];
 
     let crossSortAsc = false;
