@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let diffSortState = 0;
     let globalData = [];
 
-    updateBadge.textContent = '最新交易日差異比較 (...)';
+    // badge hidden
 
     const formatNumber = (num, decimals = 0) =>
         Number(Math.abs(num)).toLocaleString('zh-TW', {
@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         : '';
                     elSubtitle.innerHTML = `<i class="fa-solid fa-user-tie"></i> 經理人：${meta.manager}${priceStr} &nbsp;|&nbsp; <i class="fa-solid fa-chart-line"></i> 今年以來(YTD)績效：<span style="color:${meta.ytd >= 0 ? '#ff4d4d' : '#4ade80'};font-weight:bold;">${meta.ytd > 0 ? '+' : ''}${meta.ytd}%</span>`;
                 }
-                if (meta.dataDate) updateBadge.textContent = `最新交易日差異比較 (${meta.dataDate})`;
+                // badge removed
                 const elLastUpdate = document.getElementById('last-update-time');
                 if (elLastUpdate && meta.lastUpdate) elLastUpdate.textContent = `最後更新時間：${meta.lastUpdate}`;
 
