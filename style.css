@@ -126,6 +126,12 @@ body {
     font-size: 0.95rem;
 }
 
+.header-titles p#etf-scale-info {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-top: 0.2rem;
+}
+
 .stock-id {
     font-size: 0.75rem;
     color: var(--text-secondary);

@@ -214,11 +214,36 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str):
     except Exception as e:
         log.warning(f"ETF price fetch failed: {e}")
 
+
+    # Fetch ETF total assets (AUM) to derive 總股數 & 市值
+    total_shares_raw, prev_total_shares, prev_total_market_cap = 0, 0, 0.0
+    total_market_cap = 0.0
+    try:
+        _info = yf.Ticker(f"{ETF_CODE}.TW").info
+        _assets = float(_info.get("totalAssets") or 0)
+        if _assets > 0 and etf_price > 0:
+            total_shares_raw = round(_assets / etf_price)
+            total_market_cap = round(_assets / 1e8, 2)
+    except Exception:
+        pass
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, "r", encoding="utf-8") as _f:
+                _prev = json.load(_f)
+            prev_total_shares = _prev.get("meta", {}).get("totalShares", 0)
+            prev_total_market_cap = _prev.get("meta", {}).get("totalMarketCap", 0.0)
+        except Exception:
+            pass
+    total_shares_zhang = total_shares_raw // 1000
     wrapper = {
         "meta": {
             "manager": MANAGER, "ytd": ytd_val, "etfPrice": etf_price,
             "dataDate": data_date_str,
             "lastUpdate": datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M"),
+            "totalShares": total_shares_zhang,
+            "prevTotalShares": prev_total_shares,
+            "totalMarketCap": total_market_cap,
+            "prevTotalMarketCap": prev_total_market_cap,
         },
         "holdings": final_output,
     }

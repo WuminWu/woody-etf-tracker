@@ -59,6 +59,18 @@ def update_etf_prices():
         data["meta"]["ytd"] = ytd
         data["meta"]["etfPrice"] = price
         data["meta"]["lastUpdate"] = now_str
+        # Update totalShares & totalMarketCap from yfinance totalAssets
+        try:
+            _info = yf.Ticker(f"{code}.TW").info
+            _assets = float(_info.get("totalAssets") or 0)
+            if _assets > 0 and price > 0:
+                data["meta"]["totalShares"] = round(_assets / price) // 1000
+                data["meta"]["totalMarketCap"] = round(_assets / 1e8, 2)
+        except Exception:
+            # Fallback: recalculate market cap from existing totalShares
+            total_shares_zhang = data["meta"].get("totalShares") or 0
+            if total_shares_zhang and price:
+                data["meta"]["totalMarketCap"] = round(price * total_shares_zhang * 1000 / 1e8, 2)
 
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)

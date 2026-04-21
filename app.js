@@ -90,8 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.innerHTML = `
                 <td><span style="display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:50%;background:#334155;color:#fff;font-weight:bold;">${holding.rank}</span></td>
                 <td><div class="stock-id">${holding.code}</div><div class="stock-name">${holding.name}</div></td>
-                <td class="stock-shares">${formatNumber(holding.shares)}</td>
                 <td class="align-right stock-price">$${formatNumber(holding.price, 2)}</td>
+                <td class="stock-shares">${formatNumber(holding.shares)}</td>
                 <td class="align-right">${weightDisplay}</td>
                 <td class="align-right">${renderStatus(holding)}</td>
                 <td class="align-right">${renderDiff(holding.diffShares, 0)}</td>
@@ -140,6 +140,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (meta.dataDate) updateBadge.textContent = `最新交易日差異比較 (${meta.dataDate})`;
                 const elLastUpdate = document.getElementById('last-update-time');
                 if (elLastUpdate && meta.lastUpdate) elLastUpdate.textContent = `最後更新時間：${meta.lastUpdate}`;
+
+                // ETF 規模資訊 (總股數 & 市值)
+                const elScale = document.getElementById('etf-scale-info');
+                if (elScale && meta.totalShares != null) {
+                    const fmtZhang = n => n >= 10000
+                        ? `${(n / 10000).toFixed(1)}萬張`
+                        : `${n.toLocaleString()}張`;
+                    const sharesNow = meta.totalShares || 0;
+                    const sharesPrev = meta.prevTotalShares || 0;
+                    const sharesDiff = sharesNow - sharesPrev;
+                    let sharesDiffStr = '';
+                    if (sharesDiff !== 0 && sharesPrev > 0) {
+                        const arrow = sharesDiff > 0 ? '↑' : '↓';
+                        const color = sharesDiff > 0 ? '#ff4d4d' : '#4ade80';
+                        sharesDiffStr = ` <span style="color:${color};font-weight:700;">(${arrow}${fmtZhang(Math.abs(sharesDiff))})</span>`;
+                    }
+
+                    const capNow = meta.totalMarketCap || 0;
+                    const capPrev = meta.prevTotalMarketCap || 0;
+                    const capDiff = capNow - capPrev;
+                    let capDiffStr = '';
+                    if (Math.abs(capDiff) >= 0.01 && capPrev > 0) {
+                        const arrow = capDiff > 0 ? '↑' : '↓';
+                        const color = capDiff > 0 ? '#ff4d4d' : '#4ade80';
+                        capDiffStr = ` <span style="color:${color};font-weight:700;">(${arrow}${Math.abs(capDiff).toFixed(2)}億)</span>`;
+                    }
+
+                    elScale.innerHTML = `<i class="fa-solid fa-layer-group"></i> 基金規模：${fmtZhang(sharesNow)}${sharesDiffStr} &nbsp;|&nbsp; <i class="fa-solid fa-coins"></i> 市值：${capNow.toFixed(2)}億${capDiffStr}`;
+                    elScale.style.display = '';
+                } else if (elScale) {
+                    elScale.style.display = 'none';
+                }
                 applySortAndRender();
             })
             .catch(err => {

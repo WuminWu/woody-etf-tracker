@@ -4,7 +4,9 @@
         "ytd": "62.37",
         "etfPrice": 16.87,
         "dataDate": "2026-04-20",
-        "lastUpdate": "2026-04-21 14:21"
+        "lastUpdate": "2026-04-21 20:09",
+        "totalShares": 1185873,
+        "totalMarketCap": 200.06
     },
     "holdings": [
         {
