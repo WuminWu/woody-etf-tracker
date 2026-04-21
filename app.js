@@ -165,6 +165,9 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00992A', name: '群益科技創新' },
         { id: '00982A', name: '群益台灣強棒' },
         { id: '00987A', name: '台新台灣優勢成長' },
+        { id: '00993A', name: '主動安聯台灣' },
+        { id: '00994A', name: '主動第一金台股優' },
+        { id: '00995A', name: '主動中信台灣卓越' },
     ];
 
     const loadYtdRanking = () => {
@@ -229,6 +232,9 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00992A', name: '群益科技創新' },
         { id: '00982A', name: '群益台灣強棒' },
         { id: '00987A', name: '台新台灣優勢成長' },
+        { id: '00993A', name: '主動安聯台灣' },
+        { id: '00994A', name: '主動第一金台股優' },
+        { id: '00995A', name: '主動中信台灣卓越' },
     ];
 
     let crossSortAsc = false;
