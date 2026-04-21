@@ -316,6 +316,79 @@ tbody tr:last-child td {
     }
 }
 
+/* YTD Ranking Bar */
+.ytd-ranking-bar {
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.ytd-ranking-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.ytd-ranking-title i {
+    color: #f59e0b;
+}
+
+.ytd-ranking-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.ytd-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 2rem;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    font-size: 0.82rem;
+}
+
+.ytd-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+    transform: translateY(-1px);
+}
+
+.ytd-item-active {
+    border-color: rgba(139, 92, 246, 0.5);
+    background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15));
+}
+
+.ytd-medal {
+    font-size: 0.9rem;
+}
+
+.ytd-etf-id {
+    font-weight: 700;
+    color: #60a5fa;
+    font-size: 0.8rem;
+}
+
+.ytd-etf-name {
+    color: var(--text-secondary);
+}
+
+.ytd-value {
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
 /* Page Tabs */
 .page-tabs {
     display: flex;

@@ -148,8 +148,62 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     };
 
-    etfSelector.addEventListener('change', e => loadData(e.target.value));
+    etfSelector.addEventListener('change', e => {
+        loadData(e.target.value);
+        document.querySelectorAll('.ytd-item').forEach(el => {
+            el.classList.toggle('ytd-item-active', el.dataset.etf === e.target.value);
+        });
+    });
     loadData(etfSelector.value);
+
+    // ── YTD Ranking ────────────────────────────────────────────
+    const ALL_ETFS = [
+        { id: '00981A', name: '統一台股增長' },
+        { id: '00985A', name: '野村台灣50' },
+        { id: '00991A', name: '復華未來50' },
+        { id: '00992A', name: '群益科技創新' },
+        { id: '00982A', name: '群益台灣強棒' },
+    ];
+
+    const loadYtdRanking = () => {
+        Promise.all(ALL_ETFS.map(etf =>
+            fetch(`data_${etf.id}.json`)
+                .then(r => r.ok ? r.json() : null)
+                .then(data => data ? { id: etf.id, name: etf.name, ytd: parseFloat(data.meta.ytd), etfPrice: data.meta.etfPrice } : null)
+                .catch(() => null)
+        )).then(results => {
+            const valid = results.filter(Boolean)
+                .sort((a, b) => b.ytd - a.ytd);
+
+            const medals = ['🥇', '🥈', '🥉'];
+            const list = document.getElementById('ytd-ranking-list');
+            list.innerHTML = valid.map((etf, i) => {
+                const sign = etf.ytd >= 0 ? '+' : '';
+                const color = etf.ytd >= 0 ? '#ff4d4d' : '#4ade80';
+                const medal = medals[i] || `${i + 1}.`;
+                return `
+                    <div class="ytd-item ${etf.id === etfSelector.value ? 'ytd-item-active' : ''}" data-etf="${etf.id}">
+                        <span class="ytd-medal">${medal}</span>
+                        <span class="ytd-etf-id">${etf.id}</span>
+                        <span class="ytd-etf-name">${etf.name}</span>
+                        <span class="ytd-value" style="color:${color}">${sign}${etf.ytd.toFixed(2)}%</span>
+                    </div>`;
+            }).join('');
+
+            // Click to switch ETF
+            list.querySelectorAll('.ytd-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const id = el.dataset.etf;
+                    etfSelector.value = id;
+                    loadData(id);
+                    list.querySelectorAll('.ytd-item').forEach(e => e.classList.remove('ytd-item-active'));
+                    el.classList.add('ytd-item-active');
+                });
+            });
+        });
+    };
+
+    loadYtdRanking();
 
     // ── Cross-compare tab ──────────────────────────────────────
     const ETF_LIST = [
