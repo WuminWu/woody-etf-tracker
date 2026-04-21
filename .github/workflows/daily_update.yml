@@ -48,7 +48,6 @@ jobs:
           python check_and_update_00982A.py
           python check_and_update_00987A.py
           python check_and_update_00993A.py
-          python check_and_update_00994A.py
           python check_and_update_00995A.py
           python check_and_update_index.py
 

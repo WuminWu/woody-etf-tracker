@@ -1,8 +1,9 @@
 """
 00995A ETF Holdings Daily Checker & Updater (主動中信台灣卓越)
 
-Data source: MoneyDJ Basic0007B page
-Columns: 個股名稱(含代碼), 投資比例(%), 持有股數
+Data source: CTBC Investments official API
+https://www.ctbcinvestments.com/Etf/00653201/Combination
+API: https://www.ctbcinvestments.com.tw/API/etf/ETFHoldingWeight
 """
 
 import glob
@@ -15,7 +16,6 @@ import sys
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
-from html.parser import HTMLParser
 
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
@@ -25,8 +25,10 @@ import yfinance as yf
 # --------------- Config ---------------
 ETF_CODE = "00995A"
 ETF_NAME = "主動中信台灣卓越"
-MANAGER = "TBD"
-MONEYDJ_URL = f"https://www.moneydj.com/ETF/X/Basic/Basic0007B.xdjhtm?etfid={ETF_CODE}.TW"
+MANAGER = "中信投信"
+CTBC_FID = "E0036"
+CTBC_BASE = "https://www.ctbcinvestments.com.tw/API"
+CTBC_REFERER = "https://www.ctbcinvestments.com/"
 HOLDINGS_DIR = "holdings"
 DATA_FILE = f"data_{ETF_CODE}.json"
 
@@ -49,63 +51,100 @@ if not os.path.exists(HOLDINGS_DIR):
     os.makedirs(HOLDINGS_DIR)
 
 
-# --------------- HTML Parser ---------------
+# --------------- CTBC API ---------------
 
-class MoneyDJParser(HTMLParser):
-    """Parse MoneyDJ Basic0007B holdings table.
+def _post(url, body):
+    data = json.dumps(body).encode()
+    req = urllib.request.Request(
+        url, data=data,
+        headers={"Content-Type": "application/json", "Referer": CTBC_REFERER},
+        method="POST"
+    )
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return json.loads(r.read())
 
-    Column order: 個股名稱(code embedded), 投資比例(%), 持有股數
-    Stock name format: "欣興(3037.TW)"
+
+def get_ctbc_token():
+    resp = _post(
+        f"{CTBC_BASE}/home/AuthToken?token=www.ctbcinvestments.com",
+        {"token": "www.ctbcinvestments.com"}
+    )
+    token = resp["Data"]["token"]
+    log.info(f"CTBC token acquired: {token[:30]}...")
+    return token
+
+
+def fetch_holdings_for_date(token, date_str):
+    """Fetch holdings data for a given date (format: YYYY/MM/DD)."""
+    encoded_token = urllib.parse.quote(token, safe="")
+    resp = _post(
+        f"{CTBC_BASE}/etf/ETFHoldingWeight?token={encoded_token}",
+        {"token": token, "FID": CTBC_FID, "StartDate": date_str}
+    )
+    if resp.get("ResultCode") != 0:
+        log.error(f"API error for {date_str}: {resp.get('ResultMsg')}")
+        return None
+    return resp["Data"]
+
+
+def parse_holdings_data(data):
     """
+    Parse CTBC ETFHoldingWeight response.
+    Returns (holdings_list, aum_ntd, units_zhang, nav, data_date_str)
+    """
+    fa = data["FundAssets"][0]
 
-    def __init__(self):
-        super().__init__()
-        self.holdings = []
-        self._in_tr = False
-        self._in_td = False
-        self._cells = []
-        self._current = ""
-        self._page_text = ""
+    # NAV_DT is reliable for date
+    nav_dt = fa.get("NAV_DT", "")[:10]  # "2026-04-21"
+    data_date_str = nav_dt if nav_dt else ""
 
-    def handle_starttag(self, tag, attrs):
-        if tag == "tr":
-            self._in_tr = True
-            self._cells = []
-        if self._in_tr and tag in ("td", "th"):
-            self._in_td = True
-            self._current = ""
+    # AUM and units: find numeric string values by descending size
+    # The two largest numbers are AUM (billions) and units (hundred millions)
+    aum_ntd, units_raw = 0, 0
+    numeric_vals = []
+    for v in fa.values():
+        if isinstance(v, str) and re.match(r'^\d{1,3}(,\d{3})+$', v):
+            numeric_vals.append(int(v.replace(",", "")))
+    numeric_vals.sort(reverse=True)
+    if len(numeric_vals) >= 1:
+        aum_ntd = numeric_vals[0]
+    if len(numeric_vals) >= 2:
+        units_raw = numeric_vals[1]
+    units_zhang = units_raw // 1000
 
-    def handle_endtag(self, tag):
-        if tag in ("td", "th") and self._in_td:
-            self._cells.append(self._current.strip())
-            self._in_td = False
-        if tag == "tr" and self._in_tr:
-            self._process_row(self._cells)
-            self._in_tr = False
+    # NAV: find the decimal float value
+    nav = 0.0
+    for v in fa.values():
+        if isinstance(v, str) and re.match(r'^\d+\.\d+$', v):
+            try:
+                nav = float(v)
+                break
+            except Exception:
+                pass
 
-    def handle_data(self, data):
-        self._page_text += data
-        if self._in_td:
-            self._current += data
+    log.info(f"AUM: {aum_ntd:,} NTD ({aum_ntd/1e8:.2f}億), Units: {units_zhang:,}張, NAV: {nav}, Date: {data_date_str}")
 
-    def _process_row(self, cells):
-        if len(cells) < 3:
-            return
-        name_col = cells[0].strip()
-        # Extract stock code from "(3037.TW)" pattern
-        m = re.search(r'\((\d{4,6}[A-Z0-9]*)\.TW[O]?\)', name_col)
-        if not m:
-            return
-        code = m.group(1)
-        name = name_col[:name_col.rfind("(")].strip()
-        try:
-            weight = float(cells[1].replace("%", "").replace(",", "").strip())
-            shares = int(float(cells[2].replace(",", "").strip()))
-        except (ValueError, IndexError):
-            return
-        if not re.fullmatch(r'\d{4,6}', code) or weight <= 0:
-            return
-        self.holdings.append({"code": code, "name": name, "shares": shares, "weight": weight})
+    # Parse stock holdings from FundAssetsDetail where Code == "STOCK"
+    holdings = []
+    fad = data.get("FundAssetsDetail", [])
+    stock_section = next((x for x in fad if x.get("Code") == "STOCK"), None)
+    if stock_section:
+        for item in stock_section.get("Data", []):
+            code = str(item.get("code_", "")).strip()
+            name = str(item.get("name_", "")).strip()
+            qty_str = str(item.get("qty_", "0")).replace(",", "")
+            weight_str = str(item.get("weights_", "0"))
+            try:
+                shares = int(float(qty_str))
+                weight = float(weight_str)
+            except Exception:
+                continue
+            if not re.match(r'^\d{4,6}$', code) or weight <= 0:
+                continue
+            holdings.append({"code": code, "name": name, "shares": shares, "weight": weight})
+
+    log.info(f"Parsed {len(holdings)} stock holdings")
+    return holdings, aum_ntd, units_zhang, nav, data_date_str
 
 
 # --------------- Helpers ---------------
@@ -119,29 +158,6 @@ def prev_trading_day(date):
 
 def holdings_exist_for(date_str):
     return os.path.exists(os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{date_str}.json"))
-
-
-def fetch_holdings():
-    log.info(f"Fetching {MONEYDJ_URL} ...")
-    try:
-        req = urllib.request.Request(
-            MONEYDJ_URL,
-            headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                "Accept": "text/html,application/xhtml+xml",
-                "Accept-Language": "zh-TW,zh;q=0.9",
-            }
-        )
-        with urllib.request.urlopen(req, timeout=30) as r:
-            html = r.read().decode("utf-8", errors="replace")
-        parser = MoneyDJParser()
-        parser.feed(html)
-        holdings = parser.holdings
-        log.info(f"Parsed {len(holdings)} holdings from MoneyDJ")
-        return holdings
-    except Exception as e:
-        log.error(f"Fetch failed: {e}")
-        return None
 
 
 def get_previous_holdings(exclude_date_str):
@@ -168,7 +184,7 @@ def get_price(code):
     return 0.0
 
 
-def generate_data_json(today_holdings, prev_holdings, data_date_str):
+def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd, units_zhang):
     prev_dict = {h["code"]: h for h in prev_holdings}
     final_output = []
     total = len(today_holdings)
@@ -183,8 +199,10 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str):
             "code": h["code"], "name": h["name"],
             "shares": h["shares"], "prevShares": shares_prev,
             "price": round(price, 2),
-            "yestWeight": prev_data.get("weight", 0.0), "todayWeight": h["weight"],
-            "diffShares": diff_shares, "diffAmount": round(diff_shares * price, 2),
+            "yestWeight": prev_data.get("weight", 0.0),
+            "todayWeight": h["weight"],
+            "diffShares": diff_shares,
+            "diffAmount": round(diff_shares * price, 2),
         })
         if (i + 1) % 10 == 0:
             log.info(f"  Progress: {i + 1}/{total}")
@@ -198,7 +216,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str):
                 "code": prev_h["code"], "name": prev_h["name"],
                 "shares": 0, "prevShares": prev_h["shares"],
                 "price": round(price, 2),
-                "yestWeight": prev_h["weight"], "todayWeight": 0.0,
+                "yestWeight": prev_h.get("weight", 0.0), "todayWeight": 0.0,
                 "diffShares": diff_shares, "diffAmount": round(diff_shares * price, 2),
             })
 
@@ -216,18 +234,21 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str):
     except Exception as e:
         log.warning(f"ETF price fetch failed: {e}")
 
+    total_market_cap = round(aum_ntd / 1e8, 2) if aum_ntd > 0 else 0.0
+    total_shares_zhang = units_zhang if units_zhang > 0 else 0
 
-    # Fetch ETF total assets (AUM) to derive 總股數 & 市值
-    total_shares_raw, prev_total_shares, prev_total_market_cap = 0, 0, 0.0
-    total_market_cap = 0.0
-    try:
-        _info = yf.Ticker(f"{ETF_CODE}.TW").info
-        _assets = float(_info.get("totalAssets") or 0)
-        if _assets > 0 and etf_price > 0:
-            total_shares_raw = round(_assets / etf_price)
-            total_market_cap = round(_assets / 1e8, 2)
-    except Exception:
-        pass
+    # Fallback to yfinance totalAssets
+    if total_shares_zhang == 0:
+        try:
+            _info = yf.Ticker(f"{ETF_CODE}.TW").info
+            _assets = float(_info.get("totalAssets") or 0)
+            if _assets > 0 and etf_price > 0:
+                total_shares_zhang = round(_assets / etf_price) // 1000
+                total_market_cap = round(_assets / 1e8, 2)
+        except Exception:
+            pass
+
+    prev_total_shares, prev_total_market_cap = 0, 0.0
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, "r", encoding="utf-8") as _f:
@@ -236,7 +257,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str):
             prev_total_market_cap = _prev.get("meta", {}).get("totalMarketCap", 0.0)
         except Exception:
             pass
-    total_shares_zhang = total_shares_raw // 1000
+
     wrapper = {
         "meta": {
             "manager": MANAGER, "ytd": ytd_val, "etfPrice": etf_price,
@@ -251,7 +272,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str):
     }
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(wrapper, f, ensure_ascii=False, indent=4)
-    log.info(f"{DATA_FILE} updated with {len(final_output)} holdings")
+    log.info(f"{DATA_FILE} updated: {len(final_output)} holdings, {total_shares_zhang:,}張, {total_market_cap}億")
     return wrapper
 
 
@@ -328,30 +349,58 @@ def git_push():
 # --------------- Main ---------------
 
 def main():
-    run_date = datetime.now().date()
-    data_date = prev_trading_day(run_date)
-    data_date_str = data_date.strftime("%Y-%m-%d")
-
     log.info(f"=== {ETF_CODE} Check & Update started ===")
-    log.info(f"  Run date:  {run_date}")
-    log.info(f"  Data date: {data_date_str}")
+
+    token = get_ctbc_token()
+
+    # Fetch today's data
+    today_tw = datetime.now(timezone(timedelta(hours=8)))
+    today_date_str = today_tw.strftime("%Y/%m/%d")
+    log.info(f"Fetching data for {today_date_str}...")
+
+    raw_data = fetch_holdings_for_date(token, today_date_str)
+    if not raw_data:
+        log.error("Failed to fetch today's data. Exiting.")
+        send_telegram(f"⏳ {ETF_CODE} {ETF_NAME} 無法取得持股資料")
+        return
+
+    today_holdings, aum_ntd, units_zhang, nav, data_date_str = parse_holdings_data(raw_data)
+    if not today_holdings:
+        log.error("No holdings parsed. Exiting.")
+        return
+
+    if not data_date_str:
+        data_date_str = today_tw.strftime("%Y-%m-%d")
+
+    log.info(f"Data date from API: {data_date_str}")
 
     if holdings_exist_for(data_date_str):
         log.info(f"Holdings for {data_date_str} already exist. Nothing to do.")
         return
 
-    today_holdings = fetch_holdings()
-    if not today_holdings:
-        log.error("No holdings fetched. Will retry next hour.")
-        send_telegram(f"⏳ {ETF_CODE} {ETF_NAME} 持股尚未更新\n📅 資料日期：{data_date_str}\n🔄 將於下一個小時再次檢查...")
-        return
+    # Bootstrap: if no previous holdings file exists, fetch previous trading day from CTBC
+    prev_date = prev_trading_day(datetime.strptime(data_date_str, "%Y-%m-%d").date())
+    prev_date_str = prev_date.strftime("%Y-%m-%d")
+    if not holdings_exist_for(prev_date_str):
+        log.info(f"No previous holdings found. Bootstrapping {prev_date_str} from CTBC...")
+        prev_api_date = prev_date.strftime("%Y/%m/%d")
+        prev_raw = fetch_holdings_for_date(token, prev_api_date)
+        if prev_raw:
+            prev_h_list, _, _, _, _ = parse_holdings_data(prev_raw)
+            if prev_h_list:
+                prev_json_path = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{prev_date_str}.json")
+                with open(prev_json_path, "w", encoding="utf-8") as f:
+                    json.dump(prev_h_list, f, ensure_ascii=False, indent=2)
+                log.info(f"Bootstrapped previous holdings: {prev_json_path}")
 
+    # Save today's snapshot
     json_path = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{data_date_str}.json")
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(today_holdings, f, ensure_ascii=False, indent=2)
+    log.info(f"Saved holdings snapshot: {json_path}")
 
     prev_holdings = get_previous_holdings(exclude_date_str=data_date_str)
-    wrapper = generate_data_json(today_holdings, prev_holdings, data_date_str)
+    wrapper = generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd, units_zhang)
 
     git_push()
     send_telegram(build_notification(wrapper))
