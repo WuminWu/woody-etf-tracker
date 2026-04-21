@@ -1,17 +1,16 @@
-name: Daily ETF Data Scrape
+name: Daily ETF Holdings Update
 
 on:
   schedule:
-    # 10:00 UTC is 18:00 (6:00 PM) in Taiwan (UTC+8)
-    - cron: '0 10 * * *'
-  # Allow manual trigger from GitHub UI
+    # 08:00 UTC = 16:00 Taiwan (UTC+8)
+    - cron: '0 8 * * 1-5'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  scrape-and-update:
+  update-holdings:
     runs-on: ubuntu-latest
 
     steps:
@@ -30,15 +29,23 @@ jobs:
           pip install -r requirements.txt
           python -m playwright install --with-deps chromium
 
-      - name: Run Python Scraper
+      - name: Run all ETF update scripts
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          python scraper.py
+          python check_and_update_00981A.py
+          python check_and_update_00980A.py
+          python check_and_update_00985A.py
+          python check_and_update_00991A.py
+          python check_and_update_00992A.py
+          python check_and_update_00982A.py
+          python check_and_update_00987A.py
 
-      - name: Commit and Push Changes
+      - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add data.json history/
-          
-          # Only commit if there are changes
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Automated daily scrape update" && git push)
+          git add data_*.json holdings/
+          git diff --quiet && git diff --staged --quiet || \
+            git commit -m "Auto-update ETF holdings $(date +'%Y-%m-%d')" && git push
