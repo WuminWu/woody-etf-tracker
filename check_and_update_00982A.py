@@ -393,11 +393,13 @@ def main():
     xlsx_path = download_xlsx(form_date_str)
     if xlsx_path is None:
         log.error("Download failed. Will retry next hour.")
+        send_telegram(f"⏳ 00982A 群益台灣強棒 持股尚未更新\n📅 資料日期：{data_date_str}\n🔄 將於下一個小時再次檢查...")
         return
 
     today_holdings = parse_holdings_from_xlsx(xlsx_path)
     if not today_holdings:
         log.error("No holdings parsed from Excel. Will retry next hour.")
+        send_telegram(f"⏳ 00982A 群益台灣強棒 持股尚未更新\n📅 資料日期：{data_date_str}\n🔄 將於下一個小時再次檢查...")
         return
 
     log.info(f"Parsed {len(today_holdings)} stocks for {data_date_str}")

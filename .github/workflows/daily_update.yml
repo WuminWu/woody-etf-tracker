@@ -2,8 +2,12 @@ name: Daily ETF Holdings Update
 
 on:
   schedule:
-    # 08:00 UTC = 16:00 Taiwan (UTC+8)
+    # 08:00 UTC = 16:00 Taiwan (UTC+8) — first attempt
     - cron: '0 8 * * 1-5'
+    # 09:00 UTC = 17:00 Taiwan — retry if not yet updated
+    - cron: '0 9 * * 1-5'
+    # 10:00 UTC = 18:00 Taiwan — final retry
+    - cron: '0 10 * * 1-5'
   workflow_dispatch:
 
 permissions:

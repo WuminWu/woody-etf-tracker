@@ -273,6 +273,7 @@ def main():
     today_holdings = fetch_holdings(data_date_str)
     if not today_holdings:
         log.error("No holdings fetched. Will retry next hour.")
+        send_telegram(f"⏳ 00980A 野村智慧優選 持股尚未更新\n📅 資料日期：{data_date_str}\n🔄 將於下一個小時再次檢查...")
         return
 
     json_path = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{data_date_str}.json")
