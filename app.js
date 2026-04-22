@@ -116,14 +116,14 @@ document.addEventListener('DOMContentLoaded', () => {
             })();
 
             tr.innerHTML = `
-                <td><span style="display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:50%;background:#334155;color:#fff;font-weight:bold;">${holding.rank}</span></td>
-                <td><div class="stock-id">${holding.code}</div><div class="stock-name">${holding.name}</div></td>
-                <td class="align-right stock-price">$${formatNumber(holding.price, 2)}</td>
-                <td class="stock-shares">${sharesDisplay}</td>
-                <td class="align-right">${weightDisplay}</td>
-                <td class="align-right">${renderStatus(holding)}</td>
-                <td class="align-right">${renderDiff(holding.diffShares, 0)}</td>
-                <td class="align-right">$${renderDiff(holding.diffAmount, 0)}</td>
+                <td data-label="序號"><span style="display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:50%;background:#334155;color:#fff;font-weight:bold;">${holding.rank}</span></td>
+                <td data-label="股票"><div class="stock-id">${holding.code}</div><div class="stock-name">${holding.name}</div></td>
+                <td data-label="股價" class="align-right stock-price">$${formatNumber(holding.price, 2)}</td>
+                <td data-label="股數" class="stock-shares">${sharesDisplay}</td>
+                <td data-label="比例" class="align-right">${weightDisplay}</td>
+                <td data-label="狀態" class="align-right">${renderStatus(holding)}</td>
+                <td data-label="加/減碼股數" class="align-right">${renderDiff(holding.diffShares, 0)}</td>
+                <td data-label="加/減碼金額" class="align-right">$${renderDiff(holding.diffAmount, 0)}</td>
             `;
             tbody.appendChild(tr);
         });
@@ -378,10 +378,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 : `<span class="cross-count-badge cross-count-single">${row.etfs.length}</span>`;
 
             tr.innerHTML = `
-                <td><span style="display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:50%;background:#334155;color:#fff;font-weight:bold;">${index + 1}</span></td>
-                <td><div class="stock-id">${row.code}</div><div class="stock-name">${row.name}</div></td>
-                <td><div class="etf-tags">${etfTags}</div></td>
-                <td class="align-right">${countBadge}</td>
+                <td data-label="序號"><span style="display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:50%;background:#334155;color:#fff;font-weight:bold;">${index + 1}</span></td>
+                <td data-label="股票"><div class="stock-id">${row.code}</div><div class="stock-name">${row.name}</div></td>
+                <td data-label="持有 ETF 與比例"><div class="etf-tags">${etfTags}</div></td>
+                <td data-label="持有 ETF 數" class="align-right">${countBadge}</td>
             `;
             crossBody.appendChild(tr);
         });

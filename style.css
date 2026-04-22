@@ -525,7 +525,7 @@ tbody tr:last-child td {
 }
 
 /* Responsive */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .container {
         padding: 1rem;
     }
@@ -535,7 +535,59 @@ tbody tr:last-child td {
         text-align: center;
     }
     
-    th, td {
+    .header-titles {
+        width: 100%;
+    }
+
+    /* Card Table Layout */
+    table, thead, tbody, th, td, tr {
+        display: block;
+    }
+    
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    
+    tr {
+        border: 1px solid var(--glass-border);
+        border-radius: 1rem;
+        margin-bottom: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 0.5rem;
+    }
+    
+    td {
+        border: none;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        position: relative;
         padding: 1rem 0.5rem;
+        text-align: right !important;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-height: 3rem;
+    }
+    
+    td:before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-align: left;
+        flex-shrink: 0;
+        margin-right: 1rem;
+    }
+    
+    td:last-child {
+        border-bottom: 0;
+    }
+    
+    .etf-tags {
+        justify-content: flex-end;
+    }
+    
+    .table-container {
+        overflow-x: hidden;
     }
 }
