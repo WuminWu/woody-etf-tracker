@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=4">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 <body>
@@ -62,6 +62,9 @@
             </button>
             <button class="tab-btn" data-tab="cross">
                 <i class="fa-solid fa-code-compare"></i> ETF持股交叉比對
+            </button>
+            <button class="tab-btn" data-tab="search">
+                <i class="fa-solid fa-magnifying-glass"></i> 股票搜尋
             </button>
         </nav>
 
@@ -139,6 +142,53 @@
         </section>
     </main>
 
-    <script src="app.js?v=3"></script>
+        <!-- Tab: Stock Search -->
+        <section class="dashboard-content fade-in-up delay-1" id="tab-search" style="display:none;">
+            <div class="search-layout">
+                <!-- Left Column -->
+                <div class="search-left-panel glass-panel card">
+                    <div class="card-header" style="margin-bottom:1rem;">
+                        <h2><i class="fa-solid fa-magnifying-glass"></i> 搜尋股票</h2>
+                    </div>
+                    <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1.5rem;">
+                        請輸入股票代號 (如: 2330) 或名稱 (如: 台積電)
+                    </p>
+                    <div class="search-input-wrapper">
+                        <i class="fa-solid fa-search search-icon"></i>
+                        <input type="text" id="stock-search-input" class="search-input" placeholder="輸入代號或名稱...">
+                        <button id="clear-search-btn" class="clear-btn" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div id="search-status" class="search-status">
+                        準備就緒，輸入關鍵字開始搜尋。
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="search-right-panel glass-panel card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-list-check"></i> 搜尋結果 <span id="search-result-title" style="color:var(--accent-color);margin-left:0.5rem;font-size:1.1rem;"></span></h2>
+                    </div>
+                    <div class="table-container" id="search-results-container">
+                        <!-- Default empty state -->
+                        <div class="empty-state" id="search-empty-state">
+                            <i class="fa-solid fa-magnifying-glass-chart" style="font-size:3rem;color:rgba(255,255,255,0.1);margin-bottom:1rem;display:block;"></i>
+                            左側輸入股票資訊，在此查看持有該股的 ETF 列表。
+                        </div>
+                        <table id="search-table" style="display:none;">
+                            <thead>
+                                <tr>
+                                    <th>序號</th>
+                                    <th>持有 ETF</th>
+                                    <th class="align-right">權重佔比</th>
+                                </tr>
+                            </thead>
+                            <tbody id="search-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    <script src="app.js?v=4"></script>
 </body>
 </html>
