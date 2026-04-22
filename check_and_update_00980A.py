@@ -25,6 +25,7 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 import yfinance as yf
+from sheets_helper import append_holdings_to_sheets
 
 # --------------- Config ---------------
 API_URL = "https://www.nomurafunds.com.tw/API/ETFAPI/api/Fund/GetFundAssets"
@@ -313,6 +314,7 @@ def main():
 
     prev_holdings = get_previous_holdings(exclude_date_str=data_date_str)
     wrapper = generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=aum_ntd, units=units)
+    append_holdings_to_sheets(ETF_CODE, wrapper["meta"]["dataDate"], wrapper["holdings"])
 
     git_push()
     send_telegram(build_notification(wrapper))

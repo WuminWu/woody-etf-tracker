@@ -27,6 +27,7 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 import pandas as pd
 import yfinance as yf
 from playwright.sync_api import sync_playwright
+from sheets_helper import append_holdings_to_sheets
 
 # --------------- Config ---------------
 FUND_URL = "https://www.ezmoney.com.tw/ETF/Fund/Info?fundCode=49YTW"
@@ -496,6 +497,7 @@ def main():
     # 4. Load previous day's holdings and generate diff
     prev_holdings = get_previous_holdings()
     wrapper = generate_data_json(today_holdings, prev_holdings, file_date.strftime("%Y-%m-%d"), aum_ntd=aum_ntd, units=units)
+    append_holdings_to_sheets("00981A", wrapper["meta"]["dataDate"], wrapper["holdings"])
 
     # 5. Push to GitHub
     git_push()

@@ -29,6 +29,7 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 import pandas as pd
 import yfinance as yf
 from playwright.sync_api import sync_playwright
+from sheets_helper import append_holdings_to_sheets
 
 # --------------- Config ---------------
 FUND_URL = "https://www.capitalfund.com.tw/etf/product/detail/399/portfolio"
@@ -457,6 +458,7 @@ def main():
 
     prev_holdings = get_previous_holdings(exclude_date_str=data_date_str)
     wrapper = generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=aum_ntd, units=units)
+    append_holdings_to_sheets(ETF_CODE, wrapper["meta"]["dataDate"], wrapper["holdings"])
 
     git_push()
 
