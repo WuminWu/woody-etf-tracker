@@ -235,6 +235,10 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str):
         except Exception:
             pass
     total_shares_zhang = total_shares_raw // 1000
+    # Fallback: if yfinance totalAssets unavailable, keep previous values
+    if total_shares_zhang == 0 and prev_total_shares > 0:
+        total_shares_zhang = prev_total_shares
+        total_market_cap = round(etf_price * prev_total_shares * 1000 / 1e8, 2) if etf_price > 0 else prev_total_market_cap
     wrapper = {
         "meta": {
             "manager": MANAGER, "ytd": ytd_val, "etfPrice": etf_price,
