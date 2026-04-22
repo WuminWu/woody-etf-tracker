@@ -1,13 +1,13 @@
 {
     "meta": {
         "manager": "安聯投信",
-        "ytd": "26.79",
-        "etfPrice": 12.54,
+        "ytd": "26.90",
+        "etfPrice": 12.55,
         "dataDate": "2026-04-22",
-        "lastUpdate": "2026-04-21 22:31",
-        "totalShares": 1029591,
+        "lastUpdate": "2026-04-22 15:12",
+        "totalShares": 933347,
         "prevTotalShares": 934092,
-        "totalMarketCap": 129.44,
+        "totalMarketCap": 117.14,
         "prevTotalMarketCap": 117.14
     },
     "holdings": [
