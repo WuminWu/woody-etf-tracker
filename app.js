@@ -6,9 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabHoldings = document.getElementById('tab-holdings');
     const tabCross    = document.getElementById('tab-cross');
-    const etfSelectWrapper = document.getElementById('etf-select-wrapper');
-    const etfSwitchHint    = document.getElementById('etf-switch-hint');
-    const headerSubtitle   = document.getElementById('header-subtitle');
+    const tabSearch   = document.getElementById('tab-search');
+    const appHeader   = document.querySelector('.app-header');
+    const ytdRankingBar = document.getElementById('ytd-ranking-bar');
 
     let activeTab = 'holdings';
 
@@ -18,21 +18,25 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.classList.add('active');
             activeTab = btn.dataset.tab;
 
-            const elScale = document.getElementById('etf-scale-info');
             if (activeTab === 'holdings') {
                 tabHoldings.style.display = '';
                 tabCross.style.display = 'none';
-                etfSelectWrapper.style.display = '';
-                etfSwitchHint.style.display = '';
-                headerSubtitle.style.display = '';
-                if (elScale) elScale.style.display = '';
-            } else {
+                tabSearch.style.display = 'none';
+                appHeader.style.display = '';
+                if (ytdRankingBar) ytdRankingBar.style.display = '';
+            } else if (activeTab === 'cross') {
                 tabHoldings.style.display = 'none';
                 tabCross.style.display = '';
-                etfSelectWrapper.style.display = 'none';
-                etfSwitchHint.style.display = 'none';
-                headerSubtitle.style.display = 'none';
-                if (elScale) elScale.style.display = 'none';
+                tabSearch.style.display = 'none';
+                appHeader.style.display = 'none';
+                if (ytdRankingBar) ytdRankingBar.style.display = 'none';
+                loadCrossData();
+            } else if (activeTab === 'search') {
+                tabHoldings.style.display = 'none';
+                tabCross.style.display = 'none';
+                tabSearch.style.display = '';
+                appHeader.style.display = 'none';
+                if (ytdRankingBar) ytdRankingBar.style.display = 'none';
                 loadCrossData();
             }
         });
@@ -346,6 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let crossSortAsc = false;
     let crossData = [];
     let crossLoaded = false;
+    let globalStockMap = new Map();
 
     const thCrossCount = document.getElementById('th-cross-etf-count');
     thCrossCount.addEventListener('click', () => {
@@ -400,13 +405,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const valid = results.filter(Boolean);
 
             // Build code → { code, name, etfs[] } map
-            const stockMap = new Map();
+            globalStockMap.clear();
             valid.forEach(({ etf, holdings }) => {
                 holdings.filter(h => h.shares > 0).forEach(h => {
-                    if (!stockMap.has(h.code)) {
-                        stockMap.set(h.code, { code: h.code, name: h.name, etfs: [] });
+                    if (!globalStockMap.has(h.code)) {
+                        globalStockMap.set(h.code, { code: h.code, name: h.name, etfs: [] });
                     }
-                    stockMap.get(h.code).etfs.push({
+                    globalStockMap.get(h.code).etfs.push({
                         etfId: etf.id,
                         etfName: etf.name,
                         weight: h.todayWeight,
@@ -414,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-            crossData = Array.from(stockMap.values())
+            crossData = Array.from(globalStockMap.values())
                 .filter(s => s.etfs.length >= 2)
                 .sort((a, b) => b.etfs.length - a.etfs.length || b.etfs[0].weight - a.etfs[0].weight);
 
@@ -429,6 +434,90 @@ document.addEventListener('DOMContentLoaded', () => {
 
             crossLoaded = true;
             renderCrossTable(crossData);
+            if (activeTab === 'search') handleSearch();
         });
     };
+
+    // ── Search Tab ──────────────────────────────────────────────
+    const searchInput = document.getElementById('stock-search-input');
+    const clearBtn = document.getElementById('clear-search-btn');
+    const searchStatus = document.getElementById('search-status');
+    const searchEmptyState = document.getElementById('search-empty-state');
+    const searchTable = document.getElementById('search-table');
+    const searchBody = document.getElementById('search-body');
+    const searchResultTitle = document.getElementById('search-result-title');
+
+    const renderSearchResults = (stock) => {
+        if (!stock) {
+            searchEmptyState.style.display = 'block';
+            searchTable.style.display = 'none';
+            searchResultTitle.textContent = '';
+            searchStatus.textContent = '查無相符股票，請重新輸入代號或完整名稱。';
+            return;
+        }
+
+        searchEmptyState.style.display = 'none';
+        searchTable.style.display = '';
+        searchResultTitle.textContent = `- ${stock.code} ${stock.name}`;
+        searchStatus.innerHTML = `找到 <strong style="color:var(--text-primary)">${stock.etfs.length}</strong> 檔 ETF 持有此股票`;
+
+        const sortedEtfs = [...stock.etfs].sort((a, b) => b.weight - a.weight);
+        searchBody.innerHTML = '';
+
+        sortedEtfs.forEach((etf, index) => {
+            const tr = document.createElement('tr');
+            tr.style.animation = `fadeInUp 0.3s cubic-bezier(0.16,1,0.3,1) ${Math.min(0.05 + index * 0.015, 0.8)}s forwards`;
+            tr.style.opacity = '0';
+            tr.style.transform = 'translateY(10px)';
+
+            tr.innerHTML = `
+                <td data-label="序號"><span style="display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:50%;background:#334155;color:#fff;font-weight:bold;">${index + 1}</span></td>
+                <td data-label="持有 ETF"><div class="stock-id">${etf.etfId}</div><div class="stock-name">${etf.etfName}</div></td>
+                <td data-label="權重佔比" class="align-right"><span class="weight-pill">${etf.weight}%</span></td>
+            `;
+            searchBody.appendChild(tr);
+        });
+    };
+
+    const handleSearch = () => {
+        if (!searchInput) return;
+        const query = searchInput.value.trim().toLowerCase();
+        if (!query) {
+            clearBtn.style.display = 'none';
+            searchEmptyState.style.display = 'block';
+            searchTable.style.display = 'none';
+            searchResultTitle.textContent = '';
+            searchStatus.textContent = '準備就緒，輸入關鍵字開始搜尋。';
+            return;
+        }
+        clearBtn.style.display = 'block';
+
+        if (!crossLoaded) {
+            searchStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 正在載入資料庫，請稍候...';
+            return;
+        }
+
+        if (globalStockMap.has(query)) {
+            renderSearchResults(globalStockMap.get(query));
+            return;
+        }
+
+        let foundStock = null;
+        for (const stock of globalStockMap.values()) {
+            if (stock.code.includes(query) || stock.name.toLowerCase().includes(query)) {
+                foundStock = stock;
+                if (stock.name === query) break;
+            }
+        }
+        renderSearchResults(foundStock);
+    };
+
+    if (searchInput) {
+        searchInput.addEventListener('input', handleSearch);
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            handleSearch();
+            searchInput.focus();
+        });
+    }
 });
