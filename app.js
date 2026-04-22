@@ -108,11 +108,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `<span style="color:#9ca3af;font-size:0.8em;">${prev}%</span> <span style="color:${color};">→</span> <span class="weight-pill">${curr}%</span>`;
             })();
 
+            const sharesDisplay = (() => {
+                const prev = holding.prevShares ?? 0, curr = holding.shares;
+                if (prev === 0 || prev === curr) return `<span>${formatNumber(curr)}</span>`;
+                const color = curr > prev ? '#ff4d4d' : '#4ade80';
+                return `<span style="color:#9ca3af;font-size:0.8em;">${formatNumber(prev)}</span> <span style="color:${color};">→</span> <span style="font-weight:600;">${formatNumber(curr)}</span>`;
+            })();
+
             tr.innerHTML = `
                 <td><span style="display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:50%;background:#334155;color:#fff;font-weight:bold;">${holding.rank}</span></td>
                 <td><div class="stock-id">${holding.code}</div><div class="stock-name">${holding.name}</div></td>
                 <td class="align-right stock-price">$${formatNumber(holding.price, 2)}</td>
-                <td class="stock-shares">${formatNumber(holding.shares)}</td>
+                <td class="stock-shares">${sharesDisplay}</td>
                 <td class="align-right">${weightDisplay}</td>
                 <td class="align-right">${renderStatus(holding)}</td>
                 <td class="align-right">${renderDiff(holding.diffShares, 0)}</td>
@@ -190,8 +197,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 globalData = data.holdings;
                 const elSubtitle = document.getElementById('header-subtitle');
                 if (elSubtitle) {
+                    const priceDateStr = meta.priceDate
+                        ? `<span style="color:#6b7280;font-size:0.82em;margin-left:0.3em;">(${meta.priceDate})</span>`
+                        : '';
                     const priceStr = meta.etfPrice
-                        ? ` &nbsp;|&nbsp; <i class="fa-solid fa-dollar-sign"></i> 股價：<span style="color:#60a5fa;font-weight:bold;">${Number(meta.etfPrice).toFixed(2)}</span>`
+                        ? ` &nbsp;|&nbsp; <i class="fa-solid fa-dollar-sign"></i> 股價：<span style="color:#60a5fa;font-weight:bold;">${Number(meta.etfPrice).toFixed(2)}</span>${priceDateStr}`
                         : '';
                     elSubtitle.innerHTML = `<i class="fa-solid fa-user-tie"></i> 經理人：${meta.manager}${priceStr} &nbsp;|&nbsp; <i class="fa-solid fa-chart-line"></i> 今年以來(YTD)績效：<span style="color:${meta.ytd >= 0 ? '#ff4d4d' : '#4ade80'};font-weight:bold;">${meta.ytd > 0 ? '+' : ''}${meta.ytd}%</span>`;
                 }

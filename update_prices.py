@@ -57,7 +57,7 @@ def update_etf_prices():
 
         data["meta"]["ytd"] = ytd
         data["meta"]["etfPrice"] = price
-        data["meta"]["lastUpdate"] = now_str
+        data["meta"]["priceDate"] = now_str[:10]  # YYYY-MM-DD only
         # Update totalShares & totalMarketCap from yfinance totalAssets
         try:
             _info = yf.Ticker(f"{code}.TW").info
