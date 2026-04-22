@@ -371,7 +371,7 @@ def build_notification(wrapper, etf_code="00992A", etf_name="群益科技創新"
         for h in decreased:
             lines.append(f"  • {h['code']} {h['name']}　{fmt_zhang(h['diffShares'])}")
 
-    lines.append(f"\n🕐 更新時間：{meta['lastUpdate']}")
+    lines.append(f"\n🕐 更新時間：{meta['lastUpdate']} (台灣時間)")
     lines.append("🔗 https://wuminwu.github.io/etf-tracker/")
     return "\n".join(lines)
 
@@ -399,7 +399,7 @@ def main():
     # - data_date  = prev_trading_day(today) = T
     # - save file  = data_date
 
-    now = datetime.now()
+    now = datetime.now(timezone(timedelta(hours=8)))
     run_date = now.date()
     # The actual holdings date = the previous trading day relative to today
     data_date = prev_trading_day(run_date)

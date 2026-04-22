@@ -403,7 +403,7 @@ def build_notification(wrapper, etf_code="00981A", etf_name="統一台股增長"
         for h in decreased:
             lines.append(f"  • {h['code']} {h['name']}　{fmt_zhang(h['diffShares'])}")
 
-    lines.append(f"\n🕐 更新時間：{meta['lastUpdate']}")
+    lines.append(f"\n🕐 更新時間：{meta['lastUpdate']} (台灣時間)")
     lines.append("🔗 https://wuminwu.github.io/etf-tracker/")
     return "\n".join(lines)
 
@@ -423,7 +423,7 @@ def git_push():
 # --------------- Main ---------------
 
 def main():
-    today = datetime.now().date()
+    today = datetime.now(timezone(timedelta(hours=8))).date()
     today_str = today.strftime("%Y-%m-%d")
     log.info(f"=== Check & Update started. Today: {today_str} ===")
 

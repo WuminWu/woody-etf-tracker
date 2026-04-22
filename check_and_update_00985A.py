@@ -265,7 +265,7 @@ def build_notification(wrapper):
         lines.append("\n🟢 減碼明細：")
         for h in decreased:
             lines.append(f"  • {h['code']} {h['name']}　{fmt_zhang(h['diffShares'])}")
-    lines.append(f"\n🕐 更新時間：{meta['lastUpdate']}")
+    lines.append(f"\n🕐 更新時間：{meta['lastUpdate']} (台灣時間)")
     lines.append("https://wuminwu.github.io/etf-tracker/")
     return "\n".join(lines)
 
@@ -283,7 +283,7 @@ def git_push():
 # --------------- Main ---------------
 
 def main():
-    run_date = datetime.now().date()
+    run_date = datetime.now(timezone(timedelta(hours=8))).date()
     data_date = prev_trading_day(run_date)
     data_date_str = data_date.strftime("%Y-%m-%d")
 
