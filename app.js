@@ -292,15 +292,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const valid = results.filter(Boolean)
                 .sort((a, b) => b.ytd - a.ytd);
 
-            const medals = ['🥇', '🥈', '🥉'];
+            const rankStyles = [
+                { bg: 'linear-gradient(135deg,#f59e0b,#d97706)', color: '#fff', shadow: '0 2px 8px rgba(245,158,11,0.5)' },
+                { bg: 'linear-gradient(135deg,#94a3b8,#64748b)', color: '#fff', shadow: '0 2px 8px rgba(148,163,184,0.4)' },
+                { bg: 'linear-gradient(135deg,#cd7c2f,#a16207)', color: '#fff', shadow: '0 2px 8px rgba(205,124,47,0.4)' },
+            ];
             const list = document.getElementById('ytd-ranking-list');
             list.innerHTML = valid.map((etf, i) => {
                 const sign = etf.ytd >= 0 ? '+' : '';
                 const color = etf.ytd >= 0 ? '#ff4d4d' : '#4ade80';
-                const medal = medals[i] || `${i + 1}.`;
+                const rs = rankStyles[i];
+                const rankBadge = rs
+                    ? `<span class="ytd-rank-badge" style="background:${rs.bg};color:${rs.color};box-shadow:${rs.shadow};">${i + 1}</span>`
+                    : `<span class="ytd-rank-num">${i + 1}</span>`;
+                const isTop3 = i < 3 ? 'ytd-item-top3' : '';
                 return `
-                    <div class="ytd-item ${etf.id === etfSelector.value ? 'ytd-item-active' : ''}" data-etf="${etf.id}">
-                        <span class="ytd-medal">${medal}</span>
+                    <div class="ytd-item ${isTop3} ${etf.id === etfSelector.value ? 'ytd-item-active' : ''}" data-etf="${etf.id}">
+                        ${rankBadge}
                         <span class="ytd-etf-id">${etf.id}</span>
                         <span class="ytd-etf-name">${etf.name}</span>
                         <span class="ytd-value" style="color:${color}">${sign}${etf.ytd.toFixed(2)}%</span>
