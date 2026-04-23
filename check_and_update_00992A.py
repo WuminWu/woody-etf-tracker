@@ -390,7 +390,7 @@ def build_notification(wrapper, etf_code="00992A", etf_name="群益科技創新"
             lines.append(f"  • {h['code']} {h['name']}　{fmt_zhang(h['diffShares'])}")
 
     lines.append(f"\n🕐 更新時間：{meta['lastUpdate']} (台灣時間)")
-    lines.append("🔗 https://wuminwu.github.io/etf-tracker/")
+    lines.append("🔗 https://wuminwu.github.io/woody-etf-tracker/")
     return "\n".join(lines)
 
 
