@@ -495,8 +495,8 @@ tbody tr:last-child td {
 
 .etf-tag-weight {
     font-weight: 700;
-    color: var(--accent-color);
-    background: rgba(16,185,129,0.15);
+    color: var(--danger-color);
+    background: rgba(239, 68, 68, 0.15);
     border-radius: 0.4rem;
     padding: 0.1rem 0.4rem;
 }

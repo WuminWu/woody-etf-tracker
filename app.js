@@ -373,7 +373,8 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.style.opacity = '0';
             tr.style.transform = 'translateY(10px)';
 
-            const etfTags = row.etfs.map(e => `
+            const sortedEtfs = [...row.etfs].sort((a, b) => b.weight - a.weight);
+            const etfTags = sortedEtfs.map(e => `
                 <span class="etf-tag">
                     <span class="etf-tag-id">${e.etfId}</span>
                     <span class="etf-tag-name">${e.etfName}</span>
