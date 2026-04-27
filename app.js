@@ -226,7 +226,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (sharesDiff !== 0 && sharesPrev > 0) {
                         const arrow = sharesDiff > 0 ? '↑' : '↓';
                         const color = sharesDiff > 0 ? '#ff4d4d' : '#4ade80';
-                        sharesDiffStr = ` <span style="color:${color};font-weight:700;">(${arrow}${fmtZhang(Math.abs(sharesDiff))})</span>`;
+                        const sharesPct = (sharesDiff / sharesPrev * 100).toFixed(1);
+                        const pctSign = sharesDiff > 0 ? '+' : '';
+                        sharesDiffStr = ` <span style="color:${color};font-weight:700;">(${arrow}${fmtZhang(Math.abs(sharesDiff))}, ${pctSign}${sharesPct}%)</span>`;
                     }
 
                     const capNow = meta.totalMarketCap || 0;
@@ -236,7 +238,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (Math.abs(capDiff) >= 0.01 && capPrev > 0) {
                         const arrow = capDiff > 0 ? '↑' : '↓';
                         const color = capDiff > 0 ? '#ff4d4d' : '#4ade80';
-                        capDiffStr = ` <span style="color:${color};font-weight:700;">(${arrow}${Math.abs(capDiff).toFixed(2)}億)</span>`;
+                        const capPct = (capDiff / capPrev * 100).toFixed(1);
+                        const pctSign = capDiff > 0 ? '+' : '';
+                        capDiffStr = ` <span style="color:${color};font-weight:700;">(${arrow}${Math.abs(capDiff).toFixed(2)}億, ${pctSign}${capPct}%)</span>`;
                     }
 
                     elScale.innerHTML = `<i class="fa-solid fa-layer-group"></i> 基金規模：${fmtZhang(sharesNow)}${sharesDiffStr} &nbsp;|&nbsp; <i class="fa-solid fa-coins"></i> 市值：${capNow.toFixed(2)}億${capDiffStr}`;
