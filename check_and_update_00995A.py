@@ -291,6 +291,13 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd, un
                 log.info(f"AUM 比較跳過：JSON dataDate={prev_meta.get('dataDate')} 非前一交易日({_prev_trading_day})")
         except Exception:
             pass
+    # AUM 合理性驗證：若新值與前一交易日相差超過 50%，視為資料來源解析異常，捨棄新值
+    if total_shares_zhang > 0 and prev_total_shares > 0:
+        ratio = total_shares_zhang / prev_total_shares
+        if ratio < 0.5 or ratio > 2.0:
+            log.warning(f"AUM 異常：totalShares={total_shares_zhang} 與前一交易日 {prev_total_shares} 相差 {ratio:.1%}，視為解析異常，改用前一交易日數值")
+            total_shares_zhang = prev_total_shares
+            total_market_cap = prev_total_market_cap
 
     wrapper = {
         "meta": {
