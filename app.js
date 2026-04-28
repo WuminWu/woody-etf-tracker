@@ -188,6 +188,35 @@ document.addEventListener('DOMContentLoaded', () => {
         applySortAndRender();
     });
 
+    // ── ETF 配息設定 ──────────────────────────────────────────
+    // distMonths: 配息月份陣列（請依實際公開說明書核對）
+    // distDay: 預計配息日（每月幾號），超過當月最後一天時自動取月底
+    const ETF_DIST = {
+        '00980A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
+        '00981A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
+        '00982A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
+        '00985A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
+        '00987A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
+        '00988A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
+        '00991A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
+        '00992A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
+        '00993A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
+        '00995A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
+    };
+
+    // 計算下一次配息日（distMonths 需已排序）
+    const getNextDivDate = (months, day) => {
+        const today = new Date(); today.setHours(0,0,0,0);
+        for (let yr = today.getFullYear(); yr <= today.getFullYear() + 1; yr++) {
+            for (const mo of months) {
+                const lastDay = new Date(yr, mo, 0).getDate(); // 當月最後一天
+                const candidate = new Date(yr, mo - 1, Math.min(day, lastDay));
+                if (candidate >= today) return candidate;
+            }
+        }
+        return null;
+    };
+
     const etfSelector = document.getElementById('etf-selector');
 
     const loadData = (etfId) => {
@@ -283,6 +312,25 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (overlay) overlay.style.display = 'none';
                         }
                     });
+                }
+
+                // 配息資訊
+                const elDistFreq = document.getElementById('stat-dist-freq');
+                const elDistNext = document.getElementById('stat-dist-next');
+                const distCfg = ETF_DIST[etfId];
+                if (elDistFreq && distCfg) {
+                    elDistFreq.textContent = distCfg.distFreq;
+                    if (elDistNext) {
+                        const nextDate = getNextDivDate(distCfg.distMonths, distCfg.distDay);
+                        if (nextDate) {
+                            const y = nextDate.getFullYear();
+                            const m = nextDate.getMonth() + 1;
+                            const d = nextDate.getDate();
+                            elDistNext.textContent = `下次配息日 ${y}/${m}/${d}`;
+                        } else {
+                            elDistNext.textContent = '';
+                        }
+                    }
                 }
 
                 applySortAndRender();
