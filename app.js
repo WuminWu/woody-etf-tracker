@@ -209,7 +209,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         const pc = meta.priceChange;
                         const pcSign = pc >= 0 ? '+' : '';
                         const pcColor = pc >= 0 ? '#ff4d4d' : '#4ade80';
-                        priceChangeStr = ` <span style="color:${pcColor};font-weight:600;font-size:0.92em;">(${pcSign}${pc.toFixed(2)}%)</span>`;
+                        let amtStr = '';
+                        if (meta.prevPrice > 0) {
+                            const amt = Number(meta.etfPrice) - Number(meta.prevPrice);
+                            const amtSign = amt >= 0 ? '+' : '';
+                            amtStr = `${amtSign}${amt.toFixed(2)}, `;
+                        }
+                        priceChangeStr = ` <span style="color:${pcColor};font-weight:600;font-size:0.92em;">(${amtStr}${pcSign}${pc.toFixed(2)}%)</span>`;
                     }
                     const priceStr = meta.etfPrice
                         ? ` &nbsp;|&nbsp; <i class="fa-solid fa-dollar-sign"></i> 股價：<span style="color:#60a5fa;font-weight:bold;">${Number(meta.etfPrice).toFixed(2)}</span>${priceChangeStr}${priceDateStr}`

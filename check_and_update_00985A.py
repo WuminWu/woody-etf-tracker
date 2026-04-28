@@ -170,13 +170,14 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
     for idx, item in enumerate(final_output):
         item["rank"] = idx + 1
 
-    ytd_val, etf_price, price_change = "0.00", 0.0, 0.0
+    ytd_val, etf_price, price_change, prev_price = "0.00", 0.0, 0.0, 0.0
     try:
         hist = yf.Ticker(f"{ETF_CODE}.TW").history(period="ytd", timeout=10)
         if len(hist) >= 2:
             ytd_val = f"{((hist['Close'].iloc[-1] - hist['Close'].iloc[0]) / hist['Close'].iloc[0]) * 100:.2f}"
             etf_price = round(float(hist["Close"].iloc[-1]), 2)
             price_change = round(float((hist["Close"].iloc[-1] - hist["Close"].iloc[-2]) / hist["Close"].iloc[-2] * 100), 2)
+            prev_price = round(float(hist["Close"].iloc[-2]), 2)
             log.info(f"ETF Price: {etf_price}, YTD: {ytd_val}%")
     except Exception as e:
         log.warning(f"ETF price fetch failed: {e}")
@@ -222,7 +223,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
         total_market_cap = round(etf_price * prev_total_shares * 1000 / 1e8, 2) if etf_price > 0 else prev_total_market_cap
     wrapper = {
         "meta": {
-            "manager": MANAGER, "ytd": ytd_val, "etfPrice": etf_price, "priceChange": price_change,
+            "manager": MANAGER, "ytd": ytd_val, "etfPrice": etf_price, "priceChange": price_change, "prevPrice": prev_price,
             "dataDate": data_date_str,
             "lastUpdate": datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M"),
             "totalShares": total_shares_zhang,

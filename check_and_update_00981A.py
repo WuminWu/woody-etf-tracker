@@ -296,6 +296,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
     ytd_val = "0.0"
     etf_price = 0.0
     price_change = 0.0
+    prev_price = 0.0
     try:
         etf_ticker = yf.Ticker("00981A.TW")
         ytd_hist = etf_ticker.history(period="ytd", timeout=10)
@@ -306,6 +307,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
             ytd_val = f"{ytd_calc:.2f}"
             etf_price = round(float(last_price), 2)
             price_change = round(float((last_price - ytd_hist["Close"].iloc[-2]) / ytd_hist["Close"].iloc[-2] * 100), 2)
+            prev_price = round(float(ytd_hist["Close"].iloc[-2]), 2)
             log.info(f"ETF Price: {etf_price}, YTD: {ytd_val}%")
     except Exception as e:
         log.warning(f"Failed to fetch ETF price/YTD: {e}")
@@ -353,7 +355,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
         "meta": {
             "manager": "陳釧瑤",
             "ytd": ytd_val,
-            "etfPrice": etf_price, "priceChange": price_change,
+            "etfPrice": etf_price, "priceChange": price_change, "prevPrice": prev_price,
             "dataDate": data_date_str,
             "lastUpdate": datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M"),
             "totalShares": total_shares_zhang,
