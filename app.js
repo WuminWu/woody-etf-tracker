@@ -559,6 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         etfId: etf.id,
                         etfName: etf.name,
                         weight: h.todayWeight,
+                        yestWeight: h.yestWeight,
                     });
                 });
             });
@@ -614,10 +615,20 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.style.opacity = '0';
             tr.style.transform = 'translateY(10px)';
 
+            const weightDisplay = (() => {
+                const prev = etf.yestWeight, curr = etf.weight;
+                if (!curr && curr !== 0) return '-';
+                if (prev == null || prev === undefined) return `<span class="weight-pill">${curr}%</span>`;
+                if (prev === curr) return `<span class="weight-pill">${curr}%</span>`;
+                const diff = curr - prev;
+                const color = curr > prev ? '#ff4d4d' : '#4ade80';
+                return `<span style="color:#9ca3af;font-size:0.8em;">${prev}%</span> <span style="color:${color};">→</span> <span class="weight-pill">${curr}%</span> <span style="color:${color};font-size:0.8em;">(${diff > 0 ? '+' : ''}${diff.toFixed(2)}%)</span>`;
+            })();
+
             tr.innerHTML = `
                 <td data-label="序號"><span style="display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:50%;background:#334155;color:#fff;font-weight:bold;">${index + 1}</span></td>
                 <td data-label="持有 ETF"><div class="stock-id">${etf.etfId}</div><div class="stock-name">${etf.etfName}</div></td>
-                <td data-label="權重佔比" class="align-right"><span class="weight-pill">${etf.weight}%</span></td>
+                <td data-label="權重佔比" class="align-right">${weightDisplay}</td>
             `;
             searchBody.appendChild(tr);
         });
