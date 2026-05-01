@@ -8,8 +8,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=8">
+    <link rel="stylesheet" href="style.css?v=9">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script defer src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
     <div class="background-blobs">
@@ -199,6 +200,34 @@
         <div id="lightbox-close">✕</div>
     </div>
 
-    <script src="app.js?v=4"></script>
+    <!-- K-line Chart Modal -->
+    <div id="chart-modal" style="display:none;">
+        <div id="chart-backdrop"></div>
+        <div id="chart-panel" class="glass-panel">
+            <div id="chart-header">
+                <div id="chart-title">
+                    <span id="chart-code" class="stock-id"></span>
+                    <span id="chart-name" class="stock-name"></span>
+                </div>
+                <div id="chart-controls">
+                    <div class="chart-btn-group" id="ma-btns">
+                        <button class="chart-btn ma-btn active" data-ma="5">MA5</button>
+                        <button class="chart-btn ma-btn active" data-ma="20">MA20</button>
+                        <button class="chart-btn ma-btn active" data-ma="60">MA60</button>
+                    </div>
+                    <div class="chart-btn-group" id="range-btns">
+                        <button class="chart-btn range-btn" data-range="3mo">3M</button>
+                        <button class="chart-btn range-btn active" data-range="6mo">6M</button>
+                        <button class="chart-btn range-btn" data-range="1y">1Y</button>
+                    </div>
+                    <button id="chart-close-btn" title="關閉"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div id="chart-status-bar"></div>
+            <div id="chart-container"></div>
+        </div>
+    </div>
+
+    <script src="app.js?v=5"></script>
 </body>
 </html>
