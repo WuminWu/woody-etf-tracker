@@ -735,27 +735,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Try each ticker in order (TW → TWO, or US directly)
-        // Falls back to corsproxy.io if direct fetch is blocked (e.g. localhost CORS)
+        // Falls back to multiple CORS proxies if direct fetch is blocked
         const fetchYahoo = async (ticker) => {
             const directUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=${range}`;
-            try {
-                const resp = await fetch(directUrl);
-                if (resp.ok) {
+            const attempts = [
+                () => fetch(directUrl),
+                () => fetch('https://corsproxy.io/?' + encodeURIComponent(directUrl)),
+                () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(directUrl)),
+            ];
+            for (const atFn of attempts) {
+                try {
+                    const resp = await atFn();
+                    if (!resp.ok) continue;
                     const json = await resp.json();
                     const r = json.chart?.result?.[0];
                     if (r?.timestamp?.length > 5) return r;
-                }
-            } catch (_) {}
-            // Fallback: CORS proxy (for localhost dev)
-            try {
-                const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(directUrl);
-                const resp = await fetch(proxyUrl);
-                if (resp.ok) {
-                    const json = await resp.json();
-                    const r = json.chart?.result?.[0];
-                    if (r?.timestamp?.length > 5) return r;
-                }
-            } catch (_) {}
+                } catch (_) {}
+            }
             return null;
         };
 
