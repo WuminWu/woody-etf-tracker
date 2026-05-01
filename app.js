@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             tr.innerHTML = `
                 <td data-label="序號"><span style="display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:50%;background:#334155;color:#fff;font-weight:bold;">${holding.rank}</span></td>
-                <td data-label="股票" class="clickable-stock" data-code="${holding.code}" data-name="${holding.name}"><div class="stock-id">${holding.code}</div><div class="stock-name">${holding.name}</div></td>
+                <td data-label="股票"><div class="stock-id">${holding.code}</div><div class="stock-name">${holding.name}</div></td>
                 <td data-label="股價" class="align-right stock-price">${priceDisplay}</td>
                 <td data-label="股數" class="stock-shares">${sharesDisplay}</td>
                 <td data-label="比例" class="align-right">${weightDisplay}</td>
@@ -362,7 +362,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (e.key === 'Escape') {
                             const overlay = document.getElementById('lightbox-overlay');
                             if (overlay) overlay.style.display = 'none';
-                            closeChartModal();
                         }
                     });
                 }
@@ -529,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             tr.innerHTML = `
                 <td data-label="序號"><span style="display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:50%;background:#334155;color:#fff;font-weight:bold;">${index + 1}</span></td>
-                <td data-label="股票" class="clickable-stock" data-code="${row.code}" data-name="${row.name}"><div class="stock-id">${row.code}</div><div class="stock-name">${row.name}</div></td>
+                <td data-label="股票"><div class="stock-id">${row.code}</div><div class="stock-name">${row.name}</div></td>
                 <td data-label="持有 ETF 與比例"><div class="etf-tags">${etfTags}</div></td>
                 <td data-label="持有 ETF 數" class="align-right">${countBadge}</td>
             `;
@@ -604,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         searchEmptyState.style.display = 'none';
         searchTable.style.display = '';
-        searchResultTitle.innerHTML = `- ${stock.code} ${stock.name}<button class="search-chart-btn" data-code="${stock.code}" data-name="${stock.name}" title="查看K線圖"><i class="fa-solid fa-chart-line"></i> K線</button>`;
+        searchResultTitle.textContent = `- ${stock.code} ${stock.name}`;
         searchStatus.innerHTML = `找到 <strong style="color:var(--text-primary)">${stock.etfs.length}</strong> 檔 ETF 持有此股票`;
 
         const sortedEtfs = [...stock.etfs].sort((a, b) => b.weight - a.weight);
@@ -677,206 +676,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ── K-line Chart Modal ─────────────────────────────────────
-    let chartInstance  = null;
-    let chartActiveMA  = new Set([5, 20, 60]);
-    let chartRange     = '6mo';
-    let chartCode      = null;
-    let chartName      = null;
-
-    const MA_CFG = [
-        { period: 5,  color: '#60a5fa' },
-        { period: 20, color: '#f59e0b' },
-        { period: 60, color: '#a78bfa' },
-    ];
-
-    // Resolve to Yahoo Finance ticker(s) to try in order
-    const resolveYahooTickers = (code) => {
-        if (/^\d{4,6}$/.test(code))           return ['tw', [`${code}.TW`, `${code}.TWO`]];
-        if (/ US$/i.test(code) || /^[A-Z]{2,6}$/.test(code)) {
-            const sym = code.replace(/ US$/i, '').trim();
-            return ['us', [sym]];
-        }
-        if (/ JP$/i.test(code))                return ['jp', []];
-        return ['unknown', [code]];
-    };
-
-    const calcMA = (data, period) => {
-        const out = [];
-        for (let i = period - 1; i < data.length; i++) {
-            let sum = 0;
-            for (let j = i - period + 1; j <= i; j++) sum += data[j].close;
-            out.push({ time: data[i].time, value: parseFloat((sum / period).toFixed(2)) });
-        }
-        return out;
-    };
-
-    const closeChartModal = () => {
-        const modal = document.getElementById('chart-modal');
-        if (!modal || modal.style.display === 'none') return;
-        modal.style.display = 'none';
-        if (chartInstance) { chartInstance.remove(); chartInstance = null; }
-        document.getElementById('chart-container').innerHTML = '';
-        chartCode = chartName = null;
-    };
-
-    const loadChart = async (code, range) => {
-        const container  = document.getElementById('chart-container');
-        const statusBar  = document.getElementById('chart-status-bar');
-        container.innerHTML = `<div class="chart-placeholder"><i class="fa-solid fa-spinner fa-spin fa-lg"></i><span>資料載入中…</span></div>`;
-        statusBar.textContent = '';
-        if (chartInstance) { chartInstance.remove(); chartInstance = null; }
-
-        const [type, tickers] = resolveYahooTickers(code);
-
-        if (type === 'jp') {
-            container.innerHTML = `<div class="chart-placeholder"><i class="fa-solid fa-circle-info fa-xl" style="color:#60a5fa"></i><span>日股 K 線圖暫不支援</span></div>`;
-            return;
-        }
-
-        // Try each ticker in order (TW → TWO, or US directly)
-        // Falls back to multiple CORS proxies if direct fetch is blocked
-        const fetchYahoo = async (ticker) => {
-            const directUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=${range}`;
-            const attempts = [
-                () => fetch(directUrl),
-                () => fetch('https://corsproxy.io/?' + encodeURIComponent(directUrl)),
-                () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(directUrl)),
-            ];
-            for (const atFn of attempts) {
-                try {
-                    const resp = await atFn();
-                    if (!resp.ok) continue;
-                    const json = await resp.json();
-                    const r = json.chart?.result?.[0];
-                    if (r?.timestamp?.length > 5) return r;
-                } catch (_) {}
-            }
-            return null;
-        };
-
-        let chartData = null, usedTicker = null;
-        for (const ticker of tickers) {
-            const r = await fetchYahoo(ticker);
-            if (r) { chartData = r; usedTicker = ticker; break; }
-        }
-
-        if (!chartData) {
-            container.innerHTML = `<div class="chart-placeholder" style="color:#ef4444"><i class="fa-solid fa-circle-exclamation fa-lg"></i><span>無法取得股價資料，請稍後再試</span></div>`;
-            return;
-        }
-
-        // Build OHLCV array
-        const { timestamp, indicators: { quote: [q] } } = chartData;
-        const ohlcv = timestamp.map((t, i) => ({
-            time:  new Date(t * 1000).toISOString().split('T')[0],
-            open:  q.open[i],
-            high:  q.high[i],
-            low:   q.low[i],
-            close: q.close[i],
-        })).filter(d => d.open != null && d.close != null && !isNaN(d.close));
-
-        if (ohlcv.length === 0) {
-            container.innerHTML = `<div class="chart-placeholder" style="color:#ef4444"><i class="fa-solid fa-circle-exclamation"></i><span>資料為空</span></div>`;
-            return;
-        }
-
-        // Status bar: last close + day change
-        const last = ohlcv.at(-1), prev = ohlcv.at(-2);
-        const dayPct  = prev ? ((last.close - prev.close) / prev.close * 100) : 0;
-        const pctSign = dayPct >= 0 ? '+' : '';
-        const pctClr  = dayPct >= 0 ? '#ff4d4d' : '#4ade80';
-        statusBar.innerHTML =
-            `收盤 <strong style="color:${pctClr}">${last.close.toFixed(2)}</strong>` +
-            ` <span style="color:${pctClr};font-size:0.85em">(${pctSign}${dayPct.toFixed(2)}%)</span>` +
-            ` &nbsp;·&nbsp; ${ohlcv.length} 個交易日 &nbsp;·&nbsp; <span style="opacity:.55">${usedTicker}</span>`;
-
-        // Render
-        container.innerHTML = '';
-        chartInstance = LightweightCharts.createChart(container, {
-            autoSize: true,
-            layout: {
-                background: { type: 'solid', color: '#0b1120' },
-                textColor: '#94a3b8',
-            },
-            grid: {
-                vertLines: { color: 'rgba(255,255,255,0.04)' },
-                horzLines: { color: 'rgba(255,255,255,0.04)' },
-            },
-            crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-            rightPriceScale: { borderColor: 'rgba(255,255,255,0.1)' },
-            timeScale:        { borderColor: 'rgba(255,255,255,0.1)', timeVisible: false },
-        });
-
-        const candleSeries = chartInstance.addCandlestickSeries({
-            upColor:        '#ff4d4d',
-            downColor:      '#4ade80',
-            borderUpColor:  '#ff4d4d',
-            borderDownColor:'#4ade80',
-            wickUpColor:    '#ff4d4d',
-            wickDownColor:  '#4ade80',
-        });
-        candleSeries.setData(ohlcv);
-
-        for (const { period, color } of MA_CFG) {
-            if (!chartActiveMA.has(period)) continue;
-            const maData = calcMA(ohlcv, period);
-            if (maData.length === 0) continue;
-            const maSeries = chartInstance.addLineSeries({
-                color, lineWidth: 1.5,
-                priceLineVisible: false,
-                lastValueVisible: false,
-                crosshairMarkerVisible: false,
-            });
-            maSeries.setData(maData);
-        }
-
-        chartInstance.timeScale().fitContent();
-    };
-
-    const openChartModal = (code, name) => {
-        chartCode = code;
-        chartName = name;
-        document.getElementById('chart-code').textContent = code;
-        document.getElementById('chart-name').textContent = name;
-        document.getElementById('chart-modal').style.display = 'flex';
-        loadChart(code, chartRange);
-    };
-
-    // Event delegation – catches all .clickable-stock clicks in every table
-    document.addEventListener('click', e => {
-        const cell = e.target.closest('.clickable-stock');
-        if (cell && cell.dataset.code) {
-            openChartModal(cell.dataset.code, cell.dataset.name || '');
-        }
-        // Search tab "K線" button
-        const chartBtn = e.target.closest('.search-chart-btn');
-        if (chartBtn) {
-            openChartModal(chartBtn.dataset.code, chartBtn.dataset.name || '');
-        }
-    });
-
-    // MA toggle
-    document.getElementById('ma-btns').addEventListener('click', e => {
-        const btn = e.target.closest('.ma-btn');
-        if (!btn) return;
-        const period = parseInt(btn.dataset.ma);
-        if (chartActiveMA.has(period)) { chartActiveMA.delete(period); btn.classList.remove('active'); }
-        else                           { chartActiveMA.add(period);    btn.classList.add('active');    }
-        if (chartCode) loadChart(chartCode, chartRange);
-    });
-
-    // Range toggle
-    document.getElementById('range-btns').addEventListener('click', e => {
-        const btn = e.target.closest('.range-btn');
-        if (!btn) return;
-        chartRange = btn.dataset.range;
-        document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        if (chartCode) loadChart(chartCode, chartRange);
-    });
-
-    // Close button & backdrop
-    document.getElementById('chart-close-btn').addEventListener('click', closeChartModal);
-    document.getElementById('chart-backdrop').addEventListener('click', closeChartModal);
 });
