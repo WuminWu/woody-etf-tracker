@@ -38,16 +38,16 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
         run: |
-          python check_and_update_00981A.py
-          python check_and_update_00980A.py
-          python check_and_update_00985A.py
-          python check_and_update_00991A.py
-          python check_and_update_00992A.py
-          python check_and_update_00982A.py
-          python check_and_update_00987A.py
-          python check_and_update_00993A.py
-          python check_and_update_00995A.py
-          python check_and_update_index.py
+          python check_and_update_00981A.py || true
+          python check_and_update_00980A.py || true
+          python check_and_update_00985A.py || true
+          python check_and_update_00991A.py || true
+          python check_and_update_00992A.py || true
+          python check_and_update_00982A.py || true
+          python check_and_update_00987A.py || true
+          python check_and_update_00993A.py || true
+          python check_and_update_00995A.py || true
+          python check_and_update_index.py || true
 
       - name: Commit and push changes
         run: |
