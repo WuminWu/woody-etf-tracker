@@ -9,8 +9,9 @@
         "lastUpdate": "2026-04-30 17:10",
         "totalShares": 666730,
         "prevTotalShares": 666730,
-        "totalMarketCap": 146.13,
-        "prevTotalMarketCap": 145.35
+        "totalMarketCap": 145.35,
+        "prevTotalMarketCap": 145.35,
+        "priceDate": "2026-05-01"
     },
     "holdings": [
         {
