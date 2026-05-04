@@ -15,7 +15,7 @@ import subprocess
 import sys
 import urllib.parse
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
@@ -167,11 +167,27 @@ def parse_holdings_data(data):
     return holdings, aum_ntd, units_zhang, nav, data_date_str
 
 
+# --------------- Taiwan Market Holidays ---------------
+# Update this set annually. Weekends are already skipped by weekday() check.
+# Source: https://www.twse.com.tw/ (TWSE official holiday calendar)
+TW_MARKET_HOLIDAYS = {
+    date(2026, 1, 1),   # 元旦 New Year's Day
+    date(2026, 2, 16),  # 農曆除夕 (Chinese New Year Eve)
+    date(2026, 2, 17),  # 農曆初一 (Chinese New Year)
+    date(2026, 2, 18),  # 農曆初二
+    date(2026, 2, 19),  # 農曆初三
+    date(2026, 2, 20),  # 農曆初四
+    date(2026, 2, 28),  # 和平紀念日 (Peace Memorial Day)
+    date(2026, 5, 1),   # 勞動節 (Labor Day)
+    date(2026, 10, 10), # 國慶日 (National Day)
+}
+
 # --------------- Helpers ---------------
 
 def prev_trading_day(date):
+    """Return the previous trading day (skip weekends and Taiwan market holidays)."""
     d = date - timedelta(days=1)
-    while d.weekday() >= 5:
+    while d.weekday() >= 5 or d in TW_MARKET_HOLIDAYS:
         d -= timedelta(days=1)
     return d
 
@@ -296,7 +312,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd, un
             _delta = 1
             while True:
                 _candidate = _d - timedelta(days=_delta)
-                if _candidate.weekday() < 5:
+                if _candidate.weekday() < 5 and _candidate not in TW_MARKET_HOLIDAYS:
                     _prev_trading_day = _candidate.strftime("%Y-%m-%d")
                     break
                 _delta += 1
