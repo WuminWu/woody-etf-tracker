@@ -16,7 +16,7 @@ import glob
 import subprocess
 import time
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import urllib.request
 import urllib.parse
@@ -28,6 +28,19 @@ import pandas as pd
 import yfinance as yf
 from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
+
+# --------------- Taiwan Market Holidays 2026 ---------------
+TW_MARKET_HOLIDAYS = {
+    date(2026, 1, 1),   # 元旦
+    date(2026, 2, 16),  # 農曆除夕
+    date(2026, 2, 17),  # 農曆初一
+    date(2026, 2, 18),  # 農曆初二
+    date(2026, 2, 19),  # 農曆初三
+    date(2026, 2, 20),  # 農曆初四
+    date(2026, 2, 28),  # 和平紀念日
+    date(2026, 5, 1),   # 勞動節
+    date(2026, 10, 10), # 國慶日
+}
 
 # --------------- Config ---------------
 FUND_URL = "https://www.ezmoney.com.tw/ETF/Fund/Info?fundCode=61YTW"
@@ -66,12 +79,12 @@ def minguo_to_date(minguo_str):
 
 
 def get_prev_trading_day():
-    """Return the previous trading day in Taiwan time (skip weekends)."""
+    """Return the previous trading day in Taiwan time (skip weekends and Taiwan market holidays)."""
     tw_now = datetime.now(timezone(timedelta(hours=8))).date()
     delta = 1
     while True:
         candidate = tw_now - timedelta(days=delta)
-        if candidate.weekday() < 5:  # Mon=0, Fri=4
+        if candidate.weekday() < 5 and candidate not in TW_MARKET_HOLIDAYS:
             return candidate
         delta += 1
 
@@ -366,7 +379,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
             _delta = 1
             while True:
                 _candidate = _d - timedelta(days=_delta)
-                if _candidate.weekday() < 5:
+                if _candidate.weekday() < 5 and _candidate not in TW_MARKET_HOLIDAYS:
                     _prev_trading_day = _candidate.strftime("%Y-%m-%d")
                     break
                 _delta += 1
@@ -535,15 +548,24 @@ def main():
         send_telegram(f"⏳ 00988A 主動統一全球創新 持股尚未更新\n📅 資料日期：{prev_str}\n🔄 將於 30 分鐘後再次檢查...")
         return
 
-    if file_date != prev_trading_day:
-        log.info(f"File date ({file_date}) != prev trading day ({prev_trading_day}). Not yet updated.")
+    # 00988A 含海外（美股）成分，ezmoney 可能以台灣時間編製日期標記 XLSX（比實際交易日多1天）。
+    # 因此同時接受 file_date == prev_trading_day（正常）及 file_date 超前1~2天（全球ETF慣例）。
+    # 無論哪種情況，一律以 prev_str 作為 dataDate，與統一官方網站標示一致。
+    date_delta = (file_date - prev_trading_day).days
+    if date_delta < 0 or date_delta > 2:
+        log.info(f"File date ({file_date}) not compatible with prev trading day ({prev_trading_day}) "
+                 f"(delta={date_delta} days). Not yet updated.")
         if os.path.exists(xlsx_path):
             os.remove(xlsx_path)
         send_telegram(f"⏳ 00988A 持股尚未更新\n📅 資料日期：{prev_str}\n🔄 將於 30 分鐘後再次檢查...")
         return
 
-    # 3. Date matches previous trading day! Save and process
-    log.info(f"File date matches previous trading day ({prev_str})! Processing...")
+    if date_delta > 0:
+        log.info(f"File date ({file_date}) is {date_delta} day(s) ahead of prev trading day ({prev_trading_day}). "
+                 f"Using {prev_str} as canonical dataDate (aligns with official source).")
+
+    # 3. Date matches (or is within tolerance)! Save and process
+    log.info(f"File date acceptable for prev trading day ({prev_str})! Processing...")
 
     # Save XLSX with proper name
     final_xlsx = os.path.join(HOLDINGS_DIR, f"00988A_holdings_{prev_str}.xlsx")
@@ -561,7 +583,7 @@ def main():
 
     # 4. Load previous day's holdings and generate diff
     prev_holdings = get_previous_holdings()
-    wrapper = generate_data_json(today_holdings, prev_holdings, file_date.strftime("%Y-%m-%d"), aum_ntd=aum_ntd, units=units)
+    wrapper = generate_data_json(today_holdings, prev_holdings, prev_str, aum_ntd=aum_ntd, units=units)
     append_holdings_to_sheets("00988A", wrapper["meta"]["dataDate"], wrapper["holdings"], meta=wrapper["meta"])
 
     # 5. Send Telegram notification (git push handled by GitHub Actions workflow)
