@@ -305,7 +305,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 // badge removed
                 const elLastUpdate = document.getElementById('last-update-time');
-                if (elLastUpdate && meta.lastUpdate) elLastUpdate.textContent = `最後更新時間：${meta.lastUpdate}`;
+                if (elLastUpdate) {
+                    const dataDateStr = meta.dataDate
+                        ? `<span style="font-weight:600;color:var(--text-primary);">持股資料日期：${meta.dataDate}</span>　`
+                        : '';
+                    const lastUpdateStr = meta.lastUpdate ? `最後更新：${meta.lastUpdate}` : '';
+                    elLastUpdate.innerHTML = dataDateStr + lastUpdateStr;
+                }
 
                 // ETF 規模資訊 (總股數 & 市值)
                 const elScale = document.getElementById('etf-scale-info');
