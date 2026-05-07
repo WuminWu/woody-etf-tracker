@@ -405,12 +405,12 @@ def git_push():
 
 def main():
     run_date = datetime.now(timezone(timedelta(hours=8))).date()
-    data_date = prev_trading_day(run_date)
-    data_date_str = data_date.strftime("%Y-%m-%d")
+    # tsit.com.tw always shows the latest (current trading day) holdings after market close.
+    # Use today's date as the data date (not prev_trading_day).
+    data_date_str = run_date.strftime("%Y-%m-%d")
 
     log.info(f"=== 00987A Check & Update started ===")
-    log.info(f"  Run date:  {run_date}")
-    log.info(f"  Data date: {data_date_str}")
+    log.info(f"  Run date / Data date: {data_date_str}")
 
     if holdings_exist_for(data_date_str):
         log.info(f"Holdings for {data_date_str} already exist. Nothing to do.")

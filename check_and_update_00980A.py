@@ -118,10 +118,10 @@ def fetch_holdings(date_str):
             log.info(f"AUM: {aum_ntd:,} NTD ({aum_ntd/1e8:.2f}億), Units: {units:,}")
         except Exception as e:
             log.warning(f"FundAsset parse failed: {e}")
-        return holdings, aum_ntd, units
+        return holdings, aum_ntd, units, nav_date
     except Exception as e:
         log.error(f"Fetch failed: {e}")
-        return None, 0, 0
+        return None, 0, 0, ""
 
 
 def get_previous_holdings(exclude_date_str):
@@ -344,29 +344,44 @@ def git_push():
 
 def main():
     run_date = datetime.now(timezone(timedelta(hours=8))).date()
+    run_date_str = run_date.strftime("%Y-%m-%d")
     data_date = prev_trading_day(run_date)
     data_date_str = data_date.strftime("%Y-%m-%d")
 
     log.info(f"=== 00980A Check & Update started ===")
-    log.info(f"  Run date:  {run_date}")
-    log.info(f"  Data date: {data_date_str}")
+    log.info(f"  Run date:  {run_date_str}")
+    log.info(f"  Prev date: {data_date_str}")
 
-    if holdings_exist_for(data_date_str):
-        log.info(f"Holdings for {data_date_str} already exist. Nothing to do.")
-        return
+    # Nomura API returns NavDate = actual data date.
+    # Query today first; the API may already have today's holdings.
+    # Use NavDate from response as the authoritative data date.
+    today_holdings, aum_ntd, units, nav_date = fetch_holdings(run_date_str)
+    actual_date_str = nav_date if nav_date else run_date_str
 
-    today_holdings, aum_ntd, units = fetch_holdings(data_date_str)
-    if not today_holdings:
-        log.error("No holdings fetched. Will retry next hour.")
-        send_telegram(f"⏳ 00980A 野村智慧優選 持股尚未更新\n📅 資料日期：{data_date_str}\n🔄 將於 30 分鐘後再次檢查...")
-        return
+    if not today_holdings or not nav_date:
+        # API not yet updated for today; fall back to yesterday
+        log.warning("Today's Nomura API data not available. Falling back to previous trading day.")
+        if holdings_exist_for(data_date_str):
+            log.info(f"Holdings for {data_date_str} already exist. Nothing to do.")
+            return
+        today_holdings, aum_ntd, units, nav_date = fetch_holdings(data_date_str)
+        actual_date_str = data_date_str
+        if not today_holdings:
+            log.error("No holdings fetched. Will retry next hour.")
+            send_telegram(f"⏳ 00980A 野村智慧優選 持股尚未更新\n📅 資料日期：{data_date_str}\n🔄 將於 30 分鐘後再次檢查...")
+            return
+    else:
+        log.info(f"NavDate from API: {actual_date_str}")
+        if holdings_exist_for(actual_date_str):
+            log.info(f"Holdings for {actual_date_str} already exist. Nothing to do.")
+            return
 
-    json_path = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{data_date_str}.json")
+    json_path = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{actual_date_str}.json")
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(today_holdings, f, ensure_ascii=False, indent=2)
 
-    prev_holdings = get_previous_holdings(exclude_date_str=data_date_str)
-    wrapper = generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=aum_ntd, units=units)
+    prev_holdings = get_previous_holdings(exclude_date_str=actual_date_str)
+    wrapper = generate_data_json(today_holdings, prev_holdings, actual_date_str, aum_ntd=aum_ntd, units=units)
     append_holdings_to_sheets(ETF_CODE, wrapper["meta"]["dataDate"], wrapper["holdings"], meta=wrapper["meta"])
 
     send_telegram(build_notification(wrapper))

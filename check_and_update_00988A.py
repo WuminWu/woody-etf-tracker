@@ -1,12 +1,19 @@
 """
-00988A ETF Holdings Daily Checker & Updater
+00988A ETF Holdings Daily Checker & Updater (主動統一全球創新)
+
+Special: This ETF holds overseas (US) stocks. Holdings for trading day T are only
+published after T's US market close (~04:00–05:00 AM Taiwan time the next day).
+Therefore this script always lags the Taiwan ETF scripts by one trading day:
+  - Other Taiwan ETFs: dataDate = today (T) after 3 PM close
+  - 00988A (global):  dataDate = yesterday (T-1); today's data available tomorrow
+
+Data source: ezmoney.com.tw (XLSX download via Playwright)
 
 Logic:
 1. Download the holdings XLSX from ezmoney.com.tw
-2. Check if the date in the Excel matches today
-3. If YES → save it, compare with previous day's holdings, generate data_00988A.json, push to GitHub
-4. If NO → exit (Task Scheduler will retry next hour)
-5. If today's file already exists → skip entirely (already done for today)
+2. Accept file_date == prev_trading_day ±2 days (global ETF convention)
+3. Always use prev_trading_day (prev_str) as canonical dataDate to align with official source
+4. Save holdings, compare with previous day, generate data_00988A.json
 """
 
 import json

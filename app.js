@@ -310,7 +310,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         ? `<span style="font-weight:600;color:var(--text-primary);">持股資料日期：${meta.dataDate}</span>　`
                         : '';
                     const lastUpdateStr = meta.lastUpdate ? `最後更新：${meta.lastUpdate}` : '';
-                    elLastUpdate.innerHTML = dataDateStr + lastUpdateStr;
+                    // Special note for ETFs with inherent 1-day delay
+                    const CAPITALFUND_ETFS = ['00982A', '00992A'];
+                    const GLOBAL_ETFS = ['00988A'];
+                    let delayNote = '';
+                    if (GLOBAL_ETFS.includes(etfId)) {
+                        delayNote = '　<span style="color:#6b7280;font-size:0.78em;">（海外ETF，資料比台灣ETF晚1個交易日）</span>';
+                    } else if (CAPITALFUND_ETFS.includes(etfId)) {
+                        delayNote = '　<span style="color:#6b7280;font-size:0.78em;">（資料源T+1，顯示前一交易日持股）</span>';
+                    }
+                    elLastUpdate.innerHTML = dataDateStr + lastUpdateStr + delayNote;
                 }
 
                 // ETF 規模資訊 (總股數 & 市值)

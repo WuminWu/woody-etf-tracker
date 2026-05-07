@@ -402,22 +402,36 @@ def git_push():
 def main():
     now = datetime.now(timezone(timedelta(hours=8)))
     run_date = now.date()
+    run_date_str = run_date.strftime("%Y-%m-%d")
     data_date = prev_trading_day(run_date)
     data_date_str = data_date.strftime("%Y-%m-%d")
 
     log.info(f"=== 00991A Check & Update started ===")
-    log.info(f"  Run date:  {run_date}")
-    log.info(f"  Data date: {data_date_str}")
+    log.info(f"  Run date:  {run_date_str}")
+    log.info(f"  Prev date: {data_date_str}")
 
-    if holdings_exist_for(data_date_str):
-        log.info(f"Holdings for {data_date_str} already exist. Nothing to do.")
-        return
+    # fhtrust URL embeds the date; try today first (same-day publish after market close).
+    # Fall back to previous trading day if today's file is not yet available.
+    xlsx_path = download_xlsx(run_date_str)
+    actual_date_str = run_date_str
 
-    xlsx_path = download_xlsx(data_date_str)
     if xlsx_path is None:
-        log.error("Download failed. Will retry next hour.")
-        send_telegram(f"⏳ 00991A 復華未來50 持股尚未更新\n📅 資料日期：{data_date_str}\n🔄 將於 30 分鐘後再次檢查...")
-        return
+        log.warning("Today's fhtrust data not available yet. Falling back to previous trading day.")
+        if holdings_exist_for(data_date_str):
+            log.info(f"Holdings for {data_date_str} already exist. Nothing to do.")
+            return
+        xlsx_path = download_xlsx(data_date_str)
+        actual_date_str = data_date_str
+        if xlsx_path is None:
+            log.error("Download failed. Will retry next hour.")
+            send_telegram(f"⏳ 00991A 復華未來50 持股尚未更新\n📅 資料日期：{data_date_str}\n🔄 將於 30 分鐘後再次檢查...")
+            return
+    else:
+        if holdings_exist_for(actual_date_str):
+            log.info(f"Holdings for {actual_date_str} already exist. Nothing to do.")
+            if os.path.exists(xlsx_path):
+                os.remove(xlsx_path)
+            return
 
     today_holdings = parse_holdings_from_xlsx(xlsx_path)
     aum_ntd, units = parse_aum_from_xlsx(xlsx_path)
@@ -425,20 +439,20 @@ def main():
         log.error("No holdings parsed. Will retry next hour.")
         if os.path.exists(xlsx_path):
             os.remove(xlsx_path)
-        send_telegram(f"⏳ 00991A 復華未來50 持股尚未更新\n📅 資料日期：{data_date_str}\n🔄 將於 30 分鐘後再次檢查...")
+        send_telegram(f"⏳ 00991A 復華未來50 持股尚未更新\n📅 資料日期：{actual_date_str}\n🔄 將於 30 分鐘後再次檢查...")
         return
 
-    log.info(f"Parsed {len(today_holdings)} stocks for {data_date_str}")
+    log.info(f"Parsed {len(today_holdings)} stocks for {actual_date_str}")
 
-    final_xlsx = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{data_date_str}.xlsx")
+    final_xlsx = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{actual_date_str}.xlsx")
     os.rename(xlsx_path, final_xlsx)
 
-    json_path = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{data_date_str}.json")
+    json_path = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{actual_date_str}.json")
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(today_holdings, f, ensure_ascii=False, indent=2)
 
-    prev_holdings = get_previous_holdings(exclude_date_str=data_date_str)
-    wrapper = generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=aum_ntd, units=units)
+    prev_holdings = get_previous_holdings(exclude_date_str=actual_date_str)
+    wrapper = generate_data_json(today_holdings, prev_holdings, actual_date_str, aum_ntd=aum_ntd, units=units)
     append_holdings_to_sheets(ETF_CODE, wrapper["meta"]["dataDate"], wrapper["holdings"], meta=wrapper["meta"])
 
     msg = build_notification(wrapper)
