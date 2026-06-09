@@ -35,13 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 tabCross.style.display = '';
                 appHeader.style.display = 'none';
                 if (ytdRankingBar) ytdRankingBar.style.display = '';
-                loadCrossData();
+                loadCrossData(true);   // 強制重抓最新持股
             } else if (activeTab === 'search') {
                 hideAll();
                 tabSearch.style.display = '';
                 appHeader.style.display = 'none';
                 if (ytdRankingBar) ytdRankingBar.style.display = '';
-                loadCrossData();
+                loadCrossData(true);   // 強制重抓最新持股
             } else if (activeTab === 'common') {
                 hideAll();
                 tabCommon.style.display = '';
@@ -701,15 +701,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const loadCrossData = () => {
-        if (crossLoaded) return;
+    const loadCrossData = (force = false) => {
+        if (crossLoaded && !force) return;
         const crossBody = document.getElementById('cross-body');
         crossBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;">載入中，請稍候...</td></tr>';
 
+        const bust = `?t=${Date.now()}`;
         Promise.all(ETF_LIST.map(etf =>
-            fetch(`data_${etf.id}.json`)
+            fetch(`data_${etf.id}.json${bust}`, { cache: 'no-store' })
                 .then(r => r.ok ? r.json() : null)
                 .then(data => data ? { etf, holdings: data.holdings, meta: data.meta } : null)
+                .catch(() => null)   // 單一 ETF 失敗不能拖累整個 Promise.all
         )).then(results => {
             const valid = results.filter(Boolean);
 
