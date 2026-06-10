@@ -901,6 +901,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    const renderAmountRanking = (rows) => {
+        const body = document.getElementById('common-amount-body');
+        if (!body) return;
+        body.innerHTML = '';
+        if (rows.length === 0) {
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary);padding:1.5rem;">今日無加減碼金額資料</td></tr>';
+            return;
+        }
+        const fmt = n => Number(Math.abs(Math.round(n))).toLocaleString('zh-TW');
+        rows.forEach((r, index) => {
+            const tr = document.createElement('tr');
+            tr.style.animation = `fadeInUp 0.3s cubic-bezier(0.16,1,0.3,1) ${Math.min(0.05 + index * 0.012, 0.8)}s forwards`;
+            tr.style.opacity = '0';
+            tr.style.transform = 'translateY(10px)';
+
+            const amtColor = r.totalAmount > 0 ? '#ff4d4d' : '#4ade80';
+            const amtSign  = r.totalAmount > 0 ? '+' : '-';
+            const shColor  = r.totalShares > 0 ? '#ff4d4d' : '#4ade80';
+            const shSign   = r.totalShares > 0 ? '+' : '-';
+
+            // 序號排名背景：前三名做漸層
+            const rankStyles = [
+                'background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 2px 8px rgba(245,158,11,0.5);',
+                'background:linear-gradient(135deg,#94a3b8,#64748b);color:#fff;',
+                'background:linear-gradient(135deg,#cd7c2f,#a16207);color:#fff;',
+            ];
+            const rankStyle = rankStyles[index] || 'background:#334155;color:#fff;';
+
+            tr.innerHTML = `
+                <td data-label="序號"><span style="display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:50%;font-weight:bold;${rankStyle}">${index + 1}</span></td>
+                <td data-label="股票"><div class="stock-id">${r.code}</div><div class="stock-name">${r.name}</div></td>
+                <td data-label="累計金額" class="align-right"><span style="color:${amtColor};font-weight:700;">${amtSign}$${fmt(r.totalAmount)}</span></td>
+                <td data-label="累計股數" class="align-right"><span style="color:${shColor};font-weight:600;">${shSign}${fmt(r.totalShares)}</span></td>
+                <td data-label="ETF 數" class="align-right"><span class="cross-count-badge" style="background:rgba(250,204,21,0.18);border:1px solid rgba(250,204,21,0.4);color:#facc15;">${r.etfCount}</span></td>
+            `;
+            body.appendChild(tr);
+        });
+    };
+
     const refreshCommonDatePicker = () => {
         const picker = document.getElementById('common-date-picker');
         if (!picker) return;
@@ -943,6 +982,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const valid = results.filter(Boolean);
             const addMap = new Map();    // code -> {code, name, etfs[]}
             const reduceMap = new Map();
+            const amountMap = new Map(); // code -> {code, name, totalAmount, totalShares, etfCount}
 
             valid.forEach(({ etf, holdings }) => {
                 holdings.forEach(h => {
@@ -958,6 +998,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         yestWeight: h.yestWeight,
                         todayWeight: h.todayWeight,
                     });
+
+                    // 累計金額排行：所有有變動的 ETF 都列入計算 (含單一 ETF)
+                    if (!amountMap.has(h.code)) {
+                        amountMap.set(h.code, { code: h.code, name: h.name, totalAmount: 0, totalShares: 0, etfCount: 0 });
+                    }
+                    const m = amountMap.get(h.code);
+                    m.totalAmount += (h.diffAmount || 0);
+                    m.totalShares += (h.diffShares || 0);
+                    m.etfCount += 1;
                 });
             });
 
@@ -970,6 +1019,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             renderCommonRows(addRows, 'common-add-body', 'linear-gradient(135deg,#ef4444,#b91c1c)');
             renderCommonRows(reduceRows, 'common-reduce-body', 'linear-gradient(135deg,#22c55e,#15803d)');
+
+            // 累計金額排行（依簽號值由大到小：最大買超在最上、最大賣超在最下）
+            const amountRows = Array.from(amountMap.values())
+                .filter(r => Math.abs(r.totalAmount) > 0)
+                .sort((a, b) => b.totalAmount - a.totalAmount);
+            renderAmountRanking(amountRows);
 
             const badge = document.getElementById('common-badge');
             if (badge) badge.textContent = `加碼 ${addRows.length} 檔 / 減碼 ${reduceRows.length} 檔`;
