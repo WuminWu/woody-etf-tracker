@@ -263,7 +263,7 @@
                     <i class="fa-solid fa-coins"></i> 全 ETF 累計加減碼金額排行
                 </h3>
                 <p style="color:var(--text-secondary);font-size:0.82rem;margin-bottom:0.75rem;padding:0 0.5rem;">
-                    將所有 ETF 對同一檔股票的加減碼金額合計（紅色為淨買超、綠色為淨賣超），由高到低排序。
+                    將所有 ETF 對同一檔股票的加碼金額（紅）與減碼金額（綠）分別合計，依兩者絕對值總額由高到低排序。
                 </p>
                 <div class="table-container">
                     <table id="common-amount-table">
@@ -271,8 +271,9 @@
                             <tr>
                                 <th>序號</th>
                                 <th>股票</th>
-                                <th class="align-right"><i class="fa-solid fa-sack-dollar"></i> 累計金額</th>
-                                <th class="align-right"><i class="fa-solid fa-arrow-trend-up"></i> 累計股數</th>
+                                <th class="align-right"><i class="fa-solid fa-arrow-trend-up" style="color:#ff4d4d;"></i> 加碼金額</th>
+                                <th class="align-right"><i class="fa-solid fa-arrow-trend-down" style="color:#4ade80;"></i> 減碼金額</th>
+                                <th class="align-right"><i class="fa-solid fa-coins"></i> 累計股數</th>
                                 <th class="align-right"><i class="fa-solid fa-hashtag"></i> ETF 數</th>
                             </tr>
                         </thead>
@@ -301,6 +302,6 @@
         <div id="lightbox-close">✕</div>
     </div>
 
-    <script src="app.js?v=18"></script>
+    <script src="app.js?v=19"></script>
 </body>
 </html>

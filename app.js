@@ -906,7 +906,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!body) return;
         body.innerHTML = '';
         if (rows.length === 0) {
-            body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary);padding:1.5rem;">今日無加減碼金額資料</td></tr>';
+            body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);padding:1.5rem;">今日無加減碼金額資料</td></tr>';
             return;
         }
         const fmt = n => Number(Math.abs(Math.round(n))).toLocaleString('zh-TW');
@@ -916,8 +916,12 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.style.opacity = '0';
             tr.style.transform = 'translateY(10px)';
 
-            const amtColor = r.totalAmount > 0 ? '#ff4d4d' : '#4ade80';
-            const amtSign  = r.totalAmount > 0 ? '+' : '-';
+            const addStr = r.addAmount > 0
+                ? `<span style="color:#ff4d4d;font-weight:700;">+$${fmt(r.addAmount)}</span>`
+                : `<span style="color:#6b7280;">—</span>`;
+            const reduceStr = r.reduceAmount < 0
+                ? `<span style="color:#4ade80;font-weight:700;">-$${fmt(r.reduceAmount)}</span>`
+                : `<span style="color:#6b7280;">—</span>`;
             const shColor  = r.totalShares > 0 ? '#ff4d4d' : '#4ade80';
             const shSign   = r.totalShares > 0 ? '+' : '-';
 
@@ -932,7 +936,8 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.innerHTML = `
                 <td data-label="序號"><span style="display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:50%;font-weight:bold;${rankStyle}">${index + 1}</span></td>
                 <td data-label="股票"><div class="stock-id">${r.code}</div><div class="stock-name">${r.name}</div></td>
-                <td data-label="累計金額" class="align-right"><span style="color:${amtColor};font-weight:700;">${amtSign}$${fmt(r.totalAmount)}</span></td>
+                <td data-label="加碼金額" class="align-right">${addStr}</td>
+                <td data-label="減碼金額" class="align-right">${reduceStr}</td>
                 <td data-label="累計股數" class="align-right"><span style="color:${shColor};font-weight:600;">${shSign}${fmt(r.totalShares)}</span></td>
                 <td data-label="ETF 數" class="align-right">
                     <span class="amount-etf-badge" data-stock-code="${r.code}" style="display:inline-block;cursor:pointer;background:rgba(250,204,21,0.18);border:1px solid rgba(250,204,21,0.4);color:#facc15;width:2rem;height:2rem;line-height:1.9rem;text-align:center;border-radius:50%;font-weight:700;transition:transform 0.15s, background 0.15s;" title="點擊查看 ETF 清單">${r.etfs.length}</span>
@@ -1008,16 +1013,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // 累計金額排行：所有有變動的 ETF 都列入計算 (含單一 ETF)
                     if (!amountMap.has(h.code)) {
-                        amountMap.set(h.code, { code: h.code, name: h.name, totalAmount: 0, totalShares: 0, etfs: [] });
+                        amountMap.set(h.code, { code: h.code, name: h.name, addAmount: 0, reduceAmount: 0, totalAmount: 0, totalShares: 0, etfs: [] });
                     }
                     const m = amountMap.get(h.code);
-                    m.totalAmount += (h.diffAmount || 0);
+                    const da = h.diffAmount || 0;
+                    if (da > 0) m.addAmount += da;       // 加碼金額（正值加總）
+                    else        m.reduceAmount += da;    // 減碼金額（負值加總）
+                    m.totalAmount += da;
                     m.totalShares += (h.diffShares || 0);
                     m.etfs.push({
                         etfId: etf.id,
                         etfName: etf.name,
                         diffShares: h.diffShares || 0,
-                        diffAmount: h.diffAmount || 0,
+                        diffAmount: da,
                     });
                 });
             });
@@ -1032,10 +1040,10 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCommonRows(addRows, 'common-add-body', 'linear-gradient(135deg,#ef4444,#b91c1c)');
             renderCommonRows(reduceRows, 'common-reduce-body', 'linear-gradient(135deg,#22c55e,#15803d)');
 
-            // 累計金額排行（依簽號值由大到小：最大買超在最上、最大賣超在最下）
+            // 累計金額排行（依加碼+減碼絕對值總額由大到小）
             const amountRows = Array.from(amountMap.values())
-                .filter(r => Math.abs(r.totalAmount) > 0)
-                .sort((a, b) => b.totalAmount - a.totalAmount);
+                .filter(r => r.addAmount > 0 || r.reduceAmount < 0)
+                .sort((a, b) => (b.addAmount + Math.abs(b.reduceAmount)) - (a.addAmount + Math.abs(a.reduceAmount)));
             renderAmountRanking(amountRows);
 
             const badge = document.getElementById('common-badge');
