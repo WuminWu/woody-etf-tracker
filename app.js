@@ -934,8 +934,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td data-label="股票"><div class="stock-id">${r.code}</div><div class="stock-name">${r.name}</div></td>
                 <td data-label="累計金額" class="align-right"><span style="color:${amtColor};font-weight:700;">${amtSign}$${fmt(r.totalAmount)}</span></td>
                 <td data-label="累計股數" class="align-right"><span style="color:${shColor};font-weight:600;">${shSign}${fmt(r.totalShares)}</span></td>
-                <td data-label="ETF 數" class="align-right"><span class="cross-count-badge" style="background:rgba(250,204,21,0.18);border:1px solid rgba(250,204,21,0.4);color:#facc15;">${r.etfCount}</span></td>
+                <td data-label="ETF 數" class="align-right">
+                    <span class="amount-etf-badge" data-stock-code="${r.code}" style="display:inline-block;cursor:pointer;background:rgba(250,204,21,0.18);border:1px solid rgba(250,204,21,0.4);color:#facc15;width:2rem;height:2rem;line-height:1.9rem;text-align:center;border-radius:50%;font-weight:700;transition:transform 0.15s, background 0.15s;" title="點擊查看 ETF 清單">${r.etfs.length}</span>
+                </td>
             `;
+            // 點擊 badge → 開 modal 顯示 ETF 名稱與各自加減碼明細
+            tr.querySelector('.amount-etf-badge').addEventListener('click', e => {
+                e.stopPropagation();
+                openAmountEtfsModal(r);
+            });
             body.appendChild(tr);
         });
     };
@@ -1001,12 +1008,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // 累計金額排行：所有有變動的 ETF 都列入計算 (含單一 ETF)
                     if (!amountMap.has(h.code)) {
-                        amountMap.set(h.code, { code: h.code, name: h.name, totalAmount: 0, totalShares: 0, etfCount: 0 });
+                        amountMap.set(h.code, { code: h.code, name: h.name, totalAmount: 0, totalShares: 0, etfs: [] });
                     }
                     const m = amountMap.get(h.code);
                     m.totalAmount += (h.diffAmount || 0);
                     m.totalShares += (h.diffShares || 0);
-                    m.etfCount += 1;
+                    m.etfs.push({
+                        etfId: etf.id,
+                        etfName: etf.name,
+                        diffShares: h.diffShares || 0,
+                        diffAmount: h.diffAmount || 0,
+                    });
                 });
             });
 
@@ -1198,6 +1210,50 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tbody>${rowsHtml}</tbody>
                 </table>`;
         });
+    };
+
+    // 點擊累計金額排行的 ETF 數 badge 開啟 modal，列出該股有變動的所有 ETF
+    const openAmountEtfsModal = (row) => {
+        modalTitle.innerHTML = `<i class="fa-solid fa-coins" style="color:#facc15;"></i> ${row.code} ${row.name} <span style="color:var(--text-secondary);font-size:0.82em;font-weight:400;margin-left:0.4em;">變動 ETF 清單</span>`;
+
+        // 依加減碼金額簽號值由大到小排序：買最多放上面、賣最多放下面
+        const sorted = [...row.etfs].sort((a, b) => b.diffAmount - a.diffAmount);
+
+        const totalAmtColor = row.totalAmount >= 0 ? '#ff4d4d' : '#4ade80';
+        const totalAmtSign = row.totalAmount >= 0 ? '+' : '-';
+        const totalShColor = row.totalShares >= 0 ? '#ff4d4d' : '#4ade80';
+        const totalShSign = row.totalShares >= 0 ? '+' : '-';
+
+        const rowsHtml = sorted.map(e => {
+            const amtColor = e.diffAmount > 0 ? '#ff4d4d' : (e.diffAmount < 0 ? '#4ade80' : '#6b7280');
+            const amtSign = e.diffAmount > 0 ? '+' : (e.diffAmount < 0 ? '-' : '');
+            const shColor = e.diffShares > 0 ? '#ff4d4d' : (e.diffShares < 0 ? '#4ade80' : '#6b7280');
+            const shSign = e.diffShares > 0 ? '+' : (e.diffShares < 0 ? '-' : '');
+            return `
+                <tr>
+                    <td><div style="color:#60a5fa;font-weight:700;">${e.etfId}</div><div style="color:var(--text-secondary);font-size:0.82em;">${e.etfName}</div></td>
+                    <td class="align-right"><span style="color:${shColor};font-weight:700;">${shSign}${fmt(e.diffShares)}</span></td>
+                    <td class="align-right"><span style="color:${amtColor};font-weight:700;">${amtSign}$${fmt(Math.round(Math.abs(e.diffAmount)))}</span></td>
+                </tr>`;
+        }).join('');
+
+        modalBody.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;padding:0.75rem 1rem;background:rgba(255,255,255,0.03);border-radius:0.5rem;font-size:0.85rem;">
+                <span style="color:var(--text-secondary);">共 <strong style="color:var(--text-primary);">${row.etfs.length}</strong> 檔 ETF 變動</span>
+                <span>累計 <span style="color:${totalShColor};font-weight:700;">${totalShSign}${fmt(row.totalShares)}</span> 股　/　<span style="color:${totalAmtColor};font-weight:700;">${totalAmtSign}$${fmt(Math.round(Math.abs(row.totalAmount)))}</span></span>
+            </div>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>ETF</th>
+                        <th class="align-right">加減碼股數</th>
+                        <th class="align-right">加減碼金額</th>
+                    </tr>
+                </thead>
+                <tbody>${rowsHtml}</tbody>
+            </table>`;
+
+        modalOverlay.style.display = 'flex';
     };
 
 });
