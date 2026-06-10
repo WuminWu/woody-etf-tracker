@@ -17,22 +17,37 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
+      # 排程延遲跨過台灣午夜時跳過執行，避免寫入錯誤日期資料（同 daily_update.yml）
+      - name: Time window guard (skip delayed runs past TW midnight)
+        if: github.event_name == 'schedule'
+        run: |
+          hm=$(TZ=Asia/Taipei date +%H%M)
+          echo "Current Taiwan time: $hm"
+          if [ "$hm" -lt 1400 ]; then
+            echo "Outside allowed window (TW 14:00-23:59) — scheduled run was delayed past midnight. Skipping."
+            echo "SKIP_RUN=true" >> $GITHUB_ENV
+          fi
+
       - name: Checkout repository
+        if: env.SKIP_RUN != 'true'
         uses: actions/checkout@v4
 
       - name: Set up Python
+        if: env.SKIP_RUN != 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
       - name: Install dependencies
+        if: env.SKIP_RUN != 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           python -m playwright install --with-deps chromium
 
       - name: Run 00988A update script (台灣時間中午12點起，每30分鐘檢查)
+        if: env.SKIP_RUN != 'true'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -41,6 +56,7 @@ jobs:
           python check_and_update_00988A.py || true
 
       - name: Commit and push changes
+        if: env.SKIP_RUN != 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"

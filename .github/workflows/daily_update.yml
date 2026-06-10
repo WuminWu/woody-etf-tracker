@@ -19,22 +19,40 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
+      # GitHub Actions 排程可能延遲數小時；若排程跨過台灣午夜才執行，
+      # 腳本會把「今天」誤判為隔日並寫入帶錯誤日期的資料（含 NaN 股價）。
+      # 因此排程觸發時僅允許在 TW 16:00–23:59 之間實際執行，超出即跳過。
+      # 手動觸發 (workflow_dispatch) 不受此限制。
+      - name: Time window guard (skip delayed runs past TW midnight)
+        if: github.event_name == 'schedule'
+        run: |
+          hm=$(TZ=Asia/Taipei date +%H%M)
+          echo "Current Taiwan time: $hm"
+          if [ "$hm" -lt 1600 ]; then
+            echo "Outside allowed window (TW 16:00-23:59) — scheduled run was delayed past midnight. Skipping."
+            echo "SKIP_RUN=true" >> $GITHUB_ENV
+          fi
+
       - name: Checkout repository
+        if: env.SKIP_RUN != 'true'
         uses: actions/checkout@v4
 
       - name: Set up Python
+        if: env.SKIP_RUN != 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
       - name: Install dependencies
+        if: env.SKIP_RUN != 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           python -m playwright install --with-deps chromium
 
       - name: Run ETF update scripts (台股，不含 00988A)
+        if: env.SKIP_RUN != 'true'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -56,6 +74,7 @@ jobs:
           python export_snapshots.py || true
 
       - name: Commit and push changes
+        if: env.SKIP_RUN != 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
