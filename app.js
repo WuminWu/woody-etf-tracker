@@ -279,6 +279,8 @@ document.addEventListener('DOMContentLoaded', () => {
         '00993A': { distFreq: '年配息', distMonths: [12], distDay: 31 },
         // 季配息：1/4/7/10月（上市2026/01/22，首次評價2026/09）
         '00995A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 31 },
+        // 季配息（兆豐官網標示季配息；除息月份與日期待官方公告確認）
+        '00996A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
     };
 
     // 計算下一次配息日（distMonths 需已排序）
@@ -576,6 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00987A', name: '台新台灣優勢成長' },
         { id: '00993A', name: '主動安聯台灣' },
         { id: '00995A', name: '主動中信台灣卓越' },
+        { id: '00996A', name: '主動兆豐台灣豐收' },
     ];
 
     const loadYtdRanking = () => {
@@ -653,6 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00987A', name: '台新台灣優勢成長' },
         { id: '00993A', name: '主動安聯台灣' },
         { id: '00995A', name: '主動中信台灣卓越' },
+        { id: '00996A', name: '主動兆豐台灣豐收' },
     ];
 
     let crossSortAsc = false;

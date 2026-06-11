@@ -40,6 +40,7 @@ ETFS = [
     ("00987A", "data_00987A.json"),
     ("00993A", "data_00993A.json"),
     ("00995A", "data_00995A.json"),
+    ("00996A", "data_00996A.json"),
 ]
 
 
