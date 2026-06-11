@@ -39,7 +39,7 @@ TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 MARKER_FILE = "last_digest.txt"
-SEND_THRESHOLD = 10   # 11 檔台股 ETF 中至少 10 檔更新才發送
+SEND_THRESHOLD = 10   # 12 檔台股 ETF 中至少 10 檔更新才發送
 FALLBACK_HOUR = 21    # TW 21:00 後放寬條件
 FALLBACK_MIN_COUNT = 6
 
@@ -47,6 +47,7 @@ FALLBACK_MIN_COUNT = 6
 TW_ETFS = [
     ("00981A", "統一台股增長"),
     ("00403A", "統一升級50"),
+    ("00404A", "聯博動能50"),
     ("00980A", "野村智慧優選"),
     ("00985A", "野村台灣50"),
     ("00991A", "復華未來50"),
