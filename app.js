@@ -905,12 +905,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const renderAmountRanking = (rows) => {
-        const body = document.getElementById('common-amount-body');
+    // side: 'add' | 'reduce' — 加碼與減碼各自獨立一張排行表
+    const renderAmountTable = (rows, bodyId, side) => {
+        const body = document.getElementById(bodyId);
         if (!body) return;
         body.innerHTML = '';
         if (rows.length === 0) {
-            body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);padding:1.5rem;">今日無加減碼金額資料</td></tr>';
+            body.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-secondary);padding:1.5rem;">今日無${side === 'add' ? '加碼' : '減碼'}金額資料</td></tr>`;
             return;
         }
         const fmt = n => Number(Math.abs(Math.round(n))).toLocaleString('zh-TW');
@@ -920,14 +921,12 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.style.opacity = '0';
             tr.style.transform = 'translateY(10px)';
 
-            const addStr = r.addAmount > 0
-                ? `<span style="color:#ff4d4d;font-weight:700;">+$${fmt(r.addAmount)}</span>`
-                : `<span style="color:#6b7280;">—</span>`;
-            const reduceStr = r.reduceAmount < 0
-                ? `<span style="color:#4ade80;font-weight:700;">-$${fmt(r.reduceAmount)}</span>`
-                : `<span style="color:#6b7280;">—</span>`;
-            const shColor  = r.totalShares > 0 ? '#ff4d4d' : '#4ade80';
-            const shSign   = r.totalShares > 0 ? '+' : '-';
+            const isAdd = side === 'add';
+            const amount = isAdd ? r.addAmount : r.reduceAmount;
+            const shares = isAdd ? r.addShares : r.reduceShares;
+            const etfs   = isAdd ? r.addEtfs   : r.reduceEtfs;
+            const color  = isAdd ? '#ff4d4d' : '#4ade80';
+            const sign   = isAdd ? '+' : '-';
 
             // 序號排名背景：前三名做漸層
             const rankStyles = [
@@ -940,17 +939,21 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.innerHTML = `
                 <td data-label="序號"><span style="display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:50%;font-weight:bold;${rankStyle}">${index + 1}</span></td>
                 <td data-label="股票"><div class="stock-id">${r.code}</div><div class="stock-name">${r.name}</div></td>
-                <td data-label="加碼金額" class="align-right">${addStr}</td>
-                <td data-label="減碼金額" class="align-right">${reduceStr}</td>
-                <td data-label="累計股數" class="align-right"><span style="color:${shColor};font-weight:600;">${shSign}${fmt(r.totalShares)}</span></td>
+                <td data-label="${isAdd ? '加碼' : '減碼'}金額" class="align-right"><span style="color:${color};font-weight:700;">${sign}$${fmt(amount)}</span></td>
+                <td data-label="${isAdd ? '加碼' : '減碼'}股數" class="align-right"><span style="color:${color};font-weight:600;">${sign}${fmt(shares)}</span></td>
                 <td data-label="ETF 數" class="align-right">
-                    <span class="amount-etf-badge" data-stock-code="${r.code}" style="display:inline-block;cursor:pointer;background:rgba(250,204,21,0.18);border:1px solid rgba(250,204,21,0.4);color:#facc15;width:2rem;height:2rem;line-height:1.9rem;text-align:center;border-radius:50%;font-weight:700;transition:transform 0.15s, background 0.15s;" title="點擊查看 ETF 清單">${r.etfs.length}</span>
+                    <span class="amount-etf-badge" style="display:inline-block;cursor:pointer;background:rgba(250,204,21,0.18);border:1px solid rgba(250,204,21,0.4);color:#facc15;width:2rem;height:2rem;line-height:1.9rem;text-align:center;border-radius:50%;font-weight:700;transition:transform 0.15s, background 0.15s;" title="點擊查看 ETF 清單">${etfs.length}</span>
                 </td>
             `;
-            // 點擊 badge → 開 modal 顯示 ETF 名稱與各自加減碼明細
+            // 點擊 badge → 開 modal 顯示該方向的 ETF 清單與各自明細
             tr.querySelector('.amount-etf-badge').addEventListener('click', e => {
                 e.stopPropagation();
-                openAmountEtfsModal(r);
+                openAmountEtfsModal({
+                    code: r.code, name: r.name,
+                    etfs: etfs,
+                    totalAmount: amount,
+                    totalShares: shares,
+                });
             });
             body.appendChild(tr);
         });
@@ -1015,22 +1018,27 @@ document.addEventListener('DOMContentLoaded', () => {
                         todayWeight: h.todayWeight,
                     });
 
-                    // 累計金額排行：所有有變動的 ETF 都列入計算 (含單一 ETF)
+                    // 累計金額排行：加碼/減碼分開累計 (含單一 ETF 的變動)
                     if (!amountMap.has(h.code)) {
-                        amountMap.set(h.code, { code: h.code, name: h.name, addAmount: 0, reduceAmount: 0, totalAmount: 0, totalShares: 0, etfs: [] });
+                        amountMap.set(h.code, {
+                            code: h.code, name: h.name,
+                            addAmount: 0, addShares: 0, addEtfs: [],
+                            reduceAmount: 0, reduceShares: 0, reduceEtfs: [],
+                        });
                     }
                     const m = amountMap.get(h.code);
                     const da = h.diffAmount || 0;
-                    if (da > 0) m.addAmount += da;       // 加碼金額（正值加總）
-                    else        m.reduceAmount += da;    // 減碼金額（負值加總）
-                    m.totalAmount += da;
-                    m.totalShares += (h.diffShares || 0);
-                    m.etfs.push({
-                        etfId: etf.id,
-                        etfName: etf.name,
-                        diffShares: h.diffShares || 0,
-                        diffAmount: da,
-                    });
+                    const ds = h.diffShares || 0;
+                    const entry = { etfId: etf.id, etfName: etf.name, diffShares: ds, diffAmount: da };
+                    if (action === 'add') {
+                        m.addAmount += da;
+                        m.addShares += ds;
+                        m.addEtfs.push(entry);
+                    } else {
+                        m.reduceAmount += da;
+                        m.reduceShares += ds;
+                        m.reduceEtfs.push(entry);
+                    }
                 });
             });
 
@@ -1044,11 +1052,17 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCommonRows(addRows, 'common-add-body', 'linear-gradient(135deg,#ef4444,#b91c1c)');
             renderCommonRows(reduceRows, 'common-reduce-body', 'linear-gradient(135deg,#22c55e,#15803d)');
 
-            // 累計金額排行（依加碼+減碼絕對值總額由大到小）
-            const amountRows = Array.from(amountMap.values())
-                .filter(r => r.addAmount > 0 || r.reduceAmount < 0)
-                .sort((a, b) => (b.addAmount + Math.abs(b.reduceAmount)) - (a.addAmount + Math.abs(a.reduceAmount)));
-            renderAmountRanking(amountRows);
+            // 累計加碼金額排行（由高到低）
+            const addAmountRows = Array.from(amountMap.values())
+                .filter(r => r.addAmount > 0)
+                .sort((a, b) => b.addAmount - a.addAmount);
+            renderAmountTable(addAmountRows, 'common-amount-add-body', 'add');
+
+            // 累計減碼金額排行（絕對值由高到低）
+            const reduceAmountRows = Array.from(amountMap.values())
+                .filter(r => r.reduceAmount < 0)
+                .sort((a, b) => a.reduceAmount - b.reduceAmount);
+            renderAmountTable(reduceAmountRows, 'common-amount-reduce-body', 'reduce');
 
             const badge = document.getElementById('common-badge');
             if (badge) badge.textContent = `加碼 ${addRows.length} 檔 / 減碼 ${reduceRows.length} 檔`;

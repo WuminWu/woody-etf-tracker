@@ -260,25 +260,45 @@
                     </table>
                 </div>
 
-                <h3 style="margin:1.5rem 0 0.75rem;padding:0 0.5rem;font-size:1.05rem;color:#facc15;">
-                    <i class="fa-solid fa-coins"></i> 全 ETF 累計加減碼金額排行
+                <h3 style="margin:1.5rem 0 0.75rem;padding:0 0.5rem;font-size:1.05rem;color:#ff6b6b;">
+                    <i class="fa-solid fa-sack-dollar"></i> 全 ETF 累計加碼金額排行
                 </h3>
                 <p style="color:var(--text-secondary);font-size:0.82rem;margin-bottom:0.75rem;padding:0 0.5rem;">
-                    將所有 ETF 對同一檔股票的加碼金額（紅）與減碼金額（綠）分別合計，依兩者絕對值總額由高到低排序。
+                    將所有 ETF 對同一檔股票的加碼金額合計，由高到低排序。
                 </p>
                 <div class="table-container">
-                    <table id="common-amount-table">
+                    <table id="common-amount-add-table">
                         <thead>
                             <tr>
                                 <th>序號</th>
                                 <th>股票</th>
-                                <th class="align-right"><i class="fa-solid fa-arrow-trend-up" style="color:#ff4d4d;"></i> 加碼金額</th>
-                                <th class="align-right"><i class="fa-solid fa-arrow-trend-down" style="color:#4ade80;"></i> 減碼金額</th>
-                                <th class="align-right"><i class="fa-solid fa-coins"></i> 累計股數</th>
+                                <th class="align-right"><i class="fa-solid fa-sack-dollar"></i> 加碼金額</th>
+                                <th class="align-right"><i class="fa-solid fa-coins"></i> 加碼股數</th>
                                 <th class="align-right"><i class="fa-solid fa-hashtag"></i> ETF 數</th>
                             </tr>
                         </thead>
-                        <tbody id="common-amount-body"></tbody>
+                        <tbody id="common-amount-add-body"></tbody>
+                    </table>
+                </div>
+
+                <h3 style="margin:1.5rem 0 0.75rem;padding:0 0.5rem;font-size:1.05rem;color:#4ade80;">
+                    <i class="fa-solid fa-sack-xmark"></i> 全 ETF 累計減碼金額排行
+                </h3>
+                <p style="color:var(--text-secondary);font-size:0.82rem;margin-bottom:0.75rem;padding:0 0.5rem;">
+                    將所有 ETF 對同一檔股票的減碼金額合計，依絕對值由高到低排序。
+                </p>
+                <div class="table-container">
+                    <table id="common-amount-reduce-table">
+                        <thead>
+                            <tr>
+                                <th>序號</th>
+                                <th>股票</th>
+                                <th class="align-right"><i class="fa-solid fa-sack-xmark"></i> 減碼金額</th>
+                                <th class="align-right"><i class="fa-solid fa-coins"></i> 減碼股數</th>
+                                <th class="align-right"><i class="fa-solid fa-hashtag"></i> ETF 數</th>
+                            </tr>
+                        </thead>
+                        <tbody id="common-amount-reduce-body"></tbody>
                     </table>
                 </div>
             </div>
@@ -303,6 +323,6 @@
         <div id="lightbox-close">✕</div>
     </div>
 
-    <script src="app.js?v=20"></script>
+    <script src="app.js?v=21"></script>
 </body>
 </html>
