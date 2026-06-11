@@ -1,16 +1,17 @@
 {
     "meta": {
         "manager": "陳釧瑤",
-        "ytd": "81.70",
-        "etfPrice": 29.89,
-        "priceChange": -4.29,
-        "prevPrice": 31.23,
+        "ytd": "80.60",
+        "etfPrice": 29.71,
+        "priceChange": -0.6,
+        "prevPrice": 29.89,
         "dataDate": "2026-06-10",
         "lastUpdate": "2026-06-10 20:38",
         "totalShares": 9150209,
         "prevTotalShares": 9150209,
-        "totalMarketCap": 2724.92,
-        "prevTotalMarketCap": 2735.0
+        "totalMarketCap": 2718.53,
+        "prevTotalMarketCap": 2735.0,
+        "priceDate": "2026-06-11"
     },
     "holdings": [
         {

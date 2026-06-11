@@ -1,16 +1,17 @@
 {
     "meta": {
         "manager": "施政廷 (核心)、郭勁甫 (協管)",
-        "ytd": "29.40",
-        "etfPrice": 12.94,
-        "priceChange": -4.15,
-        "prevPrice": 13.5,
+        "ytd": "29.60",
+        "etfPrice": 12.96,
+        "priceChange": 0.15,
+        "prevPrice": 12.94,
         "dataDate": "2026-06-10",
         "lastUpdate": "2026-06-10 20:40",
         "totalShares": 831091,
         "prevTotalShares": 832091,
-        "totalMarketCap": 107.32,
-        "prevTotalMarketCap": 107.67
+        "totalMarketCap": 107.71,
+        "prevTotalMarketCap": 107.67,
+        "priceDate": "2026-06-11"
     },
     "holdings": [
         {
