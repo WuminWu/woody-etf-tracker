@@ -73,6 +73,7 @@ jobs:
           python record_common_actions.py || true
           python export_history.py || true
           python export_snapshots.py || true
+          python daily_digest.py || true
 
       - name: Commit and push changes
         if: env.SKIP_RUN != 'true'
@@ -82,5 +83,6 @@ jobs:
           git add data_*.json holdings/
           [ -f history.json ] && git add history.json || echo "history.json not produced this run, skipping"
           [ -d snapshots ] && git add snapshots/ || echo "snapshots/ not produced this run, skipping"
+          [ -f last_digest.txt ] && git add last_digest.txt || echo "no digest marker yet"
           git diff --quiet && git diff --staged --quiet || \
             git commit -m "Auto-update ETF holdings $(date +'%Y-%m-%d')" && git push
