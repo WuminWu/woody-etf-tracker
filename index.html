@@ -33,7 +33,7 @@
             </div>
             <div id="twii-amp-table" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.75rem;"></div>
             <div style="font-size:0.72rem;color:var(--text-secondary);opacity:0.7;margin-top:0.5rem;">
-                振幅採真實波幅 TR（含跳空缺口，相對前日收盤）。各列為最近 N 個交易日（不含今日）的 TR 平均與標準差；★ 為滿足度判定使用的窗口。點數以最新收盤換算。
+                振幅採真實波幅 TR（含跳空缺口，相對前日收盤）。各列為最近 N 個交易日（不含今日）的 TR 平均與標準差；★ 為滿足度判定使用的窗口。<span style="color:#ff4d4d;">▲</span>=最新收盤+振幅點數（上緣）、<span style="color:#4ade80;">▼</span>=最新收盤−振幅點數（下緣），門檻每日收盤後隨滾動窗口重算。
             </div>
         </div>
 
@@ -342,6 +342,6 @@
         <div id="lightbox-close">✕</div>
     </div>
 
-    <script src="app.js?v=26"></script>
+    <script src="app.js?v=27"></script>
 </body>
 </html>

@@ -616,12 +616,17 @@ document.addEventListener('DOMContentLoaded', () => {
             `<div style="font-size:1.15rem;font-weight:700;">${amp.todayTrPct}% <span style="color:var(--text-secondary);font-size:0.8em;">(${fmtN(amp.todayTrPoints)}點)</span></div>` +
             `<div style="font-size:0.75rem;color:${statusColor};font-weight:600;">${status}</div>`;
 
-        // 表格：列 = 統計天數（5/10/20 日）；欄 = 平均振幅 / +1σ / +2σ / +3σ
-        const cell = (v) => `
+        // 表格：列 = 統計天數（5/10/20 日）；欄 = 平均振幅 / ±1σ / ±2σ / ±3σ
+        // 每格同時顯示振幅換算的指數上緣（收盤+點數）與下緣（收盤−點數）
+        const cell = (v) => {
+            const up = Math.round(amp.close + v.points);
+            const dn = Math.round(amp.close - v.points);
+            return `
             <td style="padding:0.45rem 0.9rem;text-align:right;">
-                <div style="font-weight:700;">${v.pct}%</div>
-                <div style="font-size:0.75rem;color:#60a5fa;">${fmtN(v.points)}點</div>
+                <div style="font-weight:700;">${v.pct}% <span style="color:var(--text-secondary);font-weight:400;font-size:0.82em;">(${fmtN(v.points)}點)</span></div>
+                <div style="font-size:0.75rem;"><span style="color:#ff4d4d;">▲${fmtN(up)}</span>　<span style="color:#4ade80;">▼${fmtN(dn)}</span></div>
             </td>`;
+        };
         const rowLabel = { d5: '5 日', d10: '10 日', d20: '20 日' };
         let rows = '';
         for (const key of ['d5', 'd10', 'd20']) {
@@ -640,9 +645,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tr style="color:var(--text-secondary);font-size:0.78rem;">
                         <th style="padding:0.3rem 0.9rem;text-align:left;">統計天數</th>
                         <th style="padding:0.3rem 0.9rem;text-align:right;">平均振幅</th>
-                        <th style="padding:0.3rem 0.9rem;text-align:right;">+1σ</th>
-                        <th style="padding:0.3rem 0.9rem;text-align:right;">+2σ</th>
-                        <th style="padding:0.3rem 0.9rem;text-align:right;">+3σ</th>
+                        <th style="padding:0.3rem 0.9rem;text-align:right;">±1σ</th>
+                        <th style="padding:0.3rem 0.9rem;text-align:right;">±2σ</th>
+                        <th style="padding:0.3rem 0.9rem;text-align:right;">±3σ</th>
                     </tr>
                 </thead>
                 <tbody>${rows}</tbody>
