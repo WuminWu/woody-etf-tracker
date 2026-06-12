@@ -261,6 +261,8 @@ document.addEventListener('DOMContentLoaded', () => {
         '00980A': { distFreq: '季配息', distMonths: [2,5,8,11], distDay: 18 },
         // 季配息：3/6/9/12月，除息日約17日（依歷史紀錄）
         '00981A': { distFreq: '季配息', distMonths: [3,6,9,12], distDay: 17 },
+        // 月配息（上市2026/04/09，除息日約17日，待官方公告確認）
+        '00400A': { distFreq: '月配息', distMonths: [1,2,3,4,5,6,7,8,9,10,11,12], distDay: 17 },
         // 季配息：3/6/9/12月（上市2026/05/11，首次配息待確認；暫參考同系列00981A規則）
         '00403A': { distFreq: '季配息', distMonths: [3,6,9,12], distDay: 17 },
         // 季配息：首次配息預計2026/09中旬（上市2026/06/09，除息月份待官方公告）
@@ -570,6 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── YTD Ranking ────────────────────────────────────────────
     const ALL_ETFS = [
         { id: '00981A', name: '統一台股增長' },
+        { id: '00400A', name: '國泰動能高息' },
         { id: '00403A', name: '統一升級50' },
         { id: '00404A', name: '聯博動能50' },
         { id: '00988A', name: '統一全球創新' },
@@ -649,6 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Cross-compare tab ──────────────────────────────────────
     const ETF_LIST = [
         { id: '00981A', name: '統一台股增長' },
+        { id: '00400A', name: '國泰動能高息' },
         { id: '00403A', name: '統一升級50' },
         { id: '00404A', name: '聯博動能50' },
         { id: '00988A', name: '統一全球創新' },

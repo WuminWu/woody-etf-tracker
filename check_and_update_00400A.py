@@ -1,20 +1,17 @@
 """
-00404A ETF Holdings Daily Checker & Updater (主動聯博動能50 / 聯博台灣動能收益50主動式ETF)
+00400A ETF Holdings Daily Checker & Updater (國泰台股動能高息主動式ETF)
 
-Logic (類型 I：AllianceBernstein webapi JSON):
-1. GET https://webapi.alliancebernstein.com/v2/funds/tw/zh-tw/investor/TW00000404A5/holdings
-   - domesticHoldings[0] (holdings-section-equity) 為股票持股
-   - holdingCode 為 ISIN（TW000 + 4碼股票代號 + 3碼），parse 出股票代號
-   - holdingPerc 已是百分比、holdingShares 股數
-   - 排除 options/futures section
-2. GET .../basket → navAsOfDate, nav, aum, shares（在外流通單位數）
-3. 驗證 asOfDate == 今天才寫入
-4. 股票中文名稱：API 只回英文名，從其他 data_*.json 建立 代號→中文名 對照，
-   缺漏時 fallback 用精簡英文名
-5. 比對前一日、抓股價、產生 data_00404A.json、寫入 Sheets、發 Telegram
+Logic (類型 J：cathaysite cwapi JSON API):
+1. GET https://cwapi.cathaysite.com.tw/api/ETF/GetETFDetailStockList?FundCode=EA&SearchDate=YYYY/MM/DD
+   - 回傳 [{stockCode, stockName(中文), volumn("440,000"), weights("8.54")}, ...]
+   - 查無該日資料時 returnCode=4005 → 視為尚未更新
+2. GET .../api/ETF/GetETFAssets?fundCode=EA
+   - preDate（資料日期）、fundNav（淨資產）、fundOutstandingShares（在外流通單位數）
+3. 驗證 preDate == 今天才寫入
+4. 比對前一日、抓股價、產生 data_00400A.json、寫入 Sheets、發 Telegram
 
-注意：00404A 於 2026/6/9 掛牌（IPO 價 10 元），update_prices.py 的 IPO_BASELINE
-已設定掛牌年以 IPO 價計算 YTD。
+注意：00400A 於 2026/4/9 掛牌（IPO 價 10 元），update_prices.py 的 IPO_BASELINE
+已設定掛牌年以 IPO 價計算 YTD。配息為「月配」。
 """
 
 import json
@@ -34,12 +31,13 @@ import yfinance as yf
 from sheets_helper import append_holdings_to_sheets
 
 # --------------- Config ---------------
-API_BASE = "https://webapi.alliancebernstein.com/v2/funds/tw/zh-tw/investor/TW00000404A5"
+API_BASE = "https://cwapi.cathaysite.com.tw/api"
+FUND_CODE = "EA"            # cwapi 內部代碼（網址 slug 是 EEA，API 用 EA）
 HOLDINGS_DIR = "holdings"
-DATA_FILE = "data_00404A.json"
-ETF_CODE = "00404A"
-MANAGER = "聯博投信"
-IPO_DATE = "2026-06-09"
+DATA_FILE = "data_00400A.json"
+ETF_CODE = "00400A"
+MANAGER = "梁恩溢"
+IPO_DATE = "2026-04-09"
 IPO_PRICE = 10.0
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
@@ -51,7 +49,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        logging.FileHandler("check_and_update_00404A.log", encoding="utf-8"),
+        logging.FileHandler("check_and_update_00400A.log", encoding="utf-8"),
         logging.StreamHandler(sys.stdout),
     ],
 )
@@ -70,22 +68,8 @@ TW_MARKET_HOLIDAYS = {
     date(2026, 10, 10),
 }
 
-# 內建中文名稱表：API 只回英文名，其他 ETF 也沒持有的股票由此補上
-# （查無對照時 fallback 為精簡英文名，發現新英文名可隨時補充此表）
-STATIC_CN_NAMES = {
-    "2357": "華碩", "6414": "樺漢", "5434": "崇越", "3265": "台星科",
-    "4766": "南寶", "4961": "天鈺", "6679": "鈺太", "3034": "聯詠",
-    "3010": "華立", "6640": "均華",
-}
 
-# 其他 ETF 的 data JSON，用來查股票中文名稱
-OTHER_DATA_FILES = [
-    "data_00400A.json",
-    "data_00981A.json", "data_00403A.json", "data_00980A.json", "data_00985A.json",
-    "data_00991A.json", "data_00992A.json", "data_00982A.json", "data_00987A.json",
-    "data_00993A.json", "data_00995A.json", "data_00996A.json",
-]
-
+# --------------- Helpers ---------------
 
 def holdings_exist_for(date_str):
     return os.path.exists(os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{date_str}.json"))
@@ -93,85 +77,47 @@ def holdings_exist_for(date_str):
 
 def api_get(path):
     req = urllib.request.Request(
-        f"{API_BASE}{path}",
-        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        f"{API_BASE}/{path}",
+        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                 "Referer": "https://www.cathaysite.com.tw/"}
     )
     with urllib.request.urlopen(req, timeout=30) as r:
         return json.loads(r.read())
 
 
-def build_cn_name_map():
-    """從其他 ETF data JSON 收集 代號→中文名稱 對照。"""
-    name_map = {}
-    for f in OTHER_DATA_FILES:
-        if not os.path.exists(f):
+def fetch_holdings(search_date_str):
+    """
+    search_date_str: "YYYY/MM/DD"
+    Returns [{code, name, shares, weight}, ...]；該日無資料回傳 []。
+    """
+    qs = urllib.parse.urlencode({"FundCode": FUND_CODE, "SearchDate": search_date_str})
+    d = api_get(f"ETF/GetETFDetailStockList?{qs}")
+    if d.get("returnCode") != "2000" or not isinstance(d.get("result"), list):
+        log.info(f"StockList returnCode={d.get('returnCode')} ({d.get('returnMessage')})")
+        return []
+    holdings = []
+    for it in d["result"]:
+        code = (it.get("stockCode") or "").strip()
+        if not re.fullmatch(r'\d{4,6}[A-Z]?', code):
             continue
         try:
-            d = json.loads(open(f, encoding="utf-8").read())
-            for h in d.get("holdings", []):
-                if h.get("code") and h.get("name"):
-                    name_map.setdefault(h["code"], h["name"])
-        except Exception:
-            pass
-    return name_map
-
-
-def simplify_en_name(name):
-    """精簡英文名稱：去掉 ORD TWD 10 / CORPORATION 等冗詞。"""
-    n = name
-    n = re.sub(r'\s+ORD\s+TWD\s*[\d.]+$', '', n)
-    n = re.sub(r'\s+(CO LTD|CORPORATION|CORP|INC|LTD|COMPANY)\.?$', '', n)
-    n = re.sub(r'\s+(CO LTD|CORPORATION|CORP|INC|LTD)\.?\s', ' ', n)
-    return n.strip().title()
-
-
-def parse_stock_code(isin):
-    """台股 ISIN: TW000 + 4碼股票代號 + 3碼 → 回傳股票代號，無法解析回傳 None。"""
-    m = re.fullmatch(r'TW000(\w{4})\d{3}', isin or "")
-    return m.group(1) if m else None
-
-
-def fetch_holdings_and_meta():
-    """
-    Returns (holdings, as_of_date_str, aum_ntd, units)
-      holdings: [{code, name, shares, weight}, ...] 僅股票 section
-    """
-    data = api_get("/holdings")
-    sections = data.get("domesticHoldings", [])
-    equity = next((s for s in sections if s.get("holdingCategory") == "holdings-section-equity"), None)
-    if not equity:
-        return [], "", 0, 0
-
-    # asOfDate 格式 "06/11/2026" → "2026-06-11"
-    as_of = equity.get("asOfDate", "")
-    as_of_str = ""
-    m = re.fullmatch(r'(\d{2})/(\d{2})/(\d{4})', as_of)
-    if m:
-        as_of_str = f"{m.group(3)}-{m.group(1)}-{m.group(2)}"
-
-    cn_names = build_cn_name_map()
-    holdings = []
-    for h in equity.get("holdings", []):
-        code = parse_stock_code(h.get("holdingCode", ""))
-        if not code:
+            shares = int((it.get("volumn") or "0").replace(",", ""))
+            weight = float(it.get("weights") or 0)
+        except ValueError:
             continue
-        shares = int(h.get("holdingShares") or 0)
-        if shares <= 0:
-            continue
-        weight = round(float(h.get("holdingPerc") or 0), 2)
-        name = cn_names.get(code) or STATIC_CN_NAMES.get(code) or simplify_en_name(h.get("holding", code))
-        holdings.append({"code": code, "name": name, "shares": shares, "weight": weight})
+        holdings.append({"code": code, "name": (it.get("stockName") or code).strip(),
+                         "shares": shares, "weight": weight})
+    return holdings
 
-    # basket: AUM 與在外流通單位數
-    aum_ntd, units = 0, 0
-    try:
-        basket = api_get("/basket")
-        aum_ntd = int(basket.get("aum") or 0)
-        units = int(basket.get("shares") or 0)
-    except Exception as e:
-        log.warning(f"basket fetch failed: {e}")
 
-    return holdings, as_of_str, aum_ntd, units
+def fetch_assets():
+    """Returns (data_date_str 'YYYY-MM-DD', aum_ntd, units)。"""
+    d = api_get(f"ETF/GetETFAssets?fundCode={FUND_CODE}")
+    res = d.get("result") or {}
+    pre_date = (res.get("preDate") or "").replace("/", "-")
+    aum = int((res.get("fundNav") or "0").replace(",", "") or 0)
+    units = int((res.get("fundOutstandingShares") or "0").replace(",", "") or 0)
+    return pre_date, aum, units
 
 
 def get_previous_holdings(exclude_date_str):
@@ -353,7 +299,7 @@ def build_notification(wrapper):
     decreased = sorted([h for h in holdings if h["shares"] > 0 and h.get("diffShares", 0) < 0], key=lambda x: x["diffShares"])
     ytd_sign = "+" if float(meta["ytd"]) >= 0 else ""
     lines = [
-        f"📊 00404A 主動聯博動能50 持股更新",
+        f"📊 00400A 國泰台股動能高息 持股更新",
         f"📅 資料日期：{meta['dataDate']}",
         f"💰 ETF 股價：{meta['etfPrice']}　　YTD：{ytd_sign}{meta['ytd']}%",
         f"📦 持股數量：{len([h for h in holdings if h['shares'] > 0])} 檔",
@@ -387,8 +333,9 @@ def build_notification(wrapper):
 def main():
     run_date = datetime.now(timezone(timedelta(hours=8))).date()
     data_date_str = run_date.strftime("%Y-%m-%d")
+    search_date_str = run_date.strftime("%Y/%m/%d")
 
-    log.info(f"=== 00404A Check & Update started ===")
+    log.info(f"=== 00400A Check & Update started ===")
     log.info(f"  Run date / Data date: {data_date_str}")
 
     if holdings_exist_for(data_date_str):
@@ -396,19 +343,21 @@ def main():
         return
 
     try:
-        today_holdings, as_of_str, aum_ntd, units = fetch_holdings_and_meta()
+        today_holdings = fetch_holdings(search_date_str)
+        assets_date, aum_ntd, units = fetch_assets()
     except Exception as e:
         log.error(f"API fetch failed: {e}")
-        send_telegram(f"⏳ 00404A 主動聯博動能50 持股尚未更新\n📅 資料日期：{data_date_str}\n🔄 將於 30 分鐘後再次檢查...")
+        send_telegram(f"⏳ 00400A 國泰台股動能高息 持股尚未更新\n📅 資料日期：{data_date_str}\n🔄 將於 30 分鐘後再次檢查...")
         return
 
-    log.info(f"Parsed {len(today_holdings)} holdings, asOfDate: {as_of_str}, "
+    log.info(f"Parsed {len(today_holdings)} holdings, assets date: {assets_date}, "
              f"AUM: {aum_ntd:,} NTD, Units: {units:,}")
 
-    # 日期驗證：API asOfDate 必須等於今天（防官網未更新與排程跨日）
-    if not today_holdings or as_of_str != data_date_str:
-        log.info(f"asOfDate {as_of_str} != today {data_date_str} (or no holdings). Not updated yet.")
-        send_telegram(f"⏳ 00404A 主動聯博動能50 持股尚未更新\n📅 資料日期：{data_date_str}\n🔄 將於 30 分鐘後再次檢查...")
+    # 日期驗證：以今天為 SearchDate 查詢，查無資料即尚未更新；
+    # GetETFAssets 的 preDate 也需等於今天（雙重驗證，防排程跨日）
+    if not today_holdings or assets_date != data_date_str:
+        log.info(f"Not updated yet (holdings={len(today_holdings)}, assetsDate={assets_date}).")
+        send_telegram(f"⏳ 00400A 國泰台股動能高息 持股尚未更新\n📅 資料日期：{data_date_str}\n🔄 將於 30 分鐘後再次檢查...")
         return
 
     json_path = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{data_date_str}.json")
