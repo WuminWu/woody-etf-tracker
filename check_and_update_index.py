@@ -46,25 +46,32 @@ def compute_amplitude_stats(hist):
     last_close = float(close.iloc[-1])
     prev_c = float(close.iloc[-2]) if len(close) >= 2 else last_close
 
-    def avg_pct(n):
-        return round(float(tr_pct.tail(n).mean()), 2)
-
-    atr5, atr10, atr20 = avg_pct(5), avg_pct(10), avg_pct(20)
-
-    window = tr_pct.tail(60)
-    percentiles = {
-        "p50": round(float(window.quantile(0.50)), 2),
-        "p75": round(float(window.quantile(0.75)), 2),
-        "p90": round(float(window.quantile(0.90)), 2),
-        "p95": round(float(window.quantile(0.95)), 2),
-    }
-
     # 今日（最新一筆）已實現 TR
     today_tr_pct = round(float(tr_pct.iloc[-1]), 2)
     today_date = hist.index[-1].strftime("%Y-%m-%d")
 
     def to_points(pct):
         return round(last_close * pct / 100)
+
+    def pp(pct):
+        pct = round(float(pct), 2)
+        return {"pct": pct, "points": to_points(pct)}
+
+    # 各天數窗口：TR 平均 + 標準差 → 平均+1σ/2σ/3σ
+    # 注意：窗口不含今日（用 [-n-1:-1]），否則今天的大振幅會把自己的門檻拉高
+    windows = {}
+    for n in (5, 10, 20):
+        w = tr_pct.iloc[-(n + 1):-1]
+        if len(w) < n:
+            continue
+        mean = float(w.mean())
+        std = float(w.std(ddof=1))
+        windows[f"d{n}"] = {
+            "mean":   pp(mean),
+            "sigma1": pp(mean + std),
+            "sigma2": pp(mean + 2 * std),
+            "sigma3": pp(mean + 3 * std),
+        }
 
     return {
         "dataDate": today_date,
@@ -73,15 +80,7 @@ def compute_amplitude_stats(hist):
         "changePct": round((last_close - prev_c) / prev_c * 100, 2) if prev_c else 0,
         "todayTrPct": today_tr_pct,
         "todayTrPoints": to_points(today_tr_pct),
-        "atr": {
-            "atr5":  {"pct": atr5,  "points": to_points(atr5)},
-            "atr10": {"pct": atr10, "points": to_points(atr10)},
-            "atr20": {"pct": atr20, "points": to_points(atr20)},
-        },
-        "percentiles": {
-            k: {"pct": v, "points": to_points(v)} for k, v in percentiles.items()
-        },
-        "windowDays": int(len(window)),
+        "windows": windows,
     }
 
 
@@ -102,9 +101,9 @@ def update_twii():
         hist_6mo = yf.Ticker("^TWII").history(period="6mo", timeout=15)
         amplitude = compute_amplitude_stats(hist_6mo)
         if amplitude:
-            print(f"TWII close={amplitude['close']}, ATR10={amplitude['atr']['atr10']['pct']}% "
-                  f"({amplitude['atr']['atr10']['points']}點), "
-                  f"P90={amplitude['percentiles']['p90']['pct']}%")
+            d10 = amplitude["windows"].get("d10", {})
+            print(f"TWII close={amplitude['close']}, todayTR={amplitude['todayTrPct']}%, "
+                  f"10日mean={d10.get('mean',{}).get('pct')}% +1σ={d10.get('sigma1',{}).get('pct')}%")
         else:
             print("Amplitude stats unavailable (insufficient data)")
     except Exception as e:

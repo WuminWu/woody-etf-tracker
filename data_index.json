@@ -1,6 +1,6 @@
 {
   "twii_ytd": "50.49",
-  "lastUpdate": "2026-06-12 18:33",
+  "lastUpdate": "2026-06-12 18:55",
   "amplitude": {
     "dataDate": "2026-06-12",
     "close": 44169.04,
@@ -8,38 +8,61 @@
     "changePct": 2.36,
     "todayTrPct": 3.82,
     "todayTrPoints": 1687,
-    "atr": {
-      "atr5": {
-        "pct": 3.9,
-        "points": 1723
+    "windows": {
+      "d5": {
+        "mean": {
+          "pct": 3.78,
+          "points": 1670
+        },
+        "sigma1": {
+          "pct": 5.02,
+          "points": 2217
+        },
+        "sigma2": {
+          "pct": 6.25,
+          "points": 2761
+        },
+        "sigma3": {
+          "pct": 7.48,
+          "points": 3304
+        }
       },
-      "atr10": {
-        "pct": 3.16,
-        "points": 1396
+      "d10": {
+        "mean": {
+          "pct": 3.07,
+          "points": 1356
+        },
+        "sigma1": {
+          "pct": 4.23,
+          "points": 1868
+        },
+        "sigma2": {
+          "pct": 5.39,
+          "points": 2381
+        },
+        "sigma3": {
+          "pct": 6.55,
+          "points": 2893
+        }
       },
-      "atr20": {
-        "pct": 2.91,
-        "points": 1285
+      "d20": {
+        "mean": {
+          "pct": 2.89,
+          "points": 1276
+        },
+        "sigma1": {
+          "pct": 3.93,
+          "points": 1736
+        },
+        "sigma2": {
+          "pct": 4.97,
+          "points": 2195
+        },
+        "sigma3": {
+          "pct": 6.01,
+          "points": 2655
+        }
       }
-    },
-    "percentiles": {
-      "p50": {
-        "pct": 2.35,
-        "points": 1038
-      },
-      "p75": {
-        "pct": 3.23,
-        "points": 1427
-      },
-      "p90": {
-        "pct": 3.89,
-        "points": 1718
-      },
-      "p95": {
-        "pct": 4.61,
-        "points": 2036
-      }
-    },
-    "windowDays": 60
+    }
   }
 }

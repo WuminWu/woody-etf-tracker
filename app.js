@@ -601,33 +601,52 @@ document.addEventListener('DOMContentLoaded', () => {
             `加權指數 <span style="color:#60a5fa;">${fmtN(amp.close)}</span> ` +
             `<span style="color:${chgColor};font-size:0.85em;">${chgSign}${fmtN(amp.change)} (${chgSign}${amp.changePct}%)</span>`;
 
-        // 今日已實現振幅 + 滿足度判定（對照 ATR10 與 P90）
-        const atr10 = amp.atr.atr10.pct;
-        const p90 = amp.percentiles.p90.pct;
-        let status, statusColor;
-        if (amp.todayTrPct >= p90)        { status = '已達 P90 極端區'; statusColor = '#ef4444'; }
-        else if (amp.todayTrPct >= atr10) { status = '已達 ATR10 水位'; statusColor = '#f59e0b'; }
-        else                              { status = '正常範圍內';     statusColor = '#4ade80'; }
+        // 今日已實現振幅 + 滿足度判定（對照 10 日窗口的 平均 / +1σ / +2σ）
+        const w = amp.windows || {};
+        const d10 = w.d10;
+        let status = '', statusColor = '#4ade80';
+        if (d10) {
+            if (amp.todayTrPct >= d10.sigma2.pct)      { status = '超過 10日 +2σ（極端）'; statusColor = '#ef4444'; }
+            else if (amp.todayTrPct >= d10.sigma1.pct) { status = '超過 10日 +1σ';        statusColor = '#f97316'; }
+            else if (amp.todayTrPct >= d10.mean.pct)   { status = '已達 10日平均';         statusColor = '#f59e0b'; }
+            else                                       { status = '低於 10日平均';         statusColor = '#4ade80'; }
+        }
         document.getElementById('twii-amp-today').innerHTML =
             `<div style="font-size:0.8rem;color:var(--text-secondary);">當日振幅 (TR)</div>` +
             `<div style="font-size:1.15rem;font-weight:700;">${amp.todayTrPct}% <span style="color:var(--text-secondary);font-size:0.8em;">(${fmtN(amp.todayTrPoints)}點)</span></div>` +
             `<div style="font-size:0.75rem;color:${statusColor};font-weight:600;">${status}</div>`;
 
-        const pill = (label, pct, points, accent) => `
-            <div style="flex:1;min-width:100px;background:rgba(255,255,255,0.04);border:1px solid ${accent ? accent : 'var(--glass-border)'};border-radius:0.6rem;padding:0.45rem 0.7rem;text-align:center;">
-                <div style="font-size:0.72rem;color:var(--text-secondary);">${label}</div>
-                <div style="font-weight:700;font-size:0.95rem;">${pct}%</div>
-                <div style="font-size:0.75rem;color:#60a5fa;">${fmtN(points)}點</div>
-            </div>`;
-
-        document.getElementById('twii-amp-table').innerHTML =
-            pill('ATR5', amp.atr.atr5.pct, amp.atr.atr5.points) +
-            pill('ATR10', amp.atr.atr10.pct, amp.atr.atr10.points, 'rgba(245,158,11,0.45)') +
-            pill('ATR20', amp.atr.atr20.pct, amp.atr.atr20.points) +
-            pill('P50 中位', amp.percentiles.p50.pct, amp.percentiles.p50.points) +
-            pill('P75', amp.percentiles.p75.pct, amp.percentiles.p75.points) +
-            pill('P90 滿足', amp.percentiles.p90.pct, amp.percentiles.p90.points, 'rgba(239,68,68,0.45)') +
-            pill('P95 極端', amp.percentiles.p95.pct, amp.percentiles.p95.points);
+        // 表格：列 = 統計天數（5/10/20 日）；欄 = 平均振幅 / +1σ / +2σ / +3σ
+        const cell = (v) => `
+            <td style="padding:0.45rem 0.9rem;text-align:right;">
+                <div style="font-weight:700;">${v.pct}%</div>
+                <div style="font-size:0.75rem;color:#60a5fa;">${fmtN(v.points)}點</div>
+            </td>`;
+        const rowLabel = { d5: '5 日', d10: '10 日', d20: '20 日' };
+        let rows = '';
+        for (const key of ['d5', 'd10', 'd20']) {
+            const win = w[key];
+            if (!win) continue;
+            const hl = key === 'd10';   // 滿足度判定使用的窗口
+            rows += `
+                <tr style="border-top:1px solid var(--glass-border);${hl ? 'background:rgba(245,158,11,0.05);' : ''}">
+                    <td style="padding:0.45rem 0.9rem;font-weight:600;color:${hl ? '#f59e0b' : 'var(--text-primary)'};white-space:nowrap;">${rowLabel[key]}${hl ? ' ★' : ''}</td>
+                    ${cell(win.mean)}${cell(win.sigma1)}${cell(win.sigma2)}${cell(win.sigma3)}
+                </tr>`;
+        }
+        document.getElementById('twii-amp-table').innerHTML = `
+            <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+                <thead>
+                    <tr style="color:var(--text-secondary);font-size:0.78rem;">
+                        <th style="padding:0.3rem 0.9rem;text-align:left;">統計天數</th>
+                        <th style="padding:0.3rem 0.9rem;text-align:right;">平均振幅</th>
+                        <th style="padding:0.3rem 0.9rem;text-align:right;">+1σ</th>
+                        <th style="padding:0.3rem 0.9rem;text-align:right;">+2σ</th>
+                        <th style="padding:0.3rem 0.9rem;text-align:right;">+3σ</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>`;
 
         panel.style.display = '';
     };
