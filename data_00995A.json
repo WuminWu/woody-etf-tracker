@@ -1,16 +1,17 @@
 {
     "meta": {
         "manager": "張書廷",
-        "ytd": "69.50",
-        "etfPrice": 16.95,
-        "priceChange": -0.47,
-        "prevPrice": 17.03,
+        "ytd": "73.60",
+        "etfPrice": 17.36,
+        "priceChange": 2.42,
+        "prevPrice": 16.95,
         "dataDate": "2026-06-11",
         "lastUpdate": "2026-06-11 20:59",
         "totalShares": 321035,
         "prevTotalShares": 321035,
-        "totalMarketCap": 54.58,
-        "prevTotalMarketCap": 54.42
+        "totalMarketCap": 55.73,
+        "prevTotalMarketCap": 54.42,
+        "priceDate": "2026-06-12"
     },
     "holdings": [
         {
