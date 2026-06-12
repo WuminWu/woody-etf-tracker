@@ -587,8 +587,53 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00996A', name: '主動兆豐台灣豐收' },
     ];
 
+    // ── TWII Amplitude Panel ───────────────────────────────────
+    const renderAmplitudePanel = (amp) => {
+        const panel = document.getElementById('twii-amplitude-panel');
+        if (!panel || !amp) return;
+
+        const fmtN = n => Number(n).toLocaleString('zh-TW');
+        const chgColor = amp.change >= 0 ? '#ff4d4d' : '#4ade80';
+        const chgSign = amp.change >= 0 ? '+' : '';
+
+        document.getElementById('twii-amp-date').textContent = `(${amp.dataDate})`;
+        document.getElementById('twii-amp-index').innerHTML =
+            `加權指數 <span style="color:#60a5fa;">${fmtN(amp.close)}</span> ` +
+            `<span style="color:${chgColor};font-size:0.85em;">${chgSign}${fmtN(amp.change)} (${chgSign}${amp.changePct}%)</span>`;
+
+        // 今日已實現振幅 + 滿足度判定（對照 ATR10 與 P90）
+        const atr10 = amp.atr.atr10.pct;
+        const p90 = amp.percentiles.p90.pct;
+        let status, statusColor;
+        if (amp.todayTrPct >= p90)        { status = '已達 P90 極端區'; statusColor = '#ef4444'; }
+        else if (amp.todayTrPct >= atr10) { status = '已達 ATR10 水位'; statusColor = '#f59e0b'; }
+        else                              { status = '正常範圍內';     statusColor = '#4ade80'; }
+        document.getElementById('twii-amp-today').innerHTML =
+            `<div style="font-size:0.8rem;color:var(--text-secondary);">當日振幅 (TR)</div>` +
+            `<div style="font-size:1.15rem;font-weight:700;">${amp.todayTrPct}% <span style="color:var(--text-secondary);font-size:0.8em;">(${fmtN(amp.todayTrPoints)}點)</span></div>` +
+            `<div style="font-size:0.75rem;color:${statusColor};font-weight:600;">${status}</div>`;
+
+        const pill = (label, pct, points, accent) => `
+            <div style="flex:1;min-width:100px;background:rgba(255,255,255,0.04);border:1px solid ${accent ? accent : 'var(--glass-border)'};border-radius:0.6rem;padding:0.45rem 0.7rem;text-align:center;">
+                <div style="font-size:0.72rem;color:var(--text-secondary);">${label}</div>
+                <div style="font-weight:700;font-size:0.95rem;">${pct}%</div>
+                <div style="font-size:0.75rem;color:#60a5fa;">${fmtN(points)}點</div>
+            </div>`;
+
+        document.getElementById('twii-amp-table').innerHTML =
+            pill('ATR5', amp.atr.atr5.pct, amp.atr.atr5.points) +
+            pill('ATR10', amp.atr.atr10.pct, amp.atr.atr10.points, 'rgba(245,158,11,0.45)') +
+            pill('ATR20', amp.atr.atr20.pct, amp.atr.atr20.points) +
+            pill('P50 中位', amp.percentiles.p50.pct, amp.percentiles.p50.points) +
+            pill('P75', amp.percentiles.p75.pct, amp.percentiles.p75.points) +
+            pill('P90 滿足', amp.percentiles.p90.pct, amp.percentiles.p90.points, 'rgba(239,68,68,0.45)') +
+            pill('P95 極端', amp.percentiles.p95.pct, amp.percentiles.p95.points);
+
+        panel.style.display = '';
+    };
+
     const loadYtdRanking = () => {
-        fetch('data_index.json')
+        fetch(`data_index.json?t=${Date.now()}`, { cache: 'no-store' })
             .then(r => r.ok ? r.json() : null)
             .then(idx => {
                 if (idx?.twii_ytd != null) {
@@ -598,6 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('twii-ytd-display').innerHTML =
                         `(加權指數績效 <span style="color:${color};font-weight:700">${sign}${val.toFixed(2)}%</span>)`;
                 }
+                renderAmplitudePanel(idx?.amplitude);
             })
             .catch(() => {});
 

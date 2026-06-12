@@ -1,4 +1,45 @@
 {
   "twii_ytd": "50.49",
-  "lastUpdate": "2026-06-12 17:44"
+  "lastUpdate": "2026-06-12 18:33",
+  "amplitude": {
+    "dataDate": "2026-06-12",
+    "close": 44169.04,
+    "change": 1019.58,
+    "changePct": 2.36,
+    "todayTrPct": 3.82,
+    "todayTrPoints": 1687,
+    "atr": {
+      "atr5": {
+        "pct": 3.9,
+        "points": 1723
+      },
+      "atr10": {
+        "pct": 3.16,
+        "points": 1396
+      },
+      "atr20": {
+        "pct": 2.91,
+        "points": 1285
+      }
+    },
+    "percentiles": {
+      "p50": {
+        "pct": 2.35,
+        "points": 1038
+      },
+      "p75": {
+        "pct": 3.23,
+        "points": 1427
+      },
+      "p90": {
+        "pct": 3.89,
+        "points": 1718
+      },
+      "p95": {
+        "pct": 4.61,
+        "points": 2036
+      }
+    },
+    "windowDays": 60
+  }
 }

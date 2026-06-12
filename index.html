@@ -64,6 +64,23 @@
             </div>
         </div>
 
+        <!-- TWII Amplitude Panel -->
+        <div class="glass-panel fade-in-up" id="twii-amplitude-panel" style="display:none;padding:1rem 1.5rem;margin-bottom:1.5rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+                <div>
+                    <div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:0.2rem;">
+                        <i class="fa-solid fa-chart-column"></i> 大盤振幅參考 <span id="twii-amp-date" style="margin-left:0.3em;"></span>
+                    </div>
+                    <div id="twii-amp-index" style="font-size:1.25rem;font-weight:700;"></div>
+                </div>
+                <div id="twii-amp-today" style="text-align:right;"></div>
+            </div>
+            <div id="twii-amp-table" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.75rem;"></div>
+            <div style="font-size:0.72rem;color:var(--text-secondary);opacity:0.7;margin-top:0.5rem;">
+                振幅採真實波幅 TR（含跳空缺口，相對前日收盤）；ATR 為短中期波動水位，P50–P95 為近 60 個交易日分布百分位。點數以最新收盤換算。
+            </div>
+        </div>
+
         <!-- Page Tabs -->
         <nav class="page-tabs fade-in-up">
             <button class="tab-btn active" data-tab="holdings">
@@ -325,6 +342,6 @@
         <div id="lightbox-close">✕</div>
     </div>
 
-    <script src="app.js?v=23"></script>
+    <script src="app.js?v=24"></script>
 </body>
 </html>
