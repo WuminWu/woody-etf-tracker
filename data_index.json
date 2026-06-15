@@ -1,4 +1,68 @@
 {
   "twii_ytd": "54.68",
-  "lastUpdate": "2026-06-15 19:30"
+  "lastUpdate": "2026-06-15 23:31",
+  "amplitude": {
+    "dataDate": "2026-06-15",
+    "close": 45396.99,
+    "change": 1227.95,
+    "changePct": 2.78,
+    "todayTrPct": 2.98,
+    "todayTrPoints": 1353,
+    "windows": {
+      "d5": {
+        "mean": {
+          "pct": 3.9,
+          "points": 1770
+        },
+        "sigma1": {
+          "pct": 5.1,
+          "points": 2315
+        },
+        "sigma2": {
+          "pct": 6.29,
+          "points": 2855
+        },
+        "sigma3": {
+          "pct": 7.49,
+          "points": 3400
+        }
+      },
+      "d10": {
+        "mean": {
+          "pct": 3.16,
+          "points": 1435
+        },
+        "sigma1": {
+          "pct": 4.34,
+          "points": 1970
+        },
+        "sigma2": {
+          "pct": 5.52,
+          "points": 2506
+        },
+        "sigma3": {
+          "pct": 6.7,
+          "points": 3042
+        }
+      },
+      "d20": {
+        "mean": {
+          "pct": 2.91,
+          "points": 1321
+        },
+        "sigma1": {
+          "pct": 3.97,
+          "points": 1802
+        },
+        "sigma2": {
+          "pct": 5.03,
+          "points": 2283
+        },
+        "sigma3": {
+          "pct": 6.09,
+          "points": 2765
+        }
+      }
+    }
+  }
 }
