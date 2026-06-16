@@ -596,74 +596,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     // ── TWII Amplitude Panel ───────────────────────────────────
-    const renderAmplitudePanel = (amp) => {
-        const panel = document.getElementById('twii-amplitude-panel');
-        if (!panel || !amp) return;
-
-        const fmtN = n => Number(n).toLocaleString('zh-TW');
-        const chgColor = amp.change >= 0 ? '#ff4d4d' : '#4ade80';
-        const chgSign = amp.change >= 0 ? '+' : '';
-
-        document.getElementById('twii-amp-date').textContent = `(${amp.dataDate})`;
-        document.getElementById('twii-amp-index').innerHTML =
-            `加權指數 <span style="color:#60a5fa;">${fmtN(amp.close)}</span> ` +
-            `<span style="color:${chgColor};font-size:0.85em;">${chgSign}${fmtN(amp.change)} (${chgSign}${amp.changePct}%)</span>`;
-
-        // 今日已實現振幅 + 滿足度判定（對照 10 日窗口的 平均 / +1σ / +2σ）
-        const w = amp.windows || {};
-        const d10 = w.d10;
-        let status = '', statusColor = '#4ade80';
-        if (d10) {
-            if (amp.todayTrPct >= d10.sigma2.pct)      { status = '超過 10日 +2σ（極端）'; statusColor = '#ef4444'; }
-            else if (amp.todayTrPct >= d10.sigma1.pct) { status = '超過 10日 +1σ';        statusColor = '#f97316'; }
-            else if (amp.todayTrPct >= d10.mean.pct)   { status = '已達 10日平均';         statusColor = '#f59e0b'; }
-            else                                       { status = '低於 10日平均';         statusColor = '#4ade80'; }
-        }
-        document.getElementById('twii-amp-today').innerHTML =
-            `<div style="font-size:0.8rem;color:var(--text-secondary);">當日振幅 (TR)</div>` +
-            `<div style="font-size:1.15rem;font-weight:700;">${amp.todayTrPct}% <span style="color:var(--text-secondary);font-size:0.8em;">(${fmtN(amp.todayTrPoints)}點)</span></div>` +
-            `<div style="font-size:0.75rem;color:${statusColor};font-weight:600;">${status}</div>`;
-
-        // 表格：列 = 統計天數（5/10/20 日）；欄 = 平均振幅 / ±1σ / ±2σ / ±3σ
-        // 每格同時顯示振幅換算的指數上緣（收盤+點數）與下緣（收盤−點數）
-        const cell = (v) => {
-            const up = Math.round(amp.close + v.points);
-            const dn = Math.round(amp.close - v.points);
-            return `
-            <td style="padding:0.45rem 0.9rem;text-align:right;">
-                <div style="font-weight:700;">${v.pct}% <span style="color:var(--text-secondary);font-weight:400;font-size:0.82em;">(${fmtN(v.points)}點)</span></div>
-                <div style="font-size:0.75rem;"><span style="color:#ff4d4d;">▲${fmtN(up)}</span>　<span style="color:#4ade80;">▼${fmtN(dn)}</span></div>
-            </td>`;
-        };
-        const rowLabel = { d5: '5 日', d10: '10 日', d20: '20 日' };
-        let rows = '';
-        for (const key of ['d5', 'd10', 'd20']) {
-            const win = w[key];
-            if (!win) continue;
-            const hl = key === 'd10';   // 滿足度判定使用的窗口
-            rows += `
-                <tr style="border-top:1px solid var(--glass-border);${hl ? 'background:rgba(245,158,11,0.05);' : ''}">
-                    <td style="padding:0.45rem 0.9rem;font-weight:600;color:${hl ? '#f59e0b' : 'var(--text-primary)'};white-space:nowrap;">${rowLabel[key]}${hl ? ' ★' : ''}</td>
-                    ${cell(win.mean)}${cell(win.sigma1)}${cell(win.sigma2)}${cell(win.sigma3)}
-                </tr>`;
-        }
-        document.getElementById('twii-amp-table').innerHTML = `
-            <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
-                <thead>
-                    <tr style="color:var(--text-secondary);font-size:0.78rem;">
-                        <th style="padding:0.3rem 0.9rem;text-align:left;">統計天數</th>
-                        <th style="padding:0.3rem 0.9rem;text-align:right;">平均振幅</th>
-                        <th style="padding:0.3rem 0.9rem;text-align:right;">±1σ</th>
-                        <th style="padding:0.3rem 0.9rem;text-align:right;">±2σ</th>
-                        <th style="padding:0.3rem 0.9rem;text-align:right;">±3σ</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>`;
-
-        panel.style.display = '';
-    };
-
     const loadYtdRanking = () => {
         fetch(`data_index.json?t=${Date.now()}`, { cache: 'no-store' })
             .then(r => r.ok ? r.json() : null)
@@ -675,7 +607,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('twii-ytd-display').innerHTML =
                         `(加權指數績效 <span style="color:${color};font-weight:700">${sign}${val.toFixed(2)}%</span>)`;
                 }
-                renderAmplitudePanel(idx?.amplitude);
             })
             .catch(() => {});
 

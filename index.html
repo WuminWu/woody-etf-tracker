@@ -20,23 +20,6 @@
     </div>
 
     <main class="container">
-        <!-- TWII Amplitude Panel -->
-        <div class="glass-panel fade-in-up" id="twii-amplitude-panel" style="display:none;padding:1rem 1.5rem;margin-bottom:1.5rem;">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
-                <div>
-                    <div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:0.2rem;">
-                        <i class="fa-solid fa-chart-column"></i> 大盤振幅參考 <span id="twii-amp-date" style="margin-left:0.3em;"></span>
-                    </div>
-                    <div id="twii-amp-index" style="font-size:1.25rem;font-weight:700;"></div>
-                </div>
-                <div id="twii-amp-today" style="text-align:right;"></div>
-            </div>
-            <div id="twii-amp-table" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.75rem;"></div>
-            <div style="font-size:0.72rem;color:var(--text-secondary);opacity:0.7;margin-top:0.5rem;">
-                振幅採真實波幅 TR（含跳空缺口，相對前日收盤）。各列為最近 N 個交易日（不含今日）的 TR 平均與標準差；★ 為滿足度判定使用的窗口。<span style="color:#ff4d4d;">▲</span>=最新收盤+振幅點數（上緣）、<span style="color:#4ade80;">▼</span>=最新收盤−振幅點數（下緣），門檻每日收盤後隨滾動窗口重算。
-            </div>
-        </div>
-
         <header class="app-header glass-panel fade-in-up">
             <div class="logo">
                 <i class="fa-solid fa-chart-pie"></i>
@@ -364,6 +347,6 @@
         <div id="lightbox-close">✕</div>
     </div>
 
-    <script src="app.js?v=28"></script>
+    <script src="app.js?v=29"></script>
 </body>
 </html>
