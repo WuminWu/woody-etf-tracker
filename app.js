@@ -293,6 +293,8 @@ document.addEventListener('DOMContentLoaded', () => {
         '00995A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 31 },
         // 季配息（兆豐官網標示季配息；除息月份與日期待官方公告確認）
         '00996A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
+        // 季配息（富邦官網標示季配息，含收益平準金；除息月份與日期待官方公告確認）
+        '00405A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
     };
 
     // 計算下一次配息日（distMonths 需已排序）
@@ -593,6 +595,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00993A', name: '主動安聯台灣' },
         { id: '00995A', name: '主動中信台灣卓越' },
         { id: '00996A', name: '主動兆豐台灣豐收' },
+        { id: '00405A', name: '主動富邦台灣龍耀' },
     ];
 
     // ── TWII Amplitude Panel ───────────────────────────────────
@@ -674,6 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00993A', name: '主動安聯台灣' },
         { id: '00995A', name: '主動中信台灣卓越' },
         { id: '00996A', name: '主動兆豐台灣豐收' },
+        { id: '00405A', name: '主動富邦台灣龍耀' },
     ];
 
     let crossSortAsc = false;
