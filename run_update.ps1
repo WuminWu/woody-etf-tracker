@@ -99,6 +99,7 @@ git add data_*.json holdings/ data_index.json 2>&1 | Out-Null
 if (Test-Path "history.json")   { git add history.json   2>&1 | Out-Null }
 if (Test-Path "snapshots")      { git add snapshots/     2>&1 | Out-Null }
 if (Test-Path "last_digest.txt"){ git add last_digest.txt 2>&1 | Out-Null }
+if (Test-Path "digests.json")   { git add digests.json   2>&1 | Out-Null }
 
 git diff --quiet; $unstaged = $LASTEXITCODE
 git diff --staged --quiet; $staged = $LASTEXITCODE

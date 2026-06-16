@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabCross    = document.getElementById('tab-cross');
     const tabSearch   = document.getElementById('tab-search');
     const tabCommon   = document.getElementById('tab-common');
+    const tabDigest   = document.getElementById('tab-digest');
     const appHeader   = document.querySelector('.app-header');
     const ytdRankingBar = document.getElementById('ytd-ranking-bar');
 
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tabCross.style.display = 'none';
                 tabSearch.style.display = 'none';
                 if (tabCommon) tabCommon.style.display = 'none';
+                if (tabDigest) tabDigest.style.display = 'none';
             };
             if (activeTab === 'holdings') {
                 hideAll();
@@ -48,6 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 appHeader.style.display = 'none';
                 if (ytdRankingBar) ytdRankingBar.style.display = '';
                 loadCommonActions(true);   // 每次切換到此 tab 都強制重新抓
+            } else if (activeTab === 'digest') {
+                hideAll();
+                tabDigest.style.display = '';
+                appHeader.style.display = 'none';
+                if (ytdRankingBar) ytdRankingBar.style.display = 'none';
+                loadDigests(true);
             }
         });
     });
@@ -1166,6 +1174,59 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     refreshCommonDatePicker();
+
+    // ── Daily Digest tab ───────────────────────────────────────
+    let digestData = null;          // { 'YYYY-MM-DD': text }
+    let digestDates = [];           // sorted desc
+    let digestCurrentDate = null;
+
+    const renderDigest = () => {
+        const pre = document.getElementById('digest-text');
+        const badge = document.getElementById('digest-badge');
+        if (!pre) return;
+        if (!digestData || digestDates.length === 0) {
+            pre.textContent = '目前尚無分析資料。每日收盤後產生第一份分析後即會出現。';
+            if (badge) badge.textContent = '無資料';
+            return;
+        }
+        const d = digestCurrentDate && digestData[digestCurrentDate]
+            ? digestCurrentDate : digestDates[0];
+        pre.textContent = digestData[d] || '（該日無分析）';
+        if (badge) badge.textContent = `共 ${digestDates.length} 天`;
+    };
+
+    const loadDigests = (force = false) => {
+        if (digestData && !force) { renderDigest(); return; }
+        const pre = document.getElementById('digest-text');
+        if (pre) pre.textContent = '載入中...';
+        fetch(`digests.json?t=${Date.now()}`, { cache: 'no-store' })
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                digestData = data || {};
+                digestDates = Object.keys(digestData).sort().reverse();   // 最新在前
+                if (!digestCurrentDate || !digestData[digestCurrentDate]) {
+                    digestCurrentDate = digestDates[0] || null;
+                }
+                const picker = document.getElementById('digest-date-picker');
+                if (picker) {
+                    picker.innerHTML = digestDates
+                        .map(d => `<option value="${d}">${d}</option>`).join('');
+                    if (digestCurrentDate) picker.value = digestCurrentDate;
+                }
+                renderDigest();
+            })
+            .catch(() => {
+                if (pre) pre.textContent = '載入失敗，請稍後再試。';
+            });
+    };
+
+    const digestDatePicker = document.getElementById('digest-date-picker');
+    if (digestDatePicker) {
+        digestDatePicker.addEventListener('change', e => {
+            digestCurrentDate = e.target.value;
+            renderDigest();
+        });
+    }
 
     // ── Stock History Modal ────────────────────────────────────
     // 動態建立 modal 並 inline 所有關鍵樣式，避免依賴 CSS / HTML 快取狀態

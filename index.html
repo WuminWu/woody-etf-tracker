@@ -95,6 +95,9 @@
             <button class="tab-btn" data-tab="common">
                 <i class="fa-solid fa-people-arrows"></i> 共同加碼/減碼
             </button>
+            <button class="tab-btn" data-tab="digest">
+                <i class="fa-solid fa-newspaper"></i> 每日分析
+            </button>
         </nav>
 
         <!-- Tab: Holdings -->
@@ -323,6 +326,25 @@
             </div>
         </section>
 
+        <!-- Tab: Daily Digest -->
+        <section class="dashboard-content fade-in-up delay-1" id="tab-digest" style="display:none;">
+            <div class="card glass-panel">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-newspaper"></i> 主動 ETF 經理人都在買什麼</h2>
+                    <span class="badge" id="digest-badge">載入中...</span>
+                </div>
+                <div class="last-update-bar" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+                    <span><i class="fa-regular fa-clock"></i> 每日收盤後由經理人持股異動自動彙整</span>
+                    <span style="display:flex;align-items:center;gap:0.4rem;">
+                        <i class="fa-solid fa-calendar-days" style="color:var(--text-secondary);font-size:0.85rem;"></i>
+                        <label for="digest-date-picker" style="color:var(--text-secondary);font-size:0.85rem;">查看日期：</label>
+                        <select id="digest-date-picker" class="etf-select" style="min-width:160px;font-size:0.85rem;padding:0.3rem 0.6rem;"></select>
+                    </span>
+                </div>
+                <pre id="digest-text" style="white-space:pre-wrap;word-break:break-word;font-family:inherit;line-height:1.7;font-size:0.95rem;color:var(--text-primary);margin:0;padding:1rem 0.5rem;">載入中...</pre>
+            </div>
+        </section>
+
     <!-- Stock History Modal -->
     <div id="history-modal-overlay" class="modal-overlay" style="display:none;">
         <div class="modal-box glass-panel" onclick="event.stopPropagation()">
@@ -342,6 +364,6 @@
         <div id="lightbox-close">✕</div>
     </div>
 
-    <script src="app.js?v=27"></script>
+    <script src="app.js?v=28"></script>
 </body>
 </html>

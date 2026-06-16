@@ -39,6 +39,8 @@ TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 MARKER_FILE = "last_digest.txt"
+DIGESTS_FILE = "digests.json"   # 供網站「每日分析」分頁讀取（{date: text}）
+SITE_URL = "https://wuminwu.github.io/woody-etf-tracker/"
 SEND_THRESHOLD = 10   # 12 檔台股 ETF 中至少 10 檔更新才發送
 FALLBACK_HOUR = 21    # TW 21:00 後放寬條件
 FALLBACK_MIN_COUNT = 6
@@ -97,24 +99,55 @@ def find_prev_snapshot(today_str):
         return None
 
 
+def _gather_from_live(date_str):
+    """從 live data_{code}.json 蒐集當日各 ETF 的 holdings。"""
+    etf_holdings, updated = {}, []
+    for code, _name in TW_ETFS:
+        path = f"data_{code}.json"
+        if not os.path.exists(path):
+            continue
+        d = json.loads(open(path, encoding="utf-8").read())
+        if d["meta"].get("dataDate") != date_str:
+            continue
+        updated.append(code)
+        etf_holdings[code] = d.get("holdings", [])
+    return etf_holdings, updated
+
+
+def _gather_from_snapshot(snap):
+    """從 snapshot dict（{etf:{holdings}}）蒐集當日各 TW ETF 的 holdings。"""
+    tw_codes = {c for c, _ in TW_ETFS}
+    etf_holdings, updated = {}, []
+    for etf_id, blk in snap.items():
+        if etf_id not in tw_codes:
+            continue
+        updated.append(etf_id)
+        etf_holdings[etf_id] = blk.get("holdings", [])
+    return etf_holdings, updated
+
+
 def build_digest(today_str):
-    updated, stale, first_day = [], [], []
+    """今日版：從 live data_*.json 蒐集，與前一日 snapshot 比較。"""
+    etf_holdings, updated = _gather_from_live(today_str)
+    prev_snap = find_prev_snapshot(today_str)
+    return render_digest(today_str, etf_holdings, updated, prev_snap)
+
+
+def render_digest(today_str, etf_holdings, updated, prev_snap):
+    """
+    依當日各 ETF 的 holdings 與前一日 snapshot 產生分析文字。
+    etf_holdings: { code: [holding, ...] }；holding 需含 code/name/shares/prevShares/diffShares/diffAmount
+    updated:      有當日資料的 ETF 代號清單（含首日 ETF）
+    prev_snap:    前一交易日 snapshot dict（{etf:{holdings}}）或 None
+    回傳 (message, updated_count)。message 不含結尾網站連結（由發送端另加）。
+    """
+    first_day = []
     add_map = defaultdict(lambda: {"name": "", "amt": 0.0, "etfs": []})
     red_map = defaultdict(lambda: {"name": "", "amt": 0.0, "etfs": []})
     new_pos, cleared = [], []
 
-    for code, name in TW_ETFS:
-        path = f"data_{code}.json"
-        if not os.path.exists(path):
-            stale.append(code)
-            continue
-        d = json.loads(open(path, encoding="utf-8").read())
-        if d["meta"].get("dataDate") != today_str:
-            stale.append(code)
-            continue
-        updated.append(code)
-
-        holdings = d.get("holdings", [])
+    for code in updated:
+        holdings = etf_holdings.get(code, [])
         active = [h for h in holdings if h.get("shares", 0) > 0]
         # 首日 ETF 偵測：絕大多數持股 prevShares=0 → 全組合視為新增，屬雜訊
         if active and sum(1 for h in active if h.get("prevShares", 0) == 0) / len(active) > 0.8:
@@ -139,11 +172,10 @@ def build_digest(today_str):
 
     # 與前一交易日比較共識家數
     rising, cooling = [], []
-    snap = find_prev_snapshot(today_str)
-    if snap:
+    if prev_snap:
         y_add = defaultdict(list)
         name_of = {}
-        for etf_id, blk in snap.items():
+        for etf_id, blk in prev_snap.items():
             for h in blk.get("holdings", []):
                 name_of.setdefault(h["code"], h.get("name", h["code"]))
                 if h.get("diffShares", 0) > 0:
@@ -254,28 +286,44 @@ def build_digest(today_str):
         lines.extend(obs)
         lines.append("")
 
-    lines.append("https://wuminwu.github.io/woody-etf-tracker/")
     return "\n".join(lines), len(updated)
+
+
+def save_digest(date_str, message):
+    """把當日分析文字寫入 digests.json（{date: text}），供網站讀取。重跑會以最新版覆蓋。"""
+    data = {}
+    if os.path.exists(DIGESTS_FILE):
+        try:
+            data = json.loads(open(DIGESTS_FILE, encoding="utf-8").read())
+        except Exception:
+            data = {}
+    data[date_str] = message
+    with open(DIGESTS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=0)
+    log.info(f"Saved digest text to {DIGESTS_FILE} ({date_str}).")
 
 
 def main():
     now = datetime.now(timezone(timedelta(hours=8)))
     today_str = now.strftime("%Y-%m-%d")
 
-    # 當日已發送過？
-    if os.path.exists(MARKER_FILE):
-        if open(MARKER_FILE, encoding="utf-8").read().strip() == today_str:
-            log.info("Digest already sent today. Nothing to do.")
-            return
-
     message, updated_count = build_digest(today_str)
-
     threshold = SEND_THRESHOLD if now.hour < FALLBACK_HOUR else FALLBACK_MIN_COUNT
+
+    # 資料夠完整才存檔給網站（避免清晨資料殘缺就覆蓋）；重跑會更新成最新版本
+    if updated_count >= threshold:
+        save_digest(today_str, message)
+
+    # Telegram：當日已發送過就不重送
+    if os.path.exists(MARKER_FILE) and open(MARKER_FILE, encoding="utf-8").read().strip() == today_str:
+        log.info("Digest already sent today (text saved; skipping Telegram).")
+        return
+
     if updated_count < threshold:
         log.info(f"Only {updated_count} ETFs updated (need {threshold}). Waiting for more.")
         return
 
-    if send_telegram(message):
+    if send_telegram(message + "\n\n" + SITE_URL):
         with open(MARKER_FILE, "w", encoding="utf-8") as f:
             f.write(today_str)
         log.info(f"Digest sent and marker written ({today_str}).")
