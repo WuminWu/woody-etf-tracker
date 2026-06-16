@@ -238,7 +238,11 @@ def build_digest(today_str):
     sharp_cool = [x for x in cooling if x[2] >= 3 and x[3] == 0]
     if sharp_cool:
         names = "、".join(f"{nm}（{y}→0 家）" for _, nm, y, t in sharp_cool[:3])
-        obs.append(f"- 急轉直下：{names}——前一日還是多家共識買，今日歸零，注意短線資金獲利了結。")
+        # 只有當這些股票今日確實出現在 red_map（有 ETF 減碼）時，才用「獲利了結」措辭；
+        # 否則 4→0 可能只是停止加碼、持股不動，措辭改為中性的「加碼動能消退」。
+        sold = any(c in red_map for c, nm, y, t in sharp_cool[:3])
+        tail = "部分已轉為減碼，注意短線資金獲利了結。" if sold else "加碼動能消退，後續觀察是否轉為調節。"
+        obs.append(f"- 急轉直下：{names}——前一日還是多家共識買，今日歸零，{tail}")
     if big_clear:
         c, n, e, da = big_clear[0]
         obs.append(f"- 最大清倉：{n} 被 {e} 全數出清 {yi(da)}億。")
