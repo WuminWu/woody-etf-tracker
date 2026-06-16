@@ -1,10 +1,10 @@
 name: Daily ETF Holdings Update - 00988A (全球，含美股)
 
 on:
-  schedule:
-    # 台灣時間 15:00–19:30（週一至週五），對應 UTC 07:00–11:30（Mon–Fri）
-    # 每 30 分鐘一次，共 10 次，與其他 ETF 排程相同
-    - cron: '0,30 7-11 * * 1-5'
+  # 排程已改由本機 Windows 工作排程器（run_update.ps1 內含 00988A）執行。
+  # 僅保留手動觸發作為備援；恢復雲端排程取消下列 schedule 註解即可。
+  # schedule:
+  #   - cron: '0,30 7-11 * * 1-5'
   workflow_dispatch:
 
 permissions:

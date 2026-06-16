@@ -7,3 +7,5 @@ test_info.html
 
 *.log
 *.xlsx
+logs/
+google_sa.json
