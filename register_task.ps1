@@ -28,9 +28,11 @@ $action = New-ScheduledTaskAction `
 $trigger = New-ScheduledTaskTrigger -Weekly `
     -DaysOfWeek Monday,Tuesday,Wednesday,Thursday,Friday `
     -At 17:00
+# 注意：RepetitionDuration 用「小時」帶小數（4.5）會被 Task Scheduler floor 成 4 小時，
+# 改用分鐘 (270) 確保涵蓋到 17:00+4.5h = 21:30 的最後一次觸發。
 $trigger.Repetition = (New-ScheduledTaskTrigger -Once -At 17:00 `
     -RepetitionInterval (New-TimeSpan -Minutes 30) `
-    -RepetitionDuration (New-TimeSpan -Hours 4.5)).Repetition
+    -RepetitionDuration (New-TimeSpan -Minutes 270)).Repetition
 
 # 設定：電腦使用電池時也執行；錯過排程時間（剛開機）盡快補跑
 $settings = New-ScheduledTaskSettingsSet `
