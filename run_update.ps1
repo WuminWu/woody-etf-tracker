@@ -1,4 +1,4 @@
-# run_update.ps1
+﻿# run_update.ps1
 # ------------------------------------------------------------
 # 本機版每日 ETF 更新（取代 GitHub Actions cron，避免排程延遲）。
 # 由 Windows 工作排程器（Task Scheduler）在台灣傍晚時段每 30 分鐘呼叫一次。
