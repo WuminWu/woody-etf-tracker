@@ -9,3 +9,4 @@ test_info.html
 *.xlsx
 logs/
 google_sa.json
+.claude/
