@@ -268,7 +268,7 @@ def render_digest(today_str, etf_data, updated, prev_snap):
     # ---- 組訊息 ----
     md = today_str[5:].replace("-", "/").lstrip("0").replace("/0", "/")
     total_tracked = len(TW_ETFS)
-    lines = ["報告來源: 854-Woody (未經同意請勿轉傳，若數據有誤請通知我)",
+    lines = ["報告來源: 854-Woody (狼群專用未經同意請勿轉傳，若數據有誤請通知我)",
              "",
              f"📊 {md} 主動 ETF 經理人都在買什麼",
              f"（{len(updated)}/{total_tracked} 檔已更新持股；00988A 海外 T+1 不列入）"]
