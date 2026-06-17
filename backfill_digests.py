@@ -35,16 +35,16 @@ def main():
         date = os.path.basename(f)[:10]
         snap = json.loads(open(f, encoding="utf-8").read())
 
-        etf_holdings, updated = {}, []
+        etf_data, updated = {}, []
         for etf_id, blk in snap.items():
             if etf_id in TW_CODES:
-                etf_holdings[etf_id] = blk.get("holdings", [])
+                etf_data[etf_id] = {"holdings": blk.get("holdings", []), "meta": blk.get("meta", {})}
                 updated.append(etf_id)
         if not updated:
             continue
 
         prev_snap = find_prev_snapshot(date)
-        message, count = render_digest(date, etf_holdings, updated, prev_snap)
+        message, count = render_digest(date, etf_data, updated, prev_snap)
         save_digest(date, message)
         written += 1
         print(f"  {date}: {count} 檔 ETF")

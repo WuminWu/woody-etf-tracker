@@ -101,8 +101,8 @@ def find_prev_snapshot(today_str):
 
 
 def _gather_from_live(date_str):
-    """從 live data_{code}.json 蒐集當日各 ETF 的 holdings。"""
-    etf_holdings, updated = {}, []
+    """從 live data_{code}.json 蒐集當日各 ETF 的 holdings + meta。"""
+    etf_data, updated = {}, []
     for code, _name in TW_ETFS:
         path = f"data_{code}.json"
         if not os.path.exists(path):
@@ -111,67 +111,137 @@ def _gather_from_live(date_str):
         if d["meta"].get("dataDate") != date_str:
             continue
         updated.append(code)
-        etf_holdings[code] = d.get("holdings", [])
-    return etf_holdings, updated
+        etf_data[code] = {"holdings": d.get("holdings", []), "meta": d.get("meta", {})}
+    return etf_data, updated
 
 
 def _gather_from_snapshot(snap):
-    """從 snapshot dict（{etf:{holdings}}）蒐集當日各 TW ETF 的 holdings。"""
+    """從 snapshot dict（{etf:{meta,holdings}}）蒐集當日各 TW ETF。"""
     tw_codes = {c for c, _ in TW_ETFS}
-    etf_holdings, updated = {}, []
+    etf_data, updated = {}, []
     for etf_id, blk in snap.items():
         if etf_id not in tw_codes:
             continue
         updated.append(etf_id)
-        etf_holdings[etf_id] = blk.get("holdings", [])
-    return etf_holdings, updated
+        etf_data[etf_id] = {"holdings": blk.get("holdings", []), "meta": blk.get("meta", {})}
+    return etf_data, updated
+
+
+def _best_amount(h, meta):
+    """
+    回傳該持股的變動金額（元）。優先用 diffAmount；若為 0 但有股數變動，
+    代表 yfinance 抓不到價（常見於上櫃/小型股）→ 用官方權重×淨資產回推單價估算，
+    修正金額被系統性低估的偏差。
+    """
+    ds = h.get("diffShares", 0)
+    if ds == 0:
+        return 0.0
+    amt = h.get("diffAmount", 0) or 0
+    if amt != 0:
+        return float(amt)
+    price = h.get("price", 0) or 0
+    if price <= 0:
+        aum_now = (meta.get("totalMarketCap") or 0) * 1e8
+        aum_prev = (meta.get("prevTotalMarketCap") or 0) * 1e8
+        if h.get("shares", 0) > 0 and h.get("todayWeight", 0) > 0 and aum_now > 0:
+            price = (h["todayWeight"] / 100) * aum_now / h["shares"]
+        elif h.get("prevShares", 0) > 0 and h.get("yestWeight", 0) > 0:
+            base = aum_prev or aum_now
+            if base > 0:
+                price = (h["yestWeight"] / 100) * base / h["prevShares"]
+    return ds * price
+
+
+def _recent_snapshot_dirs(ref_date_str, n=12):
+    """回傳最近 n 個（含 ref_date）snapshot 的 (date, 加碼股票set, 減碼股票set)，升冪。"""
+    files = sorted(glob.glob("snapshots/????-??-??.json"))
+    files = [f for f in files if os.path.basename(f)[:10] <= ref_date_str][-n:]
+    out = []
+    for f in files:
+        try:
+            snap = json.loads(open(f, encoding="utf-8").read())
+        except Exception:
+            continue
+        adds, reds = set(), set()
+        for _etf, blk in snap.items():
+            for h in blk.get("holdings", []):
+                ds = h.get("diffShares", 0)
+                if ds > 0:
+                    adds.add(h["code"])
+                elif ds < 0:
+                    reds.add(h["code"])
+        out.append((os.path.basename(f)[:10], adds, reds))
+    return out
+
+
+def _streak(recent, code, want):
+    """從最近日往回算 code 連續被 want('add'/'red') 的天數。"""
+    cnt = 0
+    for _date, adds, reds in reversed(recent):
+        s = adds if want == "add" else reds
+        if code in s:
+            cnt += 1
+        else:
+            break
+    return cnt
+
+
+def yi_signed(amount):
+    """元 → 億，帶正負號，一位小數。"""
+    v = amount / 1e8
+    return f"{'+' if v >= 0 else ''}{v:.1f}"
 
 
 def build_digest(today_str):
     """今日版：從 live data_*.json 蒐集，與前一日 snapshot 比較。"""
-    etf_holdings, updated = _gather_from_live(today_str)
+    etf_data, updated = _gather_from_live(today_str)
     prev_snap = find_prev_snapshot(today_str)
-    return render_digest(today_str, etf_holdings, updated, prev_snap)
+    return render_digest(today_str, etf_data, updated, prev_snap)
 
 
-def render_digest(today_str, etf_holdings, updated, prev_snap):
+def render_digest(today_str, etf_data, updated, prev_snap):
     """
-    依當日各 ETF 的 holdings 與前一日 snapshot 產生分析文字。
-    etf_holdings: { code: [holding, ...] }；holding 需含 code/name/shares/prevShares/diffShares/diffAmount
-    updated:      有當日資料的 ETF 代號清單（含首日 ETF）
-    prev_snap:    前一交易日 snapshot dict（{etf:{holdings}}）或 None
+    依當日各 ETF 的 holdings + meta 與前一日 snapshot 產生分析文字。
+    etf_data: { code: {"holdings": [...], "meta": {...}} }
+    updated:  有當日資料的 ETF 代號清單（含首日 ETF）
+    prev_snap: 前一交易日 snapshot dict 或 None
     回傳 (message, updated_count)。message 不含結尾網站連結（由發送端另加）。
     """
     first_day = []
-    add_map = defaultdict(lambda: {"name": "", "amt": 0.0, "etfs": []})
-    red_map = defaultdict(lambda: {"name": "", "amt": 0.0, "etfs": []})
+    # 個股淨額聚合：code -> {name, add_amt, red_amt(負), add_etfs[], red_etfs[]}
+    stock = defaultdict(lambda: {"name": "", "add_amt": 0.0, "red_amt": 0.0,
+                                 "add_etfs": [], "red_etfs": []})
     new_pos, cleared = [], []
+    total_buy, total_sell = 0.0, 0.0   # 全市場毛買超 / 毛賣超（賣為負）
 
     for code in updated:
-        holdings = etf_holdings.get(code, [])
+        holdings = etf_data.get(code, {}).get("holdings", [])
+        meta = etf_data.get(code, {}).get("meta", {})
         active = [h for h in holdings if h.get("shares", 0) > 0]
-        # 首日 ETF 偵測：絕大多數持股 prevShares=0 → 全組合視為新增，屬雜訊
         if active and sum(1 for h in active if h.get("prevShares", 0) == 0) / len(active) > 0.8:
             first_day.append(code)
             continue
 
         for h in holdings:
             ds = h.get("diffShares", 0)
-            da = h.get("diffAmount", 0) or 0
-            prev = h.get("prevShares", 0)
-            curr = h.get("shares", 0)
+            if ds == 0:
+                continue
+            amt = _best_amount(h, meta)
+            s = stock[h["code"]]
+            s["name"] = h["name"]
             if ds > 0:
-                m = add_map[h["code"]]
-                m["name"] = h["name"]; m["amt"] += da; m["etfs"].append(code)
-                if prev == 0:
-                    new_pos.append((h["code"], h["name"], code, da))
-            elif ds < 0:
-                m = red_map[h["code"]]
-                m["name"] = h["name"]; m["amt"] += da; m["etfs"].append(code)
-                if curr == 0:
-                    cleared.append((h["code"], h["name"], code, da))
+                s["add_amt"] += amt; s["add_etfs"].append(code); total_buy += amt
+                if h.get("prevShares", 0) == 0:
+                    new_pos.append((h["code"], h["name"], code, amt))
+            else:
+                s["red_amt"] += amt; s["red_etfs"].append(code); total_sell += amt
+                if h.get("shares", 0) == 0:
+                    cleared.append((h["code"], h["name"], code, amt))
 
-    # 與前一交易日比較共識家數
+    for c, s in stock.items():
+        s["net"] = s["add_amt"] + s["red_amt"]
+
+    # 與前一交易日比較共識「加碼家數」
     rising, cooling = [], []
     if prev_snap:
         y_add = defaultdict(list)
@@ -181,11 +251,11 @@ def render_digest(today_str, etf_holdings, updated, prev_snap):
                 name_of.setdefault(h["code"], h.get("name", h["code"]))
                 if h.get("diffShares", 0) > 0:
                     y_add[h["code"]].append(etf_id)
-        for c, m in list(add_map.items()) + list(red_map.items()):
-            if m["name"]:
-                name_of[c] = m["name"]
-        for c in set(add_map) | set(y_add):
-            t = len(add_map[c]["etfs"]) if c in add_map else 0
+        for c, s in stock.items():
+            if s["name"]:
+                name_of[c] = s["name"]
+        for c in set(stock) | set(y_add):
+            t = len(stock[c]["add_etfs"]) if c in stock else 0
             y = len(y_add.get(c, []))
             nm = name_of.get(c, c)
             if t >= 2 and t > y:
@@ -204,38 +274,63 @@ def render_digest(today_str, etf_holdings, updated, prev_snap):
         lines.append(f"（{'、'.join(first_day)} 為首日資料，不列入統計）")
     lines.append("")
 
-    top_buys = sorted(add_map.items(), key=lambda x: -x[1]["amt"])[:6]
-    if top_buys:
-        lines.append("💰 今天被買最兇的幾檔：")
-        for i, (c, m) in enumerate(top_buys, 1):
-            etfs = "、".join(sorted(m["etfs"]))
-            lines.append(f"{i}. {m['name']} {c} 約 +{yi(m['amt'])}億（{etfs}）")
+    # 1. 多空總結
+    net_all = total_buy + total_sell
+    if total_buy or total_sell:
+        bias = "整體偏多" if net_all > 0 else ("整體偏空" if net_all < 0 else "多空相當")
+        n_real = len(updated) - len(first_day)
+        lines.append(f"🧭 今日總結：{n_real} 檔合計買超 {yi(total_buy)}億、賣超 {yi(-total_sell)}億，"
+                     f"淨{yi_signed(net_all)}億，{bias}。")
         lines.append("")
 
-    consensus_add = [(c, m) for c, m in add_map.items() if len(m["etfs"]) >= 3]
-    consensus_add.sort(key=lambda x: -len(x[1]["etfs"]))
+    # 2a. 淨買超最多
+    net_buys = sorted([s for s in stock.values() if s["net"] > 0], key=lambda x: -x["net"])[:6]
+    if net_buys:
+        lines.append("💰 今天淨買超最多：")
+        for i, s in enumerate(net_buys, 1):
+            tail = f"／另 {len(s['red_etfs'])} 家減碼" if s["red_etfs"] else ""
+            lines.append(f"{i}. {s['name']}（{len(s['add_etfs'])} 家加碼{tail}）淨 {yi_signed(s['net'])}億")
+        lines.append("")
+
+    # 有志一同（≥3 家加碼）
+    consensus_add = sorted([s for s in stock.values() if len(s["add_etfs"]) >= 3],
+                           key=lambda x: -len(x["add_etfs"]))
     if consensus_add:
         lines.append("🤝 有志一同（3 家以上一起加碼）：")
-        for c, m in consensus_add:
-            lines.append(f"- {m['name']} {c}（{'、'.join(sorted(m['etfs']))}）")
+        for s in consensus_add:
+            lines.append(f"- {s['name']}（{'、'.join(sorted(s['add_etfs']))}）")
         lines.append("")
 
-    consensus_red = [(c, m) for c, m in red_map.items() if len(m["etfs"]) >= 3]
-    consensus_red.sort(key=lambda x: -len(x[1]["etfs"]))
+    # 集體調節（≥3 家減碼）
+    consensus_red = sorted([s for s in stock.values() if len(s["red_etfs"]) >= 3],
+                           key=lambda x: -len(x["red_etfs"]))
     if consensus_red:
         lines.append("⚠️ 集體調節（3 家以上一起減碼）：")
-        for c, m in consensus_red:
-            lines.append(f"- {m['name']} {c}（{'、'.join(sorted(m['etfs']))}）")
+        for s in consensus_red:
+            lines.append(f"- {s['name']}（{'、'.join(sorted(s['red_etfs']))}）")
     else:
         lines.append("✅ 沒有任何一檔被 3 家以上同時砍，無集體出逃。")
     lines.append("")
 
-    top_sells = sorted(red_map.items(), key=lambda x: x[1]["amt"])[:6]
-    if top_sells:
-        lines.append("🔻 今天被調節最重的幾檔：")
-        for i, (c, m) in enumerate(top_sells, 1):
-            etfs = "、".join(sorted(m["etfs"]))
-            lines.append(f"{i}. {m['name']} {c} 約 {yi(m['amt'])}億（{etfs}）")
+    # 2b. 淨賣超最多
+    net_sells = sorted([s for s in stock.values() if s["net"] < 0], key=lambda x: x["net"])[:6]
+    if net_sells:
+        lines.append("🔻 今天淨賣超最多：")
+        for i, s in enumerate(net_sells, 1):
+            tail = f"／另 {len(s['add_etfs'])} 家加碼" if s["add_etfs"] else ""
+            lines.append(f"{i}. {s['name']}（{len(s['red_etfs'])} 家減碼{tail}）淨 {yi_signed(s['net'])}億")
+        lines.append("")
+
+    # 2c. 經理人分歧（同時有加碼與減碼，至少一邊 ≥1、合計 ≥3 家）
+    divergence = [s for s in stock.values()
+                  if s["add_etfs"] and s["red_etfs"]
+                  and (len(s["add_etfs"]) + len(s["red_etfs"])) >= 3]
+    divergence.sort(key=lambda x: -(len(x["add_etfs"]) + len(x["red_etfs"])))
+    if divergence:
+        lines.append("⚔️ 經理人分歧最大：")
+        for s in divergence[:4]:
+            lines.append(f"- {s['name']}（{len(s['add_etfs'])} 家加碼 / {len(s['red_etfs'])} 家減碼，"
+                         f"淨 {yi_signed(s['net'])}億）")
         lines.append("")
 
     if rising or cooling:
@@ -256,24 +351,46 @@ def render_digest(today_str, etf_holdings, updated, prev_snap):
         lines.append("")
 
     # ---- 規則式「今日觀察」----
+    recent = _recent_snapshot_dirs(today_str)
     obs = []
-    if top_buys:
-        total_buy = sum(m["amt"] for _, m in add_map.items())
-        c0, m0 = top_buys[0]
-        share = m0["amt"] / total_buy * 100 if total_buy > 0 else 0
-        n_etf = len(m0["etfs"])
-        if share >= 40:
-            obs.append(f"- {m0['name']}一檔獨大——{n_etf} 家共買 +{yi(m0['amt'])}億，"
-                       f"佔今日全部買超金額約 {share:.0f}%。")
-        else:
-            obs.append(f"- 今日買超最集中在{m0['name']}（+{yi(m0['amt'])}億、{n_etf} 家），"
-                       f"佔整體買超約 {share:.0f}%。")
+    # 多空力道
+    if total_buy or total_sell:
+        ratio = total_buy / -total_sell if total_sell < 0 else 0
+        if net_all > 0 and ratio >= 1.5:
+            obs.append(f"- 買盤明顯佔優：買超是賣超的約 {ratio:.1f} 倍，經理人整體加碼意願強。")
+        elif net_all < 0 and 0 < ratio <= 0.67:
+            obs.append(f"- 賣壓明顯佔優：賣超是買超的約 {(1/ratio):.1f} 倍，經理人整體偏防禦。")
+    # 集中度（用淨買超龍頭）
+    if net_buys and total_buy > 0:
+        top = net_buys[0]
+        share = top["add_amt"] / total_buy * 100
+        n_add = len(top["add_etfs"])
+        if n_add == 1:
+            obs.append(f"- {top['name']} 由「單一 ETF」貢獻最大淨買超（{yi_signed(top['net'])}億），"
+                       f"屬個別經理人觀點、非全市場共識。")
+        elif share >= 40:
+            obs.append(f"- {top['name']}一檔獨大——{n_add} 家共同加碼，佔今日買超約 {share:.0f}%。")
+    # 連續走勢（streak）
+    if net_buys:
+        c = next(k for k, v in stock.items() if v is net_buys[0])
+        st = _streak(recent, c, "add")
+        if st >= 2:
+            obs.append(f"- {net_buys[0]['name']} 已連 {st} 日獲加碼，買盤具延續性。")
+    if net_sells:
+        c = next(k for k, v in stock.items() if v is net_sells[0])
+        st = _streak(recent, c, "red")
+        if st >= 2:
+            obs.append(f"- {net_sells[0]['name']} 已連 {st} 日被調節，賣壓持續。")
+    # 分歧
+    if divergence:
+        s = divergence[0]
+        obs.append(f"- 分歧最大：{s['name']} 有 {len(s['add_etfs'])} 家加碼、{len(s['red_etfs'])} 家減碼，"
+                   f"經理人看法分歧。")
+    # 急轉直下
     sharp_cool = [x for x in cooling if x[2] >= 3 and x[3] == 0]
     if sharp_cool:
         names = "、".join(f"{nm}（{y}→0 家）" for _, nm, y, t in sharp_cool[:3])
-        # 只有當這些股票今日確實出現在 red_map（有 ETF 減碼）時，才用「獲利了結」措辭；
-        # 否則 4→0 可能只是停止加碼、持股不動，措辭改為中性的「加碼動能消退」。
-        sold = any(c in red_map for c, nm, y, t in sharp_cool[:3])
+        sold = any(c in stock and stock[c]["red_etfs"] for c, nm, y, t in sharp_cool[:3])
         tail = "部分已轉為減碼，注意短線資金獲利了結。" if sold else "加碼動能消退，後續觀察是否轉為調節。"
         obs.append(f"- 急轉直下：{names}——前一日還是多家共識買，今日歸零，{tail}")
     if big_clear:
