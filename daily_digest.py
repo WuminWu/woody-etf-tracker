@@ -38,14 +38,11 @@ log = logging.getLogger(__name__)
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
-MARKER_FILE = "last_digest.txt"
 DIGESTS_FILE = "digests.json"   # 供網站「每日分析」分頁讀取（{date: text}）
 SITE_URL = "https://wuminwu.github.io/woody-etf-tracker/"
-SEND_THRESHOLD = 10   # 12 檔台股 ETF 中至少 10 檔更新才發送
-FALLBACK_HOUR = 21    # TW 21:00 後放寬條件
-FALLBACK_MIN_COUNT = 6
+PROVENANCE = "報告來源: 854-Woody (狼群專用未經同意請勿轉傳，若數據有誤請通知我)"
 
-# 台股 ETF（不含 00988A 海外）
+# 台股 ETF（純台股；海外/混合另成一組）
 TW_ETFS = [
     ("00981A", "統一台股增長"),
     ("00400A", "國泰動能高息"),
@@ -62,6 +59,34 @@ TW_ETFS = [
     ("00996A", "兆豐台灣豐收"),
     ("00405A", "富邦台灣龍耀"),
 ]
+
+# 海外／台美混合 ETF（持股含美股，T+1 更新；未來新增混合型 ETF 加在這裡即可）
+OVERSEAS_ETFS = [
+    ("00988A", "統一全球創新"),
+]
+
+# 報告群組設定。tw 用「今天」為報告日；overseas 因 T+1，用該組目前最新的資料日。
+GROUPS = {
+    "tw": {
+        "etfs": TW_ETFS,
+        "title": "📊 {md} 主動 ETF 經理人都在買什麼（台股）",
+        "subhead": "（{u}/{t} 檔已更新持股；海外/混合 ETF 另發一份）",
+        "marker": "last_digest.txt",
+        "digests_file": "digests.json",
+        "use_today": True,
+        # 門檻：21:00 前需 ≥10 檔；之後放寬為 ≥6 檔
+        "threshold_std": 10, "fallback_hour": 21, "threshold_fallback": 6,
+    },
+    "overseas": {
+        "etfs": OVERSEAS_ETFS,
+        "title": "🌍 {md} 主動 ETF 經理人都在買什麼（海外/混合）",
+        "subhead": "（{u}/{t} 檔海外/混合 ETF；持股為 T+1，報告日以官網資料日為準）",
+        "marker": "last_digest_overseas.txt",
+        "digests_file": "digests_overseas.json",
+        "use_today": False,   # 用該組最新資料日（T+1）
+        "threshold_std": 1, "fallback_hour": 0, "threshold_fallback": 1,
+    },
+}
 
 
 def send_telegram(message):
@@ -100,10 +125,10 @@ def find_prev_snapshot(today_str):
         return None
 
 
-def _gather_from_live(date_str):
-    """從 live data_{code}.json 蒐集當日各 ETF 的 holdings + meta。"""
+def _gather_from_live(date_str, etfs):
+    """從 live data_{code}.json 蒐集指定 ETF 群組在 date_str 的 holdings + meta。"""
     etf_data, updated = {}, []
-    for code, _name in TW_ETFS:
+    for code, _name in etfs:
         path = f"data_{code}.json"
         if not os.path.exists(path):
             continue
@@ -113,6 +138,29 @@ def _gather_from_live(date_str):
         updated.append(code)
         etf_data[code] = {"holdings": d.get("holdings", []), "meta": d.get("meta", {})}
     return etf_data, updated
+
+
+def _latest_data_date(etfs):
+    """回傳該群組各 data_*.json 中最新的 dataDate（供 T+1 群組決定報告日）。"""
+    dates = []
+    for code, _name in etfs:
+        path = f"data_{code}.json"
+        if os.path.exists(path):
+            try:
+                dd = json.loads(open(path, encoding="utf-8").read())["meta"].get("dataDate")
+                if dd:
+                    dates.append(dd)
+            except Exception:
+                pass
+    return max(dates) if dates else None
+
+
+def _filter_snapshot(snap, etfs):
+    """只保留群組內 ETF 的 snapshot 區塊，避免跨群組污染共識比較。"""
+    if not snap:
+        return None
+    codes = {c for c, _ in etfs}
+    return {k: v for k, v in snap.items() if k in codes}
 
 
 def _gather_from_snapshot(snap):
@@ -192,19 +240,30 @@ def yi_signed(amount):
     return f"{'+' if v >= 0 else ''}{v:.1f}"
 
 
-def build_digest(today_str):
-    """今日版：從 live data_*.json 蒐集，與前一日 snapshot 比較。"""
-    etf_data, updated = _gather_from_live(today_str)
-    prev_snap = find_prev_snapshot(today_str)
-    return render_digest(today_str, etf_data, updated, prev_snap)
-
-
-def render_digest(today_str, etf_data, updated, prev_snap):
+def build_digest(ref_date, group="tw"):
     """
-    依當日各 ETF 的 holdings + meta 與前一日 snapshot 產生分析文字。
+    為指定群組產生分析。tw 用 ref_date 為報告日；overseas（T+1）用該組最新資料日。
+    回傳 (report_date, message, updated_count)。
+    """
+    g = GROUPS[group]
+    etfs = g["etfs"]
+    report_date = ref_date if g["use_today"] else (_latest_data_date(etfs) or ref_date)
+    etf_data, updated = _gather_from_live(report_date, etfs)
+    prev_snap = _filter_snapshot(find_prev_snapshot(report_date), etfs)
+    msg, cnt = render_digest(report_date, etf_data, updated, prev_snap,
+                             total_tracked=len(etfs),
+                             title_tmpl=g["title"], subhead_tmpl=g["subhead"])
+    return report_date, msg, cnt
+
+
+def render_digest(today_str, etf_data, updated, prev_snap,
+                  total_tracked=None, title_tmpl="📊 {md} 主動 ETF 經理人都在買什麼",
+                  subhead_tmpl="（{u}/{t} 檔已更新持股）"):
+    """
+    依各 ETF 的 holdings + meta 與前一日 snapshot 產生分析文字。
     etf_data: { code: {"holdings": [...], "meta": {...}} }
     updated:  有當日資料的 ETF 代號清單（含首日 ETF）
-    prev_snap: 前一交易日 snapshot dict 或 None
+    prev_snap: 前一交易日 snapshot dict（已篩成同群組）或 None
     回傳 (message, updated_count)。message 不含結尾網站連結（由發送端另加）。
     """
     first_day = []
@@ -267,11 +326,12 @@ def render_digest(today_str, etf_data, updated, prev_snap):
 
     # ---- 組訊息 ----
     md = today_str[5:].replace("-", "/").lstrip("0").replace("/0", "/")
-    total_tracked = len(TW_ETFS)
-    lines = ["報告來源: 854-Woody (狼群專用未經同意請勿轉傳，若數據有誤請通知我)",
+    if total_tracked is None:
+        total_tracked = len(updated)
+    lines = [PROVENANCE,
              "",
-             f"📊 {md} 主動 ETF 經理人都在買什麼",
-             f"（{len(updated)}/{total_tracked} 檔已更新持股；00988A 海外 T+1 不列入）"]
+             title_tmpl.format(md=md),
+             subhead_tmpl.format(u=len(updated), t=total_tracked)]
     if first_day:
         lines.append(f"（{'、'.join(first_day)} 為首日資料，不列入統計）")
     lines.append("")
@@ -410,46 +470,54 @@ def render_digest(today_str, etf_data, updated, prev_snap):
     return "\n".join(lines), len(updated)
 
 
-def save_digest(date_str, message):
-    """把當日分析文字寫入 digests.json（{date: text}），供網站讀取。重跑會以最新版覆蓋。"""
+def save_digest(date_str, message, path=DIGESTS_FILE):
+    """把分析文字寫入指定 digests 檔（{date: text}），供網站讀取。重跑以最新版覆蓋。"""
     data = {}
-    if os.path.exists(DIGESTS_FILE):
+    if os.path.exists(path):
         try:
-            data = json.loads(open(DIGESTS_FILE, encoding="utf-8").read())
+            data = json.loads(open(path, encoding="utf-8").read())
         except Exception:
             data = {}
     data[date_str] = message
-    with open(DIGESTS_FILE, "w", encoding="utf-8") as f:
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=0)
-    log.info(f"Saved digest text to {DIGESTS_FILE} ({date_str}).")
+    log.info(f"Saved digest text to {path} ({date_str}).")
+
+
+def run_group(group, now):
+    """為單一群組產生 + 存檔 + 發送（各自獨立的 marker / digests 檔）。"""
+    g = GROUPS[group]
+    today_str = now.strftime("%Y-%m-%d")
+    report_date, message, count = build_digest(today_str, group=group)
+    threshold = g["threshold_std"] if now.hour < g["fallback_hour"] else g["threshold_fallback"]
+
+    # 資料夠完整才存檔給網站（重跑覆蓋成最新版）
+    if count >= threshold:
+        save_digest(report_date, message, path=g["digests_file"])
+
+    marker = g["marker"]
+    # 該報告日已發送過就不重送（overseas 以資料日為準，自然處理 T+1）
+    if os.path.exists(marker) and open(marker, encoding="utf-8").read().strip() == report_date:
+        log.info(f"[{group}] digest for {report_date} already sent (text saved; skipping Telegram).")
+        return
+    if count < threshold:
+        log.info(f"[{group}] only {count} ETFs for {report_date} (need {threshold}). Waiting.")
+        return
+    if send_telegram(message + "\n\n" + SITE_URL):
+        with open(marker, "w", encoding="utf-8") as f:
+            f.write(report_date)
+        log.info(f"[{group}] digest sent and marker written ({report_date}).")
+    else:
+        log.warning(f"[{group}] send failed; marker not written (will retry next run).")
 
 
 def main():
     now = datetime.now(timezone(timedelta(hours=8)))
-    today_str = now.strftime("%Y-%m-%d")
-
-    message, updated_count = build_digest(today_str)
-    threshold = SEND_THRESHOLD if now.hour < FALLBACK_HOUR else FALLBACK_MIN_COUNT
-
-    # 資料夠完整才存檔給網站（避免清晨資料殘缺就覆蓋）；重跑會更新成最新版本
-    if updated_count >= threshold:
-        save_digest(today_str, message)
-
-    # Telegram：當日已發送過就不重送
-    if os.path.exists(MARKER_FILE) and open(MARKER_FILE, encoding="utf-8").read().strip() == today_str:
-        log.info("Digest already sent today (text saved; skipping Telegram).")
-        return
-
-    if updated_count < threshold:
-        log.info(f"Only {updated_count} ETFs updated (need {threshold}). Waiting for more.")
-        return
-
-    if send_telegram(message + "\n\n" + SITE_URL):
-        with open(MARKER_FILE, "w", encoding="utf-8") as f:
-            f.write(today_str)
-        log.info(f"Digest sent and marker written ({today_str}).")
-    else:
-        log.warning("Digest send failed; marker not written (will retry next run).")
+    for group in GROUPS:
+        try:
+            run_group(group, now)
+        except Exception as e:
+            log.warning(f"[{group}] digest failed: {e}")
 
 
 if __name__ == "__main__":

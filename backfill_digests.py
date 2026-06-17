@@ -18,10 +18,12 @@ import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 from daily_digest import (
-    render_digest, find_prev_snapshot, save_digest, TW_ETFS,
+    render_digest, find_prev_snapshot, save_digest, _filter_snapshot,
+    TW_ETFS, GROUPS,
 )
 
 TW_CODES = {c for c, _ in TW_ETFS}
+_G = GROUPS["tw"]
 
 
 def main():
@@ -43,9 +45,11 @@ def main():
         if not updated:
             continue
 
-        prev_snap = find_prev_snapshot(date)
-        message, count = render_digest(date, etf_data, updated, prev_snap)
-        save_digest(date, message)
+        prev_snap = _filter_snapshot(find_prev_snapshot(date), TW_ETFS)
+        message, count = render_digest(date, etf_data, updated, prev_snap,
+                                       total_tracked=len(TW_ETFS),
+                                       title_tmpl=_G["title"], subhead_tmpl=_G["subhead"])
+        save_digest(date, message, path=_G["digests_file"])
         written += 1
         print(f"  {date}: {count} 檔 ETF")
 

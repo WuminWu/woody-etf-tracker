@@ -86,6 +86,8 @@ jobs:
           [ -f history.json ] && git add history.json || echo "history.json not produced this run, skipping"
           [ -d snapshots ] && git add snapshots/ || echo "snapshots/ not produced this run, skipping"
           [ -f last_digest.txt ] && git add last_digest.txt || echo "no digest marker yet"
+          [ -f last_digest_overseas.txt ] && git add last_digest_overseas.txt || echo "no overseas marker yet"
           [ -f digests.json ] && git add digests.json || echo "no digests.json yet"
+          [ -f digests_overseas.json ] && git add digests_overseas.json || echo "no overseas digests yet"
           git diff --quiet && git diff --staged --quiet || \
             git commit -m "Auto-update ETF holdings $(date +'%Y-%m-%d')" && git push
