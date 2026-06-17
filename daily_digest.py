@@ -228,7 +228,7 @@ def render_digest(today_str, etf_data, updated, prev_snap):
                 continue
             amt = _best_amount(h, meta)
             s = stock[h["code"]]
-            s["name"] = h["name"]
+            s["name"] = h["name"]; s["code"] = h["code"]
             if ds > 0:
                 s["add_amt"] += amt; s["add_etfs"].append(code); total_buy += amt
                 if h.get("prevShares", 0) == 0:
@@ -268,7 +268,7 @@ def render_digest(today_str, etf_data, updated, prev_snap):
     # ---- 組訊息 ----
     md = today_str[5:].replace("-", "/").lstrip("0").replace("/0", "/")
     total_tracked = len(TW_ETFS)
-    lines = ["報告來源: 854-Woody (未經同意請勿轉傳)",
+    lines = ["報告來源: 854-Woody (未經同意請勿轉傳，若數據有誤請通知我)",
              "",
              f"📊 {md} 主動 ETF 經理人都在買什麼",
              f"（{len(updated)}/{total_tracked} 檔已更新持股；00988A 海外 T+1 不列入）"]
@@ -292,7 +292,7 @@ def render_digest(today_str, etf_data, updated, prev_snap):
         for i, s in enumerate(net_buys, 1):
             add_codes = "、".join(sorted(s["add_etfs"]))
             tail = f"／{'、'.join(sorted(s['red_etfs']))} 減碼" if s["red_etfs"] else ""
-            lines.append(f"{i}. {s['name']}（{add_codes} 加碼{tail}）淨 {yi_signed(s['net'])}億")
+            lines.append(f"{i}. {s['name']} {s['code']}（{add_codes} 加碼{tail}）淨 {yi_signed(s['net'])}億")
         lines.append("")
 
     # 有志一同（≥3 家加碼）
@@ -301,7 +301,7 @@ def render_digest(today_str, etf_data, updated, prev_snap):
     if consensus_add:
         lines.append("🤝 有志一同（3 家以上一起加碼）：")
         for s in consensus_add:
-            lines.append(f"- {s['name']}（{'、'.join(sorted(s['add_etfs']))}）")
+            lines.append(f"- {s['name']} {s['code']}（{'、'.join(sorted(s['add_etfs']))}）")
         lines.append("")
 
     # 集體調節（≥3 家減碼）
@@ -310,7 +310,7 @@ def render_digest(today_str, etf_data, updated, prev_snap):
     if consensus_red:
         lines.append("⚠️ 集體調節（3 家以上一起減碼）：")
         for s in consensus_red:
-            lines.append(f"- {s['name']}（{'、'.join(sorted(s['red_etfs']))}）")
+            lines.append(f"- {s['name']} {s['code']}（{'、'.join(sorted(s['red_etfs']))}）")
     else:
         lines.append("✅ 沒有任何一檔被 3 家以上同時砍，無集體出逃。")
     lines.append("")
@@ -322,7 +322,7 @@ def render_digest(today_str, etf_data, updated, prev_snap):
         for i, s in enumerate(net_sells, 1):
             red_codes = "、".join(sorted(s["red_etfs"]))
             tail = f"／{'、'.join(sorted(s['add_etfs']))} 加碼" if s["add_etfs"] else ""
-            lines.append(f"{i}. {s['name']}（{red_codes} 減碼{tail}）淨 {yi_signed(s['net'])}億")
+            lines.append(f"{i}. {s['name']} {s['code']}（{red_codes} 減碼{tail}）淨 {yi_signed(s['net'])}億")
         lines.append("")
 
     # 2c. 經理人分歧（同時有加碼與減碼，至少一邊 ≥1、合計 ≥3 家）
@@ -333,7 +333,7 @@ def render_digest(today_str, etf_data, updated, prev_snap):
     if divergence:
         lines.append("⚔️ 經理人分歧最大：")
         for s in divergence[:4]:
-            lines.append(f"- {s['name']}（加碼：{'、'.join(sorted(s['add_etfs']))}｜"
+            lines.append(f"- {s['name']} {s['code']}（加碼：{'、'.join(sorted(s['add_etfs']))}｜"
                          f"減碼：{'、'.join(sorted(s['red_etfs']))}，淨 {yi_signed(s['net'])}億）")
         lines.append("")
 
@@ -371,36 +371,34 @@ def render_digest(today_str, etf_data, updated, prev_snap):
         add_codes = "、".join(sorted(top["add_etfs"]))
         n_add = len(top["add_etfs"])
         if n_add == 1:
-            obs.append(f"- {top['name']} 僅由 {add_codes} 單一 ETF 貢獻最大淨買超（{yi_signed(top['net'])}億），"
+            obs.append(f"- {top['name']} {top['code']} 僅由 {add_codes} 單一 ETF 貢獻最大淨買超（{yi_signed(top['net'])}億），"
                        f"屬個別經理人觀點、非全市場共識。")
         elif share >= 40:
-            obs.append(f"- {top['name']}一檔獨大——{add_codes} 共 {n_add} 家加碼，佔今日買超約 {share:.0f}%。")
+            obs.append(f"- {top['name']} {top['code']} 一檔獨大——{add_codes} 共 {n_add} 家加碼，佔今日買超約 {share:.0f}%。")
     # 連續走勢（streak）
     if net_buys:
-        c = next(k for k, v in stock.items() if v is net_buys[0])
-        st = _streak(recent, c, "add")
+        st = _streak(recent, net_buys[0]["code"], "add")
         if st >= 2:
-            obs.append(f"- {net_buys[0]['name']} 已連 {st} 日獲加碼，買盤具延續性。")
+            obs.append(f"- {net_buys[0]['name']} {net_buys[0]['code']} 已連 {st} 日獲加碼，買盤具延續性。")
     if net_sells:
-        c = next(k for k, v in stock.items() if v is net_sells[0])
-        st = _streak(recent, c, "red")
+        st = _streak(recent, net_sells[0]["code"], "red")
         if st >= 2:
-            obs.append(f"- {net_sells[0]['name']} 已連 {st} 日被調節，賣壓持續。")
+            obs.append(f"- {net_sells[0]['name']} {net_sells[0]['code']} 已連 {st} 日被調節，賣壓持續。")
     # 分歧
     if divergence:
         s = divergence[0]
-        obs.append(f"- 分歧最大：{s['name']} 有 {len(s['add_etfs'])} 家加碼、{len(s['red_etfs'])} 家減碼，"
+        obs.append(f"- 分歧最大：{s['name']} {s['code']} 有 {len(s['add_etfs'])} 家加碼、{len(s['red_etfs'])} 家減碼，"
                    f"經理人看法分歧。")
     # 急轉直下
     sharp_cool = [x for x in cooling if x[2] >= 3 and x[3] == 0]
     if sharp_cool:
-        names = "、".join(f"{nm}（{y}→0 家）" for _, nm, y, t in sharp_cool[:3])
+        names = "、".join(f"{nm} {c}（{y}→0 家）" for c, nm, y, t in sharp_cool[:3])
         sold = any(c in stock and stock[c]["red_etfs"] for c, nm, y, t in sharp_cool[:3])
         tail = "部分已轉為減碼，注意短線資金獲利了結。" if sold else "加碼動能消退，後續觀察是否轉為調節。"
         obs.append(f"- 急轉直下：{names}——前一日還是多家共識買，今日歸零，{tail}")
     if big_clear:
         c, n, e, da = big_clear[0]
-        obs.append(f"- 最大清倉：{n} 被 {e} 全數出清 {yi(da)}億。")
+        obs.append(f"- 最大清倉：{n} {c} 被 {e} 全數出清 {yi(da)}億。")
     if rising:
         c, nm, y, t = rising[0]
         obs.append(f"- 新共識成形：{nm} 加碼家數 {y}→{t}，資金開始聚集。")
