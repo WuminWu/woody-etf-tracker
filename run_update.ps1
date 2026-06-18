@@ -35,6 +35,28 @@ if ($hour -lt 14) {
     exit 0
 }
 
+# --- 台股休市日守門：休市日整個跳過（不爬蟲、不發 Telegram、不 commit）---
+# 2026 證交所休市日（僅列平日；週末排程本就不跑）。每年初請更新此清單。
+# 來源：臺灣證券交易所 https://www.twse.com.tw/zh/trading/holiday.html
+$TW_HOLIDAYS_2026 = @(
+    "2026-01-01",                                              # 元旦
+    "2026-02-12","2026-02-13","2026-02-16","2026-02-17",       # 春節（含封關後結算日）
+    "2026-02-18","2026-02-19","2026-02-20",
+    "2026-02-27",                                              # 和平紀念日補假
+    "2026-04-03","2026-04-06",                                 # 兒童節/清明補假
+    "2026-05-01",                                              # 勞動節
+    "2026-06-19",                                              # 端午節
+    "2026-09-25","2026-09-28",                                 # 中秋節 / 教師節
+    "2026-10-09","2026-10-26",                                 # 國慶補假 / 光復節補假
+    "2026-12-25"                                               # 行憲紀念日
+)
+$todayStr = Get-Date -Format "yyyy-MM-dd"
+if ($TW_HOLIDAYS_2026 -contains $todayStr) {
+    Write-Log "今日 $todayStr 台股休市，跳過更新（不爬蟲、不發 Telegram、不 commit）。"
+    Write-Log "===== run_update skipped (holiday) ====="
+    exit 0
+}
+
 # --- 載入 .env 到行程環境變數 ---
 $envFile = Join-Path $root ".env"
 if (Test-Path $envFile) {
