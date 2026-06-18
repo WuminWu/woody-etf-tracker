@@ -1,17 +1,17 @@
 {
     "meta": {
         "manager": "聯博投信",
-        "ytd": "0.90",
-        "etfPrice": 10.09,
-        "priceChange": 0.0,
+        "ytd": "1.80",
+        "etfPrice": 10.18,
+        "priceChange": 0.89,
         "prevPrice": 10.09,
         "dataDate": "2026-06-12",
         "lastUpdate": "2026-06-12 20:34",
         "totalShares": 277795,
         "prevTotalShares": 277795,
-        "totalMarketCap": 28.03,
+        "totalMarketCap": 28.28,
         "prevTotalMarketCap": 27.31,
-        "priceDate": "2026-06-17"
+        "priceDate": "2026-06-18"
     },
     "holdings": [
         {
