@@ -47,7 +47,6 @@ TW_ETFS = [
     ("00981A", "統一台股增長"),
     ("00400A", "國泰動能高息"),
     ("00403A", "統一升級50"),
-    ("00404A", "聯博動能50"),
     ("00980A", "野村智慧優選"),
     ("00985A", "野村台灣50"),
     ("00991A", "復華未來50"),
@@ -484,8 +483,21 @@ def save_digest(date_str, message, path=DIGESTS_FILE):
     log.info(f"Saved digest text to {path} ({date_str}).")
 
 
+def _read_marker(path):
+    """marker 內容格式為 'YYYY-MM-DD count'；回傳 (date, count)。"""
+    if not os.path.exists(path):
+        return None, 0
+    parts = open(path, encoding="utf-8").read().strip().split()
+    date = parts[0] if parts else None
+    cnt = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 0
+    return date, cnt
+
+
 def run_group(group, now):
-    """為單一群組產生 + 存檔 + 發送（各自獨立的 marker / digests 檔）。"""
+    """
+    為單一群組產生 + 存檔 + 發送。第一份達門檻即發；之後同一報告日若「已更新檔數
+    增加」會再發一份更新版（marker 記錄 '報告日 已發送檔數'），無新增則不重發。
+    """
     g = GROUPS[group]
     today_str = now.strftime("%Y-%m-%d")
     report_date, message, count = build_digest(today_str, group=group)
@@ -496,17 +508,21 @@ def run_group(group, now):
         save_digest(report_date, message, path=g["digests_file"])
 
     marker = g["marker"]
-    # 該報告日已發送過就不重送（overseas 以資料日為準，自然處理 T+1）
-    if os.path.exists(marker) and open(marker, encoding="utf-8").read().strip() == report_date:
-        log.info(f"[{group}] digest for {report_date} already sent (text saved; skipping Telegram).")
-        return
+    m_date, m_count = _read_marker(marker)
+
     if count < threshold:
         log.info(f"[{group}] only {count} ETFs for {report_date} (need {threshold}). Waiting.")
         return
+    # 同一報告日且檔數沒增加 → 不重發
+    if m_date == report_date and count <= m_count:
+        log.info(f"[{group}] {report_date} already sent at {m_count} 檔, no new update ({count}). Skip.")
+        return
+
+    label = "更新版" if (m_date == report_date and m_count > 0) else "第一份"
     if send_telegram(message + "\n\n" + SITE_URL):
         with open(marker, "w", encoding="utf-8") as f:
-            f.write(report_date)
-        log.info(f"[{group}] digest sent and marker written ({report_date}).")
+            f.write(f"{report_date} {count}")
+        log.info(f"[{group}] {label} sent ({report_date}, {count} 檔), marker updated.")
     else:
         log.warning(f"[{group}] send failed; marker not written (will retry next run).")
 

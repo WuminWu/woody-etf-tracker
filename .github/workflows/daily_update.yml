@@ -60,7 +60,6 @@ jobs:
           python check_and_update_00981A.py || true
           python check_and_update_00400A.py || true
           python check_and_update_00403A.py || true
-          python check_and_update_00404A.py || true
           python check_and_update_00980A.py || true
           python check_and_update_00985A.py || true
           python check_and_update_00991A.py || true

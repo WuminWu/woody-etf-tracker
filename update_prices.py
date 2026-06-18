@@ -15,7 +15,6 @@ import yfinance as yf
 IPO_BASELINE = {
     # code: (ipo_date YYYY-MM-DD, ipo_price)
     "00403A": ("2026-05-12", 10.0),
-    "00404A": ("2026-06-09", 10.0),
     "00400A": ("2026-04-09", 10.0),
     "00405A": ("2026-06-09", 10.0),
 }
@@ -35,7 +34,6 @@ ETFS = [
     ("00981A", "data_00981A.json"),
     ("00400A", "data_00400A.json"),
     ("00403A", "data_00403A.json"),
-    ("00404A", "data_00404A.json"),
     ("00988A", "data_00988A.json"),
     ("00980A", "data_00980A.json"),
     ("00985A", "data_00985A.json"),

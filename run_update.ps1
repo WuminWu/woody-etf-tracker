@@ -89,7 +89,6 @@ $scripts = @(
     "check_and_update_00981A.py",
     "check_and_update_00400A.py",
     "check_and_update_00403A.py",
-    "check_and_update_00404A.py",
     "check_and_update_00980A.py",
     "check_and_update_00985A.py",
     "check_and_update_00991A.py",
