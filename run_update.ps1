@@ -35,6 +35,14 @@ if ($hour -lt 14) {
     exit 0
 }
 
+# --- 週末守門：StartWhenAvailable 可能在週末補跑錯過的排程，非交易日一律跳過 ---
+$dow = (Get-Date).DayOfWeek
+if ($dow -eq "Saturday" -or $dow -eq "Sunday") {
+    Write-Log "今日為週末（$dow），台股休市，跳過更新。"
+    Write-Log "===== run_update skipped (weekend) ====="
+    exit 0
+}
+
 # --- 台股休市日守門：休市日整個跳過（不爬蟲、不發 Telegram、不 commit）---
 # 2026 證交所休市日（僅列平日；週末排程本就不跑）。每年初請更新此清單。
 # 來源：臺灣證券交易所 https://www.twse.com.tw/zh/trading/holiday.html
