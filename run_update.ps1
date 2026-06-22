@@ -108,6 +108,7 @@ $scripts = @(
     "check_and_update_00996A.py",
     "check_and_update_00405A.py",
     "check_and_update_00988A.py",   # 海外 T+1，一併在本機跑
+    "check_and_update_00997A.py",   # 海外（美股為主），capitalfund
     "check_and_update_index.py",
     "record_common_actions.py",
     "export_history.py",

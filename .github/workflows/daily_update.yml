@@ -70,6 +70,7 @@ jobs:
           python check_and_update_00995A.py || true
           python check_and_update_00996A.py || true
           python check_and_update_00405A.py || true
+          python check_and_update_00997A.py || true
           python check_and_update_index.py || true
           python record_common_actions.py || true
           python export_history.py || true

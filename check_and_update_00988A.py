@@ -244,33 +244,57 @@ def get_previous_holdings():
         return []
 
 
+# 市場碼 → yfinance 後綴 與 計價幣別（海外股價統一換算為新台幣，diffAmount 才能跨幣別加總）
+MARKET_MAP = {
+    "US": "", "JP": ".T", "KS": ".KS", "HK": ".HK",
+    "GY": ".DE", "FP": ".PA", "LN": ".L", "SG": ".SI", "NA": ".AS",
+}
+MARKET_CCY = {
+    "US": "USD", "JP": "JPY", "KS": "KRW", "HK": "HKD", "GY": "EUR",
+    "FP": "EUR", "NA": "EUR", "LN": "GBP", "SG": "SGD",
+}
+_FX_CACHE = {}
+
+
+def _fx_to_twd(ccy):
+    """1 單位外幣 = ? 台幣（yfinance {CCY}TWD=X）。抓不到回傳 0 → 該股金額視為 0。"""
+    if ccy == "TWD":
+        return 1.0
+    if ccy in _FX_CACHE:
+        return _FX_CACHE[ccy]
+    rate = 0.0
+    try:
+        hist = yf.Ticker(f"{ccy}TWD=X").history(period="5d", timeout=10)
+        if not hist.empty:
+            rate = float(hist["Close"].iloc[-1])
+    except Exception:
+        pass
+    _FX_CACHE[ccy] = rate
+    return rate
+
+
 def get_price(code_str):
-    """Fetch current stock price from Yahoo Finance."""
+    """Fetch latest close, **converted to TWD** (so amounts are cross-currency summable)."""
     parts = code_str.strip().split()
     base = parts[0]
-    
     if len(parts) == 1:
-        # Taiwan stock
-        suffixes = [".TW", ".TWO"]
-        for suffix in suffixes:
+        # Taiwan stock — already TWD
+        for suffix in (".TW", ".TWO"):
             try:
                 hist = yf.Ticker(f"{base}{suffix}").history(period="1d", timeout=10)
                 if not hist.empty: return float(hist["Close"].iloc[-1])
             except: pass
-    elif len(parts) == 2:
-        market = parts[1].upper()
-        # Mapping for international markets
-        market_map = {
-            "US": "", "JP": ".T", "KS": ".KS", "HK": ".HK", 
-            "GY": ".DE", "FP": ".PA", "LN": ".L", "SG": ".SI"
-        }
-        yf_ticker = f"{base}{market_map.get(market, '')}"
-        try:
-            hist = yf.Ticker(yf_ticker).history(period="1d", timeout=10)
-            if not hist.empty: return float(hist["Close"].iloc[-1])
-        except: pass
-        
-    return 0.0
+        return 0.0
+    market = parts[1].upper()
+    yf_ticker = f"{base}{MARKET_MAP.get(market, '')}"
+    try:
+        hist = yf.Ticker(yf_ticker).history(period="1d", timeout=10)
+        if hist.empty: return 0.0
+        local_price = float(hist["Close"].iloc[-1])
+    except Exception:
+        return 0.0
+    fx = _fx_to_twd(MARKET_CCY.get(market, "USD"))
+    return round(local_price * fx, 2) if fx > 0 else 0.0
 
 
 def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, units=0):

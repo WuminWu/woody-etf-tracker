@@ -62,6 +62,7 @@ TW_ETFS = [
 # 海外／台美混合 ETF（持股含美股，T+1 更新；未來新增混合型 ETF 加在這裡即可）
 OVERSEAS_ETFS = [
     ("00988A", "統一全球創新"),
+    ("00997A", "群益美國增長"),
 ]
 
 # 報告群組設定。tw 用「今天」為報告日；overseas 因 T+1，用該組目前最新的資料日。
@@ -79,7 +80,7 @@ GROUPS = {
     "overseas": {
         "etfs": OVERSEAS_ETFS,
         "title": "🌍 {md} 主動 ETF 經理人都在買什麼（海外/混合）",
-        "subhead": "（{u}/{t} 檔海外/混合 ETF；持股為 T+1，報告日以官網資料日為準）",
+        "subhead": "（{u}/{t} 檔海外/混合 ETF；持股 T+1，各檔取最新揭露日）",
         "marker": "last_digest_overseas.txt",
         "digests_file": "digests_overseas.json",
         "use_today": False,   # 用該組最新資料日（T+1）
@@ -139,19 +140,25 @@ def _gather_from_live(date_str, etfs):
     return etf_data, updated
 
 
-def _latest_data_date(etfs):
-    """回傳該群組各 data_*.json 中最新的 dataDate（供 T+1 群組決定報告日）。"""
-    dates = []
+def _gather_latest(etfs):
+    """
+    海外/混合組用：各 ETF 取「自己 data_*.json 的最新揭露日」資料（不強制同一天），
+    因 00988A / 00997A 等 T+1 來源的資料日常差一天，強制同日會導致報告每次只含一檔。
+    回傳 (etf_data, updated, report_date=各檔最新日的最大值)。
+    """
+    etf_data, updated, dates = {}, [], []
     for code, _name in etfs:
         path = f"data_{code}.json"
-        if os.path.exists(path):
-            try:
-                dd = json.loads(open(path, encoding="utf-8").read())["meta"].get("dataDate")
-                if dd:
-                    dates.append(dd)
-            except Exception:
-                pass
-    return max(dates) if dates else None
+        if not os.path.exists(path):
+            continue
+        d = json.loads(open(path, encoding="utf-8").read())
+        dd = d["meta"].get("dataDate")
+        if not dd:
+            continue
+        updated.append(code)
+        dates.append(dd)
+        etf_data[code] = {"holdings": d.get("holdings", []), "meta": d.get("meta", {})}
+    return etf_data, updated, (max(dates) if dates else None)
 
 
 def _filter_snapshot(snap, etfs):
@@ -246,8 +253,12 @@ def build_digest(ref_date, group="tw"):
     """
     g = GROUPS[group]
     etfs = g["etfs"]
-    report_date = ref_date if g["use_today"] else (_latest_data_date(etfs) or ref_date)
-    etf_data, updated = _gather_from_live(report_date, etfs)
+    if g["use_today"]:
+        report_date = ref_date
+        etf_data, updated = _gather_from_live(report_date, etfs)
+    else:
+        etf_data, updated, report_date = _gather_latest(etfs)
+        report_date = report_date or ref_date
     prev_snap = _filter_snapshot(find_prev_snapshot(report_date), etfs)
     msg, cnt = render_digest(report_date, etf_data, updated, prev_snap,
                              total_tracked=len(etfs),
