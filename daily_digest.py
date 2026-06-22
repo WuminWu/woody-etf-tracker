@@ -313,13 +313,15 @@ def render_digest(today_str, etf_data, updated, prev_snap,
             if s["name"]:
                 name_of[c] = s["name"]
         for c in set(stock) | set(y_add):
-            t = len(stock[c]["add_etfs"]) if c in stock else 0
-            y = len(y_add.get(c, []))
+            t_codes = sorted(stock[c]["add_etfs"]) if c in stock else []
+            y_codes = sorted(y_add.get(c, []))
+            t = len(t_codes)
+            y = len(y_codes)
             nm = name_of.get(c, c)
             if t >= 2 and t > y:
-                rising.append((c, nm, y, t))
+                rising.append((c, nm, y, t, t_codes))     # 升溫：附今日加碼的 ETF
             elif y >= 2 and t < y:
-                cooling.append((c, nm, y, t))
+                cooling.append((c, nm, y, t, y_codes))     # 退潮：附前一日加碼的 ETF
         rising.sort(key=lambda x: -(x[3] - x[2]))
         cooling.sort(key=lambda x: (x[3] - x[2]))
 
@@ -398,10 +400,10 @@ def render_digest(today_str, etf_data, updated, prev_snap,
 
     if rising or cooling:
         lines.append("📈 共識升溫／退潮：")
-        for c, nm, y, t in rising[:4]:
-            lines.append(f" 🔥 {nm} {c}　{y}→{t} 家")
-        for c, nm, y, t in cooling[:4]:
-            lines.append(f" ❄️ {nm} {c}　{y}→{t} 家")
+        for c, nm, y, t, codes in rising[:4]:
+            lines.append(f" 🔥 {nm} {c}　{y}→{t} 家（{'、'.join(codes)} 加碼）")
+        for c, nm, y, t, codes in cooling[:4]:
+            lines.append(f" ❄️ {nm} {c}　{y}→{t} 家（原 {'、'.join(codes)} 加碼）")
         lines.append("")
 
     big_new = sorted([x for x in new_pos if abs(x[3]) >= 1e7], key=lambda x: -x[3])[:6]
@@ -451,16 +453,16 @@ def render_digest(today_str, etf_data, updated, prev_snap,
     # 急轉直下
     sharp_cool = [x for x in cooling if x[2] >= 3 and x[3] == 0]
     if sharp_cool:
-        names = "、".join(f"{nm} {c}（{y}→0 家）" for c, nm, y, t in sharp_cool[:3])
-        sold = any(c in stock and stock[c]["red_etfs"] for c, nm, y, t in sharp_cool[:3])
+        names = "、".join(f"{nm} {c}（{y}→0 家）" for c, nm, y, t, _codes in sharp_cool[:3])
+        sold = any(c in stock and stock[c]["red_etfs"] for c, nm, y, t, _codes in sharp_cool[:3])
         tail = "部分已轉為減碼，注意短線資金獲利了結。" if sold else "加碼動能消退，後續觀察是否轉為調節。"
         obs.append(f"- 急轉直下：{names}——前一日還是多家共識買，今日歸零，{tail}")
     if big_clear:
         c, n, e, da = big_clear[0]
         obs.append(f"- 最大清倉：{n} {c} 被 {e} 全數出清 {yi(da)}億。")
     if rising:
-        c, nm, y, t = rising[0]
-        obs.append(f"- 新共識成形：{nm} 加碼家數 {y}→{t}，資金開始聚集。")
+        c, nm, y, t, codes = rising[0]
+        obs.append(f"- 新共識成形：{nm} {c} 加碼家數 {y}→{t}（{'、'.join(codes)}），資金開始聚集。")
     if obs:
         lines.append("💡 今日觀察")
         lines.extend(obs)
