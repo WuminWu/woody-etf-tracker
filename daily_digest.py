@@ -161,6 +161,28 @@ def _gather_latest(etfs):
     return etf_data, updated, (max(dates) if dates else None)
 
 
+def _gather_overseas_tw_contributors():
+    """
+    海外 ETF（OVERSEAS_ETFS）持有的「台股部位」——代號無市場後綴者（如 2330；US/JP 為 'MU US'）。
+    供台股報告一併計入個股統計（2330 的加碼家數/淨額要含海外 ETF 的台股部位）。
+    回傳 (etf_data, codes)；這些 ETF 不計入台股報告的「X/13 已更新」分母。
+    """
+    etf_data, codes = {}, []
+    for code, _name in OVERSEAS_ETFS:
+        path = f"data_{code}.json"
+        if not os.path.exists(path):
+            continue
+        try:
+            d = json.loads(open(path, encoding="utf-8").read())
+        except Exception:
+            continue
+        tw_holdings = [h for h in d.get("holdings", []) if " " not in str(h.get("code", ""))]
+        if tw_holdings:
+            etf_data[code] = {"holdings": tw_holdings, "meta": d.get("meta", {})}
+            codes.append(code)
+    return etf_data, codes
+
+
 def _filter_snapshot(snap, etfs):
     """只保留群組內 ETF 的 snapshot 區塊，避免跨群組污染共識比較。"""
     if not snap:
@@ -253,26 +275,32 @@ def build_digest(ref_date, group="tw"):
     """
     g = GROUPS[group]
     etfs = g["etfs"]
+    contributors = []
     if g["use_today"]:
         report_date = ref_date
         etf_data, updated = _gather_from_live(report_date, etfs)
+        # 海外 ETF 的台股部位也計入台股報告（額外貢獻者，不算進 X/13 分母）
+        contrib_data, contributors = _gather_overseas_tw_contributors()
+        etf_data.update(contrib_data)
     else:
         etf_data, updated, report_date = _gather_latest(etfs)
         report_date = report_date or ref_date
     prev_snap = _filter_snapshot(find_prev_snapshot(report_date), etfs)
     msg, cnt = render_digest(report_date, etf_data, updated, prev_snap,
                              total_tracked=len(etfs),
-                             title_tmpl=g["title"], subhead_tmpl=g["subhead"])
+                             title_tmpl=g["title"], subhead_tmpl=g["subhead"],
+                             contributors=contributors)
     return report_date, msg, cnt
 
 
 def render_digest(today_str, etf_data, updated, prev_snap,
                   total_tracked=None, title_tmpl="📊 {md} 主動 ETF 經理人都在買什麼",
-                  subhead_tmpl="（{u}/{t} 檔已更新持股）"):
+                  subhead_tmpl="（{u}/{t} 檔已更新持股）", contributors=()):
     """
     依各 ETF 的 holdings + meta 與前一日 snapshot 產生分析文字。
     etf_data: { code: {"holdings": [...], "meta": {...}} }
-    updated:  有當日資料的 ETF 代號清單（含首日 ETF）
+    updated:  有當日資料的 ETF 代號清單（含首日 ETF），計入 header 分母
+    contributors: 額外貢獻者 ETF（如海外 ETF 的台股部位），計入個股統計但不計 header 分母
     prev_snap: 前一交易日 snapshot dict（已篩成同群組）或 None
     回傳 (message, updated_count)。message 不含結尾網站連結（由發送端另加）。
     """
@@ -283,12 +311,13 @@ def render_digest(today_str, etf_data, updated, prev_snap,
     new_pos, cleared = [], []
     total_buy, total_sell = 0.0, 0.0   # 全市場毛買超 / 毛賣超（賣為負）
 
-    for code in updated:
+    for code in list(updated) + [c for c in contributors if c in etf_data]:
         holdings = etf_data.get(code, {}).get("holdings", [])
         meta = etf_data.get(code, {}).get("meta", {})
         active = [h for h in holdings if h.get("shares", 0) > 0]
         if active and sum(1 for h in active if h.get("prevShares", 0) == 0) / len(active) > 0.8:
-            first_day.append(code)
+            if code in updated:   # 貢獻者（海外台股部位）首日就靜默略過，不列入首日提示
+                first_day.append(code)
             continue
 
         for h in holdings:
