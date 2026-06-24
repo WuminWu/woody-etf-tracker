@@ -88,6 +88,38 @@ GROUPS = {
     },
 }
 
+# 個股 → 產業對照（涵蓋主動式 ETF 常見持股；查不到歸「其他」）。新標的常出現時可補。
+SECTOR_MAP = {
+    # 半導體上游/晶圓/IC設計/IP
+    "2330": "半導體", "2303": "半導體", "2454": "IC設計", "2379": "IC設計",
+    "3034": "IC設計", "3443": "IC設計", "5274": "IC設計", "3035": "IC設計",
+    "8299": "IC設計", "6531": "IC設計", "4961": "IC設計", "3661": "IC設計",
+    "2344": "記憶體", "2408": "記憶體", "3006": "記憶體",
+    # 封測/測試介面
+    "3711": "封測", "6239": "封測", "6147": "封測", "3264": "封測",
+    "6515": "測試介面", "6223": "半導體設備", "3680": "半導體設備", "6271": "封測",
+    # PCB/載板/銅箔基板
+    "3037": "PCB載板", "2368": "PCB載板", "8046": "PCB載板", "3189": "PCB載板",
+    "6269": "PCB載板", "8358": "PCB載板", "2383": "PCB載板", "6274": "PCB載板",
+    "3044": "PCB載板", "6213": "PCB載板",
+    # 散熱/機殼/機構
+    "3017": "散熱", "3653": "散熱", "8210": "伺服器機構", "6669": "伺服器",
+    "2376": "伺服器", "2356": "伺服器", "3231": "伺服器", "2382": "伺服器",
+    # 被動元件/連接器
+    "2327": "被動元件", "2492": "連接器", "3023": "被動元件",
+    # 光通訊/矽光子
+    "4979": "光通訊", "3450": "光通訊", "3081": "光通訊",
+    # 設備/其他電子
+    "3008": "光學", "2308": "電源/散熱", "2059": "伺服器機構", "1560": "工具機",
+    "6488": "半導體設備", "5483": "半導體", "3105": "記憶體",
+    # 金融/傳產
+    "2882": "金融", "2891": "金融", "2412": "電信", "1101": "傳產",
+}
+
+
+def _sector(code):
+    return SECTOR_MAP.get(str(code).split()[0], "其他")
+
 
 def send_telegram(message):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
@@ -229,7 +261,7 @@ def _best_amount(h, meta):
 
 
 def _recent_snapshot_dirs(ref_date_str, n=12):
-    """回傳最近 n 個（含 ref_date）snapshot 的 (date, 加碼股票set, 減碼股票set)，升冪。"""
+    """回傳最近 n 個（含 ref_date）snapshot 的 (date, 加碼set, 減碼set, {code:當日淨額})，升冪。"""
     files = sorted(glob.glob("snapshots/????-??-??.json"))
     files = [f for f in files if os.path.basename(f)[:10] <= ref_date_str][-n:]
     out = []
@@ -239,27 +271,42 @@ def _recent_snapshot_dirs(ref_date_str, n=12):
         except Exception:
             continue
         adds, reds = set(), set()
+        net = defaultdict(float)
         for _etf, blk in snap.items():
             for h in blk.get("holdings", []):
                 ds = h.get("diffShares", 0)
+                net[h["code"]] += h.get("diffAmount", 0) or 0
                 if ds > 0:
                     adds.add(h["code"])
                 elif ds < 0:
                     reds.add(h["code"])
-        out.append((os.path.basename(f)[:10], adds, reds))
+        out.append((os.path.basename(f)[:10], adds, reds, net))
     return out
 
 
 def _streak(recent, code, want):
     """從最近日往回算 code 連續被 want('add'/'red') 的天數。"""
     cnt = 0
-    for _date, adds, reds in reversed(recent):
+    for _date, adds, reds, _net in reversed(recent):
         s = adds if want == "add" else reds
         if code in s:
             cnt += 1
         else:
             break
     return cnt
+
+
+def _streak_cum(recent, code, want):
+    """連續同向天數 + 期間累計淨額（元）。"""
+    cnt, cum = 0, 0.0
+    for _date, adds, reds, net in reversed(recent):
+        s = adds if want == "add" else reds
+        if code in s:
+            cnt += 1
+            cum += net.get(code, 0.0)
+        else:
+            break
+    return cnt, cum
 
 
 def yi_signed(amount):
@@ -305,11 +352,13 @@ def render_digest(today_str, etf_data, updated, prev_snap,
     回傳 (message, updated_count)。message 不含結尾網站連結（由發送端另加）。
     """
     first_day = []
-    # 個股淨額聚合：code -> {name, add_amt, red_amt(負), add_etfs[], red_etfs[]}
+    # 個股淨額聚合：code -> {name, add_amt, red_amt(負), add_etfs[], red_etfs[], 權重方向計數}
     stock = defaultdict(lambda: {"name": "", "add_amt": 0.0, "red_amt": 0.0,
-                                 "add_etfs": [], "red_etfs": []})
+                                 "add_etfs": [], "red_etfs": [],
+                                 "add_wt_up": 0, "red_wt_dn": 0})
     new_pos, cleared = [], []
     total_buy, total_sell = 0.0, 0.0   # 全市場毛買超 / 毛賣超（賣為負）
+    fund_flows = []   # (code, pct) ETF 當日規模(受益權單位)顯著變動 → 申購(+)/贖回(-)
 
     for code in list(updated) + [c for c in contributors if c in etf_data]:
         holdings = etf_data.get(code, {}).get("holdings", [])
@@ -320,19 +369,31 @@ def render_digest(today_str, etf_data, updated, prev_snap,
                 first_day.append(code)
             continue
 
+        # 規模(受益權單位)變動 → 申購/贖回；只看計入分母的本群組 ETF
+        if code in updated:
+            ts, pts = meta.get("totalShares", 0), meta.get("prevTotalShares", 0)
+            if pts and ts and abs(ts - pts) / pts >= 0.03:
+                fund_flows.append((code, (ts - pts) / pts * 100))
+
         for h in holdings:
             ds = h.get("diffShares", 0)
             if ds == 0:
                 continue
             amt = _best_amount(h, meta)
+            wt_up = h.get("todayWeight", 0) > h.get("yestWeight", 0)
+            wt_dn = h.get("todayWeight", 0) < h.get("yestWeight", 0)
             s = stock[h["code"]]
             s["name"] = h["name"]; s["code"] = h["code"]
             if ds > 0:
                 s["add_amt"] += amt; s["add_etfs"].append(code); total_buy += amt
+                if wt_up:
+                    s["add_wt_up"] += 1
                 if h.get("prevShares", 0) == 0:
                     new_pos.append((h["code"], h["name"], code, amt))
             else:
                 s["red_amt"] += amt; s["red_etfs"].append(code); total_sell += amt
+                if wt_dn:
+                    s["red_wt_dn"] += 1
                 if h.get("shares", 0) == 0:
                     cleared.append((h["code"], h["name"], code, amt))
 
@@ -377,14 +438,31 @@ def render_digest(today_str, etf_data, updated, prev_snap,
         lines.append(f"（{'、'.join(first_day)} 為首日資料，不列入統計）")
     lines.append("")
 
-    # 1. 多空總結
+    # 廣度：被 ≥3 家同向加碼/減碼的檔數
+    breadth_add = sum(1 for s in stock.values() if len(s["add_etfs"]) >= 3)
+    breadth_red = sum(1 for s in stock.values() if len(s["red_etfs"]) >= 3)
+
+    # 1. 多空總結（+ 廣度 + 規模變動提醒）
     net_all = total_buy + total_sell
     if total_buy or total_sell:
         bias = "整體偏多" if net_all > 0 else ("整體偏空" if net_all < 0 else "多空相當")
         n_real = len(updated) - len(first_day)
         lines.append(f"🧭 今日總結：{n_real} 檔合計買超 {yi(total_buy)}億、賣超 {yi(-total_sell)}億，"
                      f"淨{yi_signed(net_all)}億，{bias}。")
+        lines.append(f"　廣度：{breadth_add} 檔被 ≥3 家同向加碼、{breadth_red} 檔被 ≥3 家同向減碼。")
+        if fund_flows:
+            ff = "、".join(f"{c}{'申購' if p > 0 else '贖回'}{abs(p):.0f}%" for c, p in
+                          sorted(fund_flows, key=lambda x: -abs(x[1]))[:4])
+            lines.append(f"　⚙️ 規模顯著變動（持股增減部分為被動、非選股）：{ff}")
         lines.append("")
+
+    # 每檔的權重訊號：主動加碼=股數↑且權重↑；股數↑權重未升則偏被動（規模驅動）
+    def _wt_note(s, side):
+        if side == "add":
+            n_up, n = s["add_wt_up"], len(s["add_etfs"])
+            return f"，{n_up}/{n} 家提高權重" if n_up else "，皆未提高權重(恐規模驅動)"
+        n_dn, n = s["red_wt_dn"], len(s["red_etfs"])
+        return f"，{n_dn}/{n} 家降低權重" if n_dn else "，皆未降低權重"
 
     # 2a. 淨買超最多
     net_buys = sorted([s for s in stock.values() if s["net"] > 0], key=lambda x: -x["net"])[:6]
@@ -393,7 +471,8 @@ def render_digest(today_str, etf_data, updated, prev_snap,
         for i, s in enumerate(net_buys, 1):
             add_codes = "、".join(sorted(s["add_etfs"]))
             tail = f"／{'、'.join(sorted(s['red_etfs']))} 減碼" if s["red_etfs"] else ""
-            lines.append(f"{i}. {s['name']} {s['code']}（{add_codes} 加碼{tail}）淨 {yi_signed(s['net'])}億")
+            lines.append(f"{i}. {s['name']} {s['code']}（{add_codes} 加碼{tail}）淨 {yi_signed(s['net'])}億"
+                         f"{_wt_note(s, 'add')}")
         lines.append("")
 
     # 有志一同（≥3 家加碼）
@@ -423,7 +502,8 @@ def render_digest(today_str, etf_data, updated, prev_snap,
         for i, s in enumerate(net_sells, 1):
             red_codes = "、".join(sorted(s["red_etfs"]))
             tail = f"／{'、'.join(sorted(s['add_etfs']))} 加碼" if s["add_etfs"] else ""
-            lines.append(f"{i}. {s['name']} {s['code']}（{red_codes} 減碼{tail}）淨 {yi_signed(s['net'])}億")
+            lines.append(f"{i}. {s['name']} {s['code']}（{red_codes} 減碼{tail}）淨 {yi_signed(s['net'])}億"
+                         f"{_wt_note(s, 'red')}")
         lines.append("")
 
     # 2c. 經理人分歧（同時有加碼與減碼，至少一邊 ≥1、合計 ≥3 家）
@@ -444,6 +524,22 @@ def render_digest(today_str, etf_data, updated, prev_snap,
             lines.append(f" 🔥 {nm} {c}　{y}→{t} 家（{'、'.join(codes)} 加碼）")
         for c, nm, y, t, codes in cooling[:4]:
             lines.append(f" ❄️ {nm} {c}　{y}→{t} 家（原 {'、'.join(codes)} 加碼）")
+        lines.append("")
+
+    # 產業流向：依產業彙總淨額（排除「其他」未分類）
+    sector_net = defaultdict(float)
+    for s in stock.values():
+        sec = _sector(s["code"])
+        if sec != "其他":
+            sector_net[sec] += s["net"]
+    sec_buy = sorted([(k, v) for k, v in sector_net.items() if v > 0], key=lambda x: -x[1])[:3]
+    sec_sell = sorted([(k, v) for k, v in sector_net.items() if v < 0], key=lambda x: x[1])[:3]
+    if sec_buy or sec_sell:
+        lines.append("🏭 產業資金流向（淨額）：")
+        if sec_buy:
+            lines.append("　流入： " + "、".join(f"{k} {yi_signed(v)}億" for k, v in sec_buy))
+        if sec_sell:
+            lines.append("　流出： " + "、".join(f"{k} {yi_signed(v)}億" for k, v in sec_sell))
         lines.append("")
 
     big_new = sorted([x for x in new_pos if abs(x[3]) >= 1e7], key=lambda x: -x[3])[:6]
@@ -478,13 +574,15 @@ def render_digest(today_str, etf_data, updated, prev_snap,
             obs.append(f"- {top['name']} {top['code']} 一檔獨大——{add_codes} 共 {n_add} 家加碼，佔今日買超約 {share:.0f}%。")
     # 連續走勢（streak）
     if net_buys:
-        st = _streak(recent, net_buys[0]["code"], "add")
+        st, cum = _streak_cum(recent, net_buys[0]["code"], "add")
         if st >= 2:
-            obs.append(f"- {net_buys[0]['name']} {net_buys[0]['code']} 已連 {st} 日獲加碼，買盤具延續性。")
+            obs.append(f"- {net_buys[0]['name']} {net_buys[0]['code']} 已連 {st} 日獲加碼，"
+                       f"期間累計淨 {yi_signed(cum)}億，買盤具延續性。")
     if net_sells:
-        st = _streak(recent, net_sells[0]["code"], "red")
+        st, cum = _streak_cum(recent, net_sells[0]["code"], "red")
         if st >= 2:
-            obs.append(f"- {net_sells[0]['name']} {net_sells[0]['code']} 已連 {st} 日被調節，賣壓持續。")
+            obs.append(f"- {net_sells[0]['name']} {net_sells[0]['code']} 已連 {st} 日被調節，"
+                       f"期間累計淨 {yi_signed(cum)}億，賣壓持續。")
     # 分歧
     if divergence:
         s = divergence[0]
