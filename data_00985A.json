@@ -1,17 +1,17 @@
 {
     "meta": {
         "manager": "林浩詳",
-        "ytd": "56.38",
-        "etfPrice": 21.33,
-        "priceChange": 0.42,
-        "prevPrice": 21.24,
+        "ytd": "61.80",
+        "etfPrice": 22.07,
+        "priceChange": 3.47,
+        "prevPrice": 21.33,
         "dataDate": "2026-06-29",
         "lastUpdate": "2026-06-29 18:02",
         "totalShares": 479289,
         "prevTotalShares": 479289,
-        "totalMarketCap": 102.23,
+        "totalMarketCap": 105.78,
         "prevTotalMarketCap": 102.19,
-        "priceDate": "2026-06-29"
+        "priceDate": "2026-06-30"
     },
     "holdings": [
         {
