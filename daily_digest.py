@@ -394,8 +394,10 @@ def render_digest(today_str, etf_data, updated, prev_snap,
                 s["red_amt"] += amt; s["red_etfs"].append(code); total_sell += amt
                 if wt_dn:
                     s["red_wt_dn"] += 1
-                if h.get("shares", 0) == 0:
-                    cleared.append((h["code"], h["name"], code, amt))
+                # 全數出清(0股) 或 砍到剩 ≤1000 股(≤1張)＝實質清倉；記剩餘股數以區分措辭
+                curr = h.get("shares", 0)
+                if curr <= 1000:
+                    cleared.append((h["code"], h["name"], code, amt, curr))
 
     for c, s in stock.items():
         s["net"] = s["add_amt"] + s["red_amt"]
@@ -547,7 +549,10 @@ def render_digest(today_str, etf_data, updated, prev_snap,
         lines.append("🆕 新建倉： " + "、".join(f"{n} {c}（{e}）" for c, n, e, _ in big_new))
     big_clear = sorted([x for x in cleared if abs(x[3]) >= 1e7], key=lambda x: x[3])[:6]
     if big_clear:
-        lines.append("🗑️ 被清倉： " + "、".join(f"{n} {c}（{e} 砍 {yi(da)}億）" for c, n, e, da in big_clear))
+        def _clear_txt(c, n, e, da, rem):
+            tail = "全數出清" if rem == 0 else f"減至剩 {rem/1000:g} 張"
+            return f"{n} {c}（{e} {tail} {yi(da)}億）"
+        lines.append("🗑️ 被清倉／砍到剩零股： " + "、".join(_clear_txt(*x) for x in big_clear))
     if big_new or big_clear:
         lines.append("")
 
@@ -596,8 +601,9 @@ def render_digest(today_str, etf_data, updated, prev_snap,
         tail = "部分已轉為減碼，注意短線資金獲利了結。" if sold else "加碼動能消退，後續觀察是否轉為調節。"
         obs.append(f"- 急轉直下：{names}——前一日還是多家共識買，今日歸零，{tail}")
     if big_clear:
-        c, n, e, da = big_clear[0]
-        obs.append(f"- 最大清倉：{n} {c} 被 {e} 全數出清 {yi(da)}億。")
+        c, n, e, da, rem = big_clear[0]
+        act = "全數出清" if rem == 0 else f"砍到剩 {rem/1000:g} 張"
+        obs.append(f"- 最大清倉：{n} {c} 被 {e} {act} {yi(da)}億。")
     if rising:
         c, nm, y, t, codes = rising[0]
         obs.append(f"- 新共識成形：{nm} {c} 加碼家數 {y}→{t}（{'、'.join(codes)}），資金開始聚集。")
