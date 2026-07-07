@@ -593,13 +593,15 @@ def render_digest(today_str, etf_data, updated, prev_snap,
         s = divergence[0]
         obs.append(f"- 分歧最大：{s['name']} {s['code']} 有 {len(s['add_etfs'])} 家加碼、{len(s['red_etfs'])} 家減碼，"
                    f"經理人看法分歧。")
-    # 急轉直下
+    # 買盤共識熄火（前一日 ≥3 家加碼、今日歸零；措辭依是否真有減碼分流，避免誤讀為大幅砍倉）
     sharp_cool = [x for x in cooling if x[2] >= 3 and x[3] == 0]
     if sharp_cool:
         names = "、".join(f"{nm} {c}（{y}→0 家）" for c, nm, y, t, _codes in sharp_cool[:3])
         sold = any(c in stock and stock[c]["red_etfs"] for c, nm, y, t, _codes in sharp_cool[:3])
-        tail = "部分已轉為減碼，注意短線資金獲利了結。" if sold else "加碼動能消退，後續觀察是否轉為調節。"
-        obs.append(f"- 急轉直下：{names}——前一日還是多家共識買，今日歸零，{tail}")
+        if sold:
+            obs.append(f"- 買盤熄火且現賣壓：{names}——前一日多家共識買，今日無人續買、部分轉為減碼，注意獲利了結。")
+        else:
+            obs.append(f"- 買盤暫歇：{names}——前一日多家共識買，今日無人續加碼（持股未減、僅停止買進），觀察是否轉為調節。")
     if big_clear:
         c, n, e, da, rem = big_clear[0]
         act = "全數出清" if rem == 0 else f"砍到剩 {rem/1000:g} 張"
