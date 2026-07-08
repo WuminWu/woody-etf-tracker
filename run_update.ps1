@@ -110,6 +110,7 @@ $scripts = @(
     "check_and_update_00988A.py",   # 海外 T+1，一併在本機跑
     "check_and_update_00997A.py",   # 海外（美股為主），capitalfund
     "check_and_update_index.py",
+    "update_cost_basis.py",
     "record_common_actions.py",
     "export_history.py",
     "export_snapshots.py",
@@ -133,6 +134,7 @@ if (Test-Path "last_digest.txt"){ git add last_digest.txt 2>&1 | Out-Null }
 if (Test-Path "last_digest_overseas.txt"){ git add last_digest_overseas.txt 2>&1 | Out-Null }
 if (Test-Path "digests.json")   { git add digests.json   2>&1 | Out-Null }
 if (Test-Path "digests_overseas.json") { git add digests_overseas.json 2>&1 | Out-Null }
+if (Test-Path "cost_basis.json") { git add cost_basis.json 2>&1 | Out-Null }
 
 git diff --quiet; $unstaged = $LASTEXITCODE
 git diff --staged --quiet; $staged = $LASTEXITCODE

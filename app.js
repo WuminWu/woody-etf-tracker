@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // status sort cycles: 0=default, 1=positive first (新增→加碼→持平→減碼→出清), -1=negative first
     let statusDir     = 1;
     let globalData    = [];
+    let costBasisData = null;   // cost_basis.json：{ETF:{code:{avgCost,shares,since}}}
     let currentEtfId  = null;
     let currentDate   = 'latest';      // 'latest' or 'YYYY-MM-DD'
     let manifest      = null;
@@ -144,6 +145,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td data-label="序號"><span style="display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:50%;background:#1e293b;color:#6b7280;font-weight:bold;">0</span></td>
                 <td data-label="股票"><div class="stock-id" style="color:#60a5fa;">💰</div><div class="stock-name" style="color:#9ca3af;">現金及其他</div></td>
                 <td data-label="股價" class="align-right stock-price" style="color:#4b5563;">—</td>
+                <td data-label="成本價" class="align-right" style="color:#4b5563;">—</td>
+                <td data-label="報酬" class="align-right" style="color:#4b5563;">—</td>
                 <td data-label="股數" class="stock-shares" style="color:#4b5563;">—</td>
                 <td data-label="比例" class="align-right">${cashWeightDisplay}</td>
                 <td data-label="狀態" class="align-right"><span style="color:#4b5563;">—</span></td>
@@ -182,6 +185,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `<span style="color:#9ca3af;font-size:0.8em;">${formatNumber(prev)}</span> <span style="color:${color};">→</span> <span style="font-weight:600;">${formatNumber(curr)}</span>`;
             })();
 
+            const costDisplay = (() => {
+                const rec = costBasisData?.[currentEtfId]?.[String(holding.code)];
+                if (!rec || !rec.avgCost) {
+                    return { cost: '<span style="color:#6b7280;font-size:0.85em;">無紀錄</span>',
+                             ret:  '<span style="color:#6b7280;">—</span>' };
+                }
+                const cost = rec.avgCost;
+                const costTxt = `<span title="起算日 ${rec.since || '—'}">$${formatNumber(cost, 2)}</span>`;
+                if (!holding.price || holding.shares <= 0) {
+                    return { cost: costTxt, ret: '<span style="color:#6b7280;">—</span>' };
+                }
+                const pct = (holding.price - cost) / cost * 100;
+                const color = pct >= 0 ? '#ff4d4d' : '#4ade80';
+                return { cost: costTxt,
+                         ret: `<span style="color:${color};font-weight:600;">${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%</span>` };
+            })();
+
             const priceDisplay = (() => {
                 const prev = holding.prevPrice || 0;
                 const curr = holding.price;
@@ -196,6 +216,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td data-label="序號"><span style="display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:50%;background:#334155;color:#fff;font-weight:bold;">${holding.rank}</span></td>
                 <td data-label="股票"><div class="stock-id">${holding.code}</div><div class="stock-name">${holding.name}</div></td>
                 <td data-label="股價" class="align-right stock-price">${priceDisplay}</td>
+                <td data-label="成本價" class="align-right">${costDisplay.cost}</td>
+                <td data-label="報酬" class="align-right">${costDisplay.ret}</td>
                 <td data-label="股數" class="stock-shares">${sharesDisplay}</td>
                 <td data-label="比例" class="align-right">${weightDisplay}</td>
                 <td data-label="狀態" class="align-right">${renderStatus(holding)}</td>
@@ -206,6 +228,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
     };
+
+    // 載入成本價資料；到手後若持股已渲染則重繪補上成本欄
+    fetch(`cost_basis.json?t=${Date.now()}`, { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+            costBasisData = data || {};
+            if (globalData.length) applySortAndRender();
+        })
+        .catch(() => { costBasisData = {}; });
 
     const resetHeaderIcons = () => {
         thDiffAmount.innerHTML  = '<i class="fa-solid fa-sack-dollar"></i> 加/減碼金額 <i class="fa-solid fa-sort" style="opacity:0.3"></i>';
