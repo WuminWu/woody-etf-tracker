@@ -321,8 +321,16 @@
                 </div>
                 <div class="last-update-bar" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
                     <span><i class="fa-regular fa-clock"></i> 每日收盤後由經理人持股異動自動彙整</span>
-                    <span style="display:flex;align-items:center;gap:0.4rem;">
-                        <i class="fa-solid fa-calendar-days" style="color:var(--text-secondary);font-size:0.85rem;"></i>
+                    <span style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+                        <i class="fa-solid fa-file-lines" style="color:var(--text-secondary);font-size:0.85rem;"></i>
+                        <label for="digest-type-picker" style="color:var(--text-secondary);font-size:0.85rem;">報告：</label>
+                        <select id="digest-type-picker" class="etf-select" style="min-width:130px;font-size:0.85rem;padding:0.3rem 0.6rem;">
+                            <option value="tw_daily">日報（台股）</option>
+                            <option value="ov_daily">日報（海外/混合）</option>
+                            <option value="tw_weekly">週報（台股）</option>
+                            <option value="ov_weekly">週報（海外/混合）</option>
+                        </select>
+                        <i class="fa-solid fa-calendar-days" style="color:var(--text-secondary);font-size:0.85rem;margin-left:0.4rem;"></i>
                         <label for="digest-date-picker" style="color:var(--text-secondary);font-size:0.85rem;">查看日期：</label>
                         <select id="digest-date-picker" class="etf-select" style="min-width:160px;font-size:0.85rem;padding:0.3rem 0.6rem;"></select>
                     </span>
@@ -350,6 +358,6 @@
         <div id="lightbox-close">✕</div>
     </div>
 
-    <script src="app.js?v=33"></script>
+    <script src="app.js?v=34"></script>
 </body>
 </html>

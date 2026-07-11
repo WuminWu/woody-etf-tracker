@@ -77,6 +77,7 @@ jobs:
           python export_history.py || true
           python export_snapshots.py || true
           python daily_digest.py || true
+          python weekly_digest.py || true
 
       - name: Commit and push changes
         if: env.SKIP_RUN != 'true'
@@ -91,5 +92,8 @@ jobs:
           [ -f digests.json ] && git add digests.json || echo "no digests.json yet"
           [ -f digests_overseas.json ] && git add digests_overseas.json || echo "no overseas digests yet"
           [ -f cost_basis.json ] && git add cost_basis.json || echo "no cost_basis yet"
+          [ -f last_weekly.txt ] && git add last_weekly.txt || echo "no weekly marker yet"
+          [ -f digests_weekly.json ] && git add digests_weekly.json || echo "no weekly digests yet"
+          [ -f digests_weekly_overseas.json ] && git add digests_weekly_overseas.json || echo "no weekly overseas digests yet"
           git diff --quiet && git diff --staged --quiet || \
             git commit -m "Auto-update ETF holdings $(date +'%Y-%m-%d')" && git push

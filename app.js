@@ -1143,6 +1143,13 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshCommonDatePicker();
 
     // ── Daily Digest tab ───────────────────────────────────────
+    const DIGEST_FILES = {
+        tw_daily:  'digests.json',
+        ov_daily:  'digests_overseas.json',
+        tw_weekly: 'digests_weekly.json',
+        ov_weekly: 'digests_weekly_overseas.json',
+    };
+    let digestType = 'tw_daily';    // 報告類型（日報/週報 × 台股/海外）
     let digestData = null;          // { 'YYYY-MM-DD': text }
     let digestDates = [];           // sorted desc
     let digestCurrentDate = null;
@@ -1152,21 +1159,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const badge = document.getElementById('digest-badge');
         if (!pre) return;
         if (!digestData || digestDates.length === 0) {
-            pre.textContent = '目前尚無分析資料。每日收盤後產生第一份分析後即會出現。';
+            pre.textContent = '目前尚無分析資料。收盤後產生第一份分析後即會出現。';
             if (badge) badge.textContent = '無資料';
             return;
         }
         const d = digestCurrentDate && digestData[digestCurrentDate]
             ? digestCurrentDate : digestDates[0];
         pre.textContent = digestData[d] || '（該日無分析）';
-        if (badge) badge.textContent = `共 ${digestDates.length} 天`;
+        const unit = digestType.endsWith('weekly') ? '週' : '天';
+        if (badge) badge.textContent = `共 ${digestDates.length} ${unit}`;
     };
 
     const loadDigests = (force = false) => {
         if (digestData && !force) { renderDigest(); return; }
         const pre = document.getElementById('digest-text');
         if (pre) pre.textContent = '載入中...';
-        fetch(`digests.json?t=${Date.now()}`, { cache: 'no-store' })
+        fetch(`${DIGEST_FILES[digestType]}?t=${Date.now()}`, { cache: 'no-store' })
             .then(r => r.ok ? r.json() : null)
             .then(data => {
                 digestData = data || {};
@@ -1192,6 +1200,16 @@ document.addEventListener('DOMContentLoaded', () => {
         digestDatePicker.addEventListener('change', e => {
             digestCurrentDate = e.target.value;
             renderDigest();
+        });
+    }
+
+    const digestTypePicker = document.getElementById('digest-type-picker');
+    if (digestTypePicker) {
+        digestTypePicker.addEventListener('change', e => {
+            digestType = e.target.value;
+            digestData = null;          // 換類型 → 重抓對應檔案
+            digestCurrentDate = null;
+            loadDigests(true);
         });
     }
 

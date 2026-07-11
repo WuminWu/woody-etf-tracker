@@ -24,9 +24,10 @@ $action = New-ScheduledTaskAction `
     -Execute "powershell.exe" `
     -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$script`""
 
-# 觸發：週一～週五 18:00，之後每 30 分鐘重複，持續 3 小時（涵蓋到 21:00）
+# 觸發：週一～週六 18:00，之後每 30 分鐘重複，持續 3 小時（涵蓋到 21:00）
+# 週六僅執行週報補發檢查（run_update.ps1 的 weeklyOnly 分支），不跑爬蟲
 $trigger = New-ScheduledTaskTrigger -Weekly `
-    -DaysOfWeek Monday,Tuesday,Wednesday,Thursday,Friday `
+    -DaysOfWeek Monday,Tuesday,Wednesday,Thursday,Friday,Saturday `
     -At 18:00
 # RepetitionDuration 用分鐘 (180) 確保涵蓋到 18:00+3h = 21:00 的最後一次觸發。
 $trigger.Repetition = (New-ScheduledTaskTrigger -Once -At 18:00 `

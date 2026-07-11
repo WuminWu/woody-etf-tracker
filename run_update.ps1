@@ -35,12 +35,17 @@ if ($hour -lt 14) {
     exit 0
 }
 
-# --- 週末守門：StartWhenAvailable 可能在週末補跑錯過的排程，非交易日一律跳過 ---
+# --- 週末守門：週日一律跳過；週六僅執行「週報補發」（週五休市時由此發出週報）---
+$weeklyOnly = $false
 $dow = (Get-Date).DayOfWeek
-if ($dow -eq "Saturday" -or $dow -eq "Sunday") {
-    Write-Log "今日為週末（$dow），台股休市，跳過更新。"
+if ($dow -eq "Sunday") {
+    Write-Log "今日為週日，台股休市，跳過更新。"
     Write-Log "===== run_update skipped (weekend) ====="
     exit 0
+}
+if ($dow -eq "Saturday") {
+    Write-Log "今日為週六：不跑爬蟲，僅檢查週報是否需補發（週五休市情境）。"
+    $weeklyOnly = $true
 }
 
 # --- 台股休市日守門：休市日整個跳過（不爬蟲、不發 Telegram、不 commit）---
@@ -97,6 +102,7 @@ if (Test-Path $saFile) {
 git pull --rebase 2>&1 | ForEach-Object { Write-Log "git: $_" }
 
 # --- 依序執行所有更新腳本（單支失敗不中斷整體）---
+# 週六（weeklyOnly）只跑週報補發；weekly_digest.py 自我守門（僅週五/六觸發、同週不重發）
 $scripts = @(
     "check_and_update_00981A.py",
     "check_and_update_00400A.py",
@@ -118,8 +124,10 @@ $scripts = @(
     "record_common_actions.py",
     "export_history.py",
     "export_snapshots.py",
-    "daily_digest.py"
+    "daily_digest.py",
+    "weekly_digest.py"
 )
+if ($weeklyOnly) { $scripts = @("weekly_digest.py") }
 foreach ($s in $scripts) {
     Write-Log "--- 執行 $s ---"
     try {
@@ -139,6 +147,9 @@ if (Test-Path "last_digest_overseas.txt"){ git add last_digest_overseas.txt 2>&1
 if (Test-Path "digests.json")   { git add digests.json   2>&1 | Out-Null }
 if (Test-Path "digests_overseas.json") { git add digests_overseas.json 2>&1 | Out-Null }
 if (Test-Path "cost_basis.json") { git add cost_basis.json 2>&1 | Out-Null }
+if (Test-Path "last_weekly.txt") { git add last_weekly.txt 2>&1 | Out-Null }
+if (Test-Path "digests_weekly.json") { git add digests_weekly.json 2>&1 | Out-Null }
+if (Test-Path "digests_weekly_overseas.json") { git add digests_weekly_overseas.json 2>&1 | Out-Null }
 
 git diff --quiet; $unstaged = $LASTEXITCODE
 git diff --staged --quiet; $staged = $LASTEXITCODE
