@@ -277,6 +277,13 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
     # AUM from official tsit HTML; fallback to previous values if unavailable
     total_market_cap = round(aum_ntd / 1e8, 2) if aum_ntd > 0 else 0.0
     total_shares_raw = units if units > 0 else (round(aum_ntd / etf_price) if aum_ntd > 0 and etf_price > 0 else 0)
+    # tsit 頁面「已發行受益權單位總數」欄位曾抓到錯誤值（如 500,000）並污染後續比對基準；
+    # 若解析值與 AUM/淨值 推算值相差 >50%，改用推算值
+    if aum_ntd > 0 and etf_price > 0:
+        derived = round(aum_ntd / etf_price)
+        if total_shares_raw <= 0 or abs(total_shares_raw - derived) / derived > 0.5:
+            log.warning(f"單位數解析值 {total_shares_raw:,} 與推算值 {derived:,} 差異過大，改用推算值")
+            total_shares_raw = derived
     # prevTotalShares：只在前一個交易日才做比較，避免腳本跳日造成跨多天誤差
     prev_total_shares, prev_total_market_cap = 0, 0.0
     if os.path.exists(DATA_FILE):

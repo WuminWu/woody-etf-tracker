@@ -649,9 +649,21 @@ document.addEventListener('DOMContentLoaded', () => {
         Promise.all(ALL_ETFS.map(etf =>
             fetch(`data_${etf.id}.json?t=${tBust}`, { cache: 'no-store' })
                 .then(r => r.ok ? r.json() : null)
-                .then(data => data ? { id: etf.id, name: etf.name, ytd: parseFloat(data.meta.ytd), etfPrice: data.meta.etfPrice } : null)
+                .then(data => data ? { id: etf.id, name: etf.name, ytd: parseFloat(data.meta.ytd), etfPrice: data.meta.etfPrice, aum: data.meta.totalMarketCap || 0 } : null)
                 .catch(() => null)
         )).then(results => {
+            // ETF 下拉選單依基金規模（億）由大到小重排，保留原完整名稱與目前選取
+            const sel = document.getElementById('etf-selector');
+            if (sel) {
+                const aumMap = {};
+                results.filter(Boolean).forEach(r => { aumMap[r.id] = r.aum; });
+                const cur = sel.value;
+                [...sel.options]
+                    .sort((a, b) => (aumMap[b.value] || 0) - (aumMap[a.value] || 0))
+                    .forEach(o => sel.appendChild(o));
+                sel.value = cur;
+            }
+
             const valid = results.filter(Boolean)
                 .sort((a, b) => b.ytd - a.ytd);
 
