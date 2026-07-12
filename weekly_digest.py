@@ -211,6 +211,106 @@ def build_weekly(group, cur_dates, prev_dates, prev2_dates):
     return report_date, msg, cnt
 
 
+# ---------- 單檔 ETF 週報（格式比照每日單檔通知）----------
+
+ALL_ETF_NAMES = dict(TW_ETFS) | dict(OVERSEAS_ETFS)
+SECTION_CAP = 15   # 每區塊最多列 N 檔，其餘收合（防超過 Telegram 4096 字上限）
+
+
+def _fmt_zhang(shares):
+    zhang = shares / 1000
+    sign = "+" if zhang > 0 else ""
+    return f"{sign}{int(zhang):,}張" if zhang == int(zhang) else f"{sign}{zhang:,.1f}張"
+
+
+def _section(lines, title, items, fmt):
+    if not items:
+        return
+    lines.append(title)
+    for h in items[:SECTION_CAP]:
+        lines.append(fmt(h))
+    if len(items) > SECTION_CAP:
+        lines.append(f"  …及其他 {len(items) - SECTION_CAP} 檔")
+
+
+def build_etf_weekly_msg(etf, syn, rng, d1, d0):
+    """單檔 ETF 的週持股異動訊息；本週無任何異動回傳 None。"""
+    hs = syn["holdings"]
+    added     = [h for h in hs if h["prevShares"] == 0 and h["shares"] > 0]
+    removed   = [h for h in hs if h["shares"] == 0 and h["prevShares"] > 0]
+    increased = sorted([h for h in hs if h["shares"] > 0 and h["diffShares"] > 0 and h["prevShares"] > 0],
+                       key=lambda x: -x["diffShares"])
+    decreased = sorted([h for h in hs if h["shares"] > 0 and h["diffShares"] < 0],
+                       key=lambda x: x["diffShares"])
+    if not (added or removed or increased or decreased):
+        return None
+
+    name = ALL_ETF_NAMES.get(etf, "")
+    m = syn["meta"]
+    lines = [
+        "報告來源: 854-Woody (狼群專用未經同意請勿轉傳，若數據有誤請通知我)",
+        "",
+        f"📆 {etf} {name} 本週持股變化（{rng}）",
+        f"📅 比較基準：{d1} vs {d0}",
+        f"📦 持股數量：{len([h for h in hs if h['shares'] > 0])} 檔",
+    ]
+    ts, pts = m.get("totalShares", 0), m.get("prevTotalShares", 0)
+    if ts and pts:
+        chg = (ts - pts) / pts * 100
+        if abs(chg) >= 1:
+            lines.append(f"⚙️ 基金規模：{'申購' if chg > 0 else '贖回'}約 {abs(chg):.0f}%（持股增減部分為被動）")
+    lines += [
+        "",
+        f"🔴 加碼：{len(increased)} 檔　🟢 減碼：{len(decreased)} 檔",
+        f"🟣 新增：{len(added)} 檔　🟠 出清：{len(removed)} 檔",
+        "",
+    ]
+    _section(lines, "✨ 本週新增持股：", sorted(added, key=lambda x: -x["diffShares"]),
+             lambda h: f"  • {h['code']} {h['name']}　{_fmt_zhang(h['shares'])}（0% → {h['todayWeight']}%）")
+    _section(lines, "🚫 本週出清持股：", sorted(removed, key=lambda x: -x["prevShares"]),
+             lambda h: f"  • {h['code']} {h['name']}　{_fmt_zhang(-h['prevShares'])}")
+    _section(lines, "🔴 加碼明細：", increased,
+             lambda h: f"  • {h['code']} {h['name']}　{_fmt_zhang(h['diffShares'])}（{h['yestWeight']}% → {h['todayWeight']}%）")
+    _section(lines, "🟢 減碼明細：", decreased,
+             lambda h: f"  • {h['code']} {h['name']}　{_fmt_zhang(h['diffShares'])}（{h['yestWeight']}% → {h['todayWeight']}%）")
+    return "\n".join(lines)
+
+
+def run_per_etf(cur_dates, prev_dates, marker, cur_week, today, wd):
+    """每檔 ETF 各發一則週報。marker['per_etf'] = {etf: 已發送的 ISO 週}。"""
+    sent_map = marker.setdefault("per_etf", {})
+    for etf, _n in list(ALL_ETF_NAMES.items()):
+        if sent_map.get(etf) == cur_week:
+            continue
+        d1 = etf_latest_in(cur_dates, etf)
+        if not d1:
+            continue
+        # 週五需該檔當日已更新（否則等後續輪次或週六補發）
+        if wd == 4 and d1 != today.isoformat():
+            continue
+        d0 = etf_latest_in(prev_dates, etf)
+        if not d0:
+            log.info(f"[per-etf {etf}] 無上週基準（新納入），跳過。")
+            sent_map[etf] = cur_week
+            continue
+        syn = build_week_diff(etf, d1, d0)
+        if not syn:
+            continue
+        rng = f"{cur_dates[0][5:].replace('-', '/')}~{d1[5:].replace('-', '/')}"
+        msg = build_etf_weekly_msg(etf, syn, rng, d1, d0)
+        if msg is None:
+            log.info(f"[per-etf {etf}] 本週無持股異動，不發送。")
+            sent_map[etf] = cur_week
+            save_marker(marker)
+            continue
+        if send_telegram(msg):
+            sent_map[etf] = cur_week
+            save_marker(marker)
+            log.info(f"[per-etf {etf}] 單檔週報已發送。")
+        else:
+            log.warning(f"[per-etf {etf}] 發送失敗，下輪重試。")
+
+
 # 把日報措辭轉為週報語意（render_digest 為日報用語，此處統一轉換）
 _WORD_MAP = [
     ("今日總結", "本週總結"),
@@ -297,6 +397,10 @@ def run_scheduled():
         else:
             log.warning(f"[{group}] 週報發送失敗，marker 未寫（下輪重試）。")
 
+    # 單檔 ETF 週報（每檔一則；台股組彙總報告達門檻後才開始發，避免資料未齊）
+    if marker.get("tw") == cur:
+        run_per_etf(cur_dates, prev_dates, marker, cur, today, wd)
+
 
 def run_preview():
     today = datetime.now(timezone(timedelta(hours=8))).date()
@@ -306,6 +410,21 @@ def run_preview():
         out = f"_weekly_{group}.txt"
         open(out, "w", encoding="utf-8").write(msg or "(無資料)")
         log.info(f"[{group}] preview → {out}（{cnt} 檔，報告日 {report_date}）")
+    # 單檔 ETF 週報全部寫入一個檔
+    parts = []
+    for etf in ALL_ETF_NAMES:
+        d1 = etf_latest_in(cur_dates, etf)
+        d0 = etf_latest_in(prev_dates, etf) if d1 else None
+        if not (d1 and d0):
+            continue
+        syn = build_week_diff(etf, d1, d0)
+        if not syn:
+            continue
+        rng = f"{cur_dates[0][5:].replace('-', '/')}~{d1[5:].replace('-', '/')}"
+        msg = build_etf_weekly_msg(etf, syn, rng, d1, d0)
+        parts.append(msg or f"（{etf} 本週無持股異動）")
+    open("_weekly_per_etf.txt", "w", encoding="utf-8").write("\n\n" + ("\n\n" + "=" * 30 + "\n\n").join(parts))
+    log.info(f"[per-etf] preview → _weekly_per_etf.txt（{len(parts)} 檔）")
 
 
 def run_backfill():
