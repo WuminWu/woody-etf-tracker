@@ -307,6 +307,7 @@ def run_per_etf(cur_dates, prev_dates, marker, cur_week, today, wd):
             sent_map[etf] = cur_week
             save_marker(marker)
             log.info(f"[per-etf {etf}] 單檔週報已發送。")
+            import time; time.sleep(3)   # Telegram 同聊天室速率限制（~20 則/分），連發需間隔
         else:
             log.warning(f"[per-etf {etf}] 發送失敗，下輪重試。")
 
