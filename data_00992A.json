@@ -1,16 +1,17 @@
 {
     "meta": {
         "manager": "陳朝政",
-        "ytd": "55.48",
-        "etfPrice": 15.72,
-        "priceChange": 5.72,
-        "prevPrice": 14.87,
+        "ytd": "60.42",
+        "etfPrice": 16.22,
+        "priceChange": 3.18,
+        "prevPrice": 15.72,
         "dataDate": "2026-07-21",
         "lastUpdate": "2026-07-21 18:06",
         "totalShares": 2425455,
         "prevTotalShares": 2422955,
-        "totalMarketCap": 380.9,
-        "prevTotalMarketCap": 380.89
+        "totalMarketCap": 393.41,
+        "prevTotalMarketCap": 380.89,
+        "priceDate": "2026-07-22"
     },
     "holdings": [
         {

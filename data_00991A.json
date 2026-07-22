@@ -1,16 +1,17 @@
 {
     "meta": {
         "manager": "呂宏宇",
-        "ytd": "60.36",
-        "etfPrice": 16.71,
-        "priceChange": 1.27,
-        "prevPrice": 16.5,
+        "ytd": "74.56",
+        "etfPrice": 17.34,
+        "priceChange": 3.77,
+        "prevPrice": 16.71,
         "dataDate": "2026-07-21",
         "lastUpdate": "2026-07-21 18:05",
         "totalShares": 4482916,
         "prevTotalShares": 4433416,
-        "totalMarketCap": 747.67,
-        "prevTotalMarketCap": 740.82
+        "totalMarketCap": 777.34,
+        "prevTotalMarketCap": 740.82,
+        "priceDate": "2026-07-22"
     },
     "holdings": [
         {
