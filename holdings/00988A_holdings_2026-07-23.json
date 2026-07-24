@@ -1,0 +1,254 @@
+[
+  {
+    "code": "AMD US",
+    "name": "ADVANCED MICRO DEVICES.amd us(超微半導體公司)",
+    "shares": 205000,
+    "weight": 6.0
+  },
+  {
+    "code": "MU US",
+    "name": "MICRON TECHNOLOGY INC",
+    "shares": 108569,
+    "weight": 5.83
+  },
+  {
+    "code": "009150 KS",
+    "name": "Samsung Electro-Mechanics co(009150 ks)",
+    "shares": 83000,
+    "weight": 4.51
+  },
+  {
+    "code": "AMAT US",
+    "name": "APPLIED MATERIALS INC",
+    "shares": 135000,
+    "weight": 4.12
+  },
+  {
+    "code": "6981 JP",
+    "name": "MURATA MANUFACTURING CO LTD",
+    "shares": 1350000,
+    "weight": 3.83
+  },
+  {
+    "code": "285A JP",
+    "name": "KIOXIA HOLDINGS CORP",
+    "shares": 180000,
+    "weight": 3.7
+  },
+  {
+    "code": "BE US",
+    "name": "BLOOM ENERGY CORP- A",
+    "shares": 310000,
+    "weight": 3.66
+  },
+  {
+    "code": "3037",
+    "name": "欣興",
+    "shares": 2400000,
+    "weight": 3.61
+  },
+  {
+    "code": "2383",
+    "name": "台光電",
+    "shares": 410000,
+    "weight": 3.51
+  },
+  {
+    "code": "LITE US",
+    "name": "LUMENTUM HOLDINGS INC",
+    "shares": 77000,
+    "weight": 3.48
+  },
+  {
+    "code": "SNDK US",
+    "name": "SANDISK CORP",
+    "shares": 35000,
+    "weight": 3.06
+  },
+  {
+    "code": "2330",
+    "name": "台積電",
+    "shares": 750000,
+    "weight": 3.03
+  },
+  {
+    "code": "2454",
+    "name": "聯發科",
+    "shares": 445000,
+    "weight": 2.89
+  },
+  {
+    "code": "TSEM US",
+    "name": "TOWER SEMICONDUCTOR LTD",
+    "shares": 186825,
+    "weight": 2.64
+  },
+  {
+    "code": "CRDO US",
+    "name": "CREDO TECHNOLOGY GROUP HOLDI",
+    "shares": 200000,
+    "weight": 2.57
+  },
+  {
+    "code": "IFX GY",
+    "name": "INFINEON TECHNOLOGIES AG",
+    "shares": 625000,
+    "weight": 2.54
+  },
+  {
+    "code": "6976 JP",
+    "name": "TAIYO YUDEN CO LTD",
+    "shares": 600000,
+    "weight": 2.43
+  },
+  {
+    "code": "WDC US",
+    "name": "WESTERN DIGITAL CORP",
+    "shares": 80000,
+    "weight": 2.42
+  },
+  {
+    "code": "8035 JP",
+    "name": "TOKYO ELECTRON LTD",
+    "shares": 110000,
+    "weight": 2.41
+  },
+  {
+    "code": "2327",
+    "name": "國巨*",
+    "shares": 1800000,
+    "weight": 2.1
+  },
+  {
+    "code": "6871 JP",
+    "name": "MICRONICS JAPAN CO LTD",
+    "shares": 370000,
+    "weight": 2.01
+  },
+  {
+    "code": "6223",
+    "name": "旺矽",
+    "shares": 190000,
+    "weight": 1.99
+  },
+  {
+    "code": "3711",
+    "name": "日月光投控",
+    "shares": 1800000,
+    "weight": 1.96
+  },
+  {
+    "code": "6920 JP",
+    "name": "LASERTEC CORP",
+    "shares": 130000,
+    "weight": 1.95
+  },
+  {
+    "code": "KLAC US",
+    "name": "KLA CORP",
+    "shares": 160000,
+    "weight": 1.9
+  },
+  {
+    "code": "FTNT US",
+    "name": "FORTINET INC",
+    "shares": 200000,
+    "weight": 1.64
+  },
+  {
+    "code": "PANW US",
+    "name": "PALO ALTO NETWORKS INC",
+    "shares": 90000,
+    "weight": 1.59
+  },
+  {
+    "code": "VECO US",
+    "name": "VEECO INSTRUMENTS INC",
+    "shares": 500000,
+    "weight": 1.48
+  },
+  {
+    "code": "MRVL US",
+    "name": "MARVELL TECHNOLOGY INC",
+    "shares": 130000,
+    "weight": 1.48
+  },
+  {
+    "code": "3665",
+    "name": "貿聯-KY",
+    "shares": 368000,
+    "weight": 1.41
+  },
+  {
+    "code": "6997 JP",
+    "name": "NIPPON CHEMI-CON CORP",
+    "shares": 1275100,
+    "weight": 1.4
+  },
+  {
+    "code": "NOW US",
+    "name": "SERVICENOW INC",
+    "shares": 270000,
+    "weight": 1.35
+  },
+  {
+    "code": "3436 JP",
+    "name": "SUMCO CORP",
+    "shares": 1000000,
+    "weight": 1.25
+  },
+  {
+    "code": "2303",
+    "name": "聯電",
+    "shares": 4500000,
+    "weight": 1.05
+  },
+  {
+    "code": "2308",
+    "name": "台達電",
+    "shares": 320000,
+    "weight": 1.01
+  },
+  {
+    "code": "STM US",
+    "name": "STMICROELECTRONICS NV-NY SHS",
+    "shares": 300000,
+    "weight": 0.87
+  },
+  {
+    "code": "300408 CH",
+    "name": "CHAOZHOU THREE-CIRCLE GROU-A",
+    "shares": 899909,
+    "weight": 0.76
+  },
+  {
+    "code": "301377 CH",
+    "name": "GUANGDONG DTECH TECHNOLOGY-A",
+    "shares": 189988,
+    "weight": 0.61
+  },
+  {
+    "code": "AIXA GY",
+    "name": "AIXTRON SE",
+    "shares": 200000,
+    "weight": 0.5
+  },
+  {
+    "code": "3017",
+    "name": "奇鋐",
+    "shares": 115000,
+    "weight": 0.47
+  },
+  {
+    "code": "4062 JP",
+    "name": "IBIDEN CO LTD",
+    "shares": 60000,
+    "weight": 0.36
+  },
+  {
+    "code": "AEHR US",
+    "name": "AEHR TEST SYSTEMS",
+    "shares": 10459,
+    "weight": 0.05
+  }
+]
