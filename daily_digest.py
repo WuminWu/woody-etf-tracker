@@ -23,6 +23,7 @@ import sys
 import logging
 import urllib.request
 import urllib.parse
+import urllib.error
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
@@ -121,21 +122,47 @@ def _sector(code):
     return SECTOR_MAP.get(str(code).split()[0], "其他")
 
 
+import time as _time
+_last_send_ts = 0.0
+_MIN_SEND_GAP = 1.5   # 同一聊天室每則至少間隔（秒），避免爆量觸發 Telegram 洪水保護
+
+
 def send_telegram(message):
+    """發送 Telegram 訊息。主動節流（每則間隔 ≥1.5s）+ 429 洪水保護重試，確保訊息不被靜默丟棄。"""
+    global _last_send_ts
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         log.warning("Telegram credentials not set — printing message instead.")
         print(message)
         return False
-    try:
-        payload = urllib.parse.urlencode({"chat_id": TELEGRAM_CHAT_ID, "text": message}).encode()
-        req = urllib.request.Request(
-            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-            data=payload, method="POST")
-        with urllib.request.urlopen(req, timeout=10) as r:
-            return json.loads(r.read()).get("ok", False)
-    except Exception as e:
-        log.warning(f"Telegram failed: {e}")
-        return False
+    payload = urllib.parse.urlencode({"chat_id": TELEGRAM_CHAT_ID, "text": message}).encode()
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    for attempt in range(4):
+        gap = _MIN_SEND_GAP - (_time.time() - _last_send_ts)   # 主動節流
+        if gap > 0:
+            _time.sleep(gap)
+        try:
+            req = urllib.request.Request(url, data=payload, method="POST")
+            with urllib.request.urlopen(req, timeout=15) as r:
+                _last_send_ts = _time.time()
+                return json.loads(r.read()).get("ok", False)
+        except urllib.error.HTTPError as e:
+            _last_send_ts = _time.time()
+            try:
+                body = json.loads(e.read())
+            except Exception:
+                body = {}
+            if e.code == 429:   # 洪水保護：依 retry_after 等待後重試
+                wait = body.get("parameters", {}).get("retry_after", 5) + 1
+                log.warning(f"Telegram 429 flood control, 等待 {wait}s 後重試（第 {attempt+1} 次）")
+                _time.sleep(wait)
+                continue
+            log.warning(f"Telegram HTTP {e.code}: {body}")
+            return False
+        except Exception as e:
+            log.warning(f"Telegram failed: {e}")
+            _time.sleep(3)
+    log.warning("Telegram 多次重試仍失敗。")
+    return False
 
 
 def yi(amount):
