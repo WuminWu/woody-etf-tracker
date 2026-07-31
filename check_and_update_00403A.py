@@ -155,19 +155,20 @@ def download_xlsx():
 
 
 def parse_holdings_from_xlsx(xlsx_path):
-    """Parse holdings from ezmoney XLSX (stock data starts at row 19)."""
+    """Parse holdings from ezmoney XLSX（版面容錯：從第 15 列掃描，只收數字代號+可解析股數）。"""
+    import re
     df = pd.read_excel(xlsx_path)
     stock_data = []
-    for idx in range(19, len(df)):
+    for idx in range(max(0, min(15, len(df))), len(df)):
         row = df.iloc[idx]
         code      = str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) else ""
         name      = str(row.iloc[1]).strip() if pd.notna(row.iloc[1]) else ""
         shares_str = str(row.iloc[2]).strip() if pd.notna(row.iloc[2]) else "0"
         weight_str = str(row.iloc[3]).strip() if pd.notna(row.iloc[3]) else "0%"
 
-        if code and code != "nan" and len(code) >= 4:
+        if re.fullmatch(r"\d{4,6}[A-Za-z]?", code):
             try:
-                shares = int(shares_str.replace(",", ""))
+                shares = int(float(shares_str.replace(",", "")))
                 weight = float(weight_str.replace("%", "")) if "%" in weight_str else 0.0
                 stock_data.append({"code": code, "name": name, "shares": shares, "weight": weight})
             except Exception:
@@ -459,7 +460,7 @@ def main():
     # 3. Date matches — save and process
     log.info("File date matches today! Processing...")
     final_xlsx = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{today_str}.xlsx")
-    os.rename(xlsx_path, final_xlsx)
+    os.replace(xlsx_path, final_xlsx)
 
     today_holdings = parse_holdings_from_xlsx(final_xlsx)
     log.info(f"Parsed {len(today_holdings)} stocks")

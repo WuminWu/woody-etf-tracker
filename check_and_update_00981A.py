@@ -144,26 +144,31 @@ def download_xlsx():
 
 
 def parse_holdings_from_xlsx(xlsx_path):
-    """Parse the holdings Excel into a list of dicts."""
+    """Parse the holdings Excel into a list of dicts.
+
+    版面容錯：ezmoney xlsx 版面偶爾位移一列，過去寫死「第 19 列起」會把標題列
+    （股票代碼/股數/權重）當成持股解析而崩潰。改為從第 15 列起掃描，且只接受
+    「代號為 4~6 碼數字(可帶一碼英文) 且股數可轉為整數」的列，其餘（標題/空白/
+    合計列）自動略過，位移一兩列也能正確解析。
+    """
+    import re
     df = pd.read_excel(xlsx_path)
     stock_data = []
-    # Stock data starts around row 19 (0-indexed), with columns: code, name, shares, weight
-    for idx in range(19, len(df)):
+    start = max(0, min(15, len(df)))
+    for idx in range(start, len(df)):
         row = df.iloc[idx]
         code = str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) else ""
         name = str(row.iloc[1]).strip() if pd.notna(row.iloc[1]) else ""
-        shares_str = str(row.iloc[2]).strip() if pd.notna(row.iloc[2]) else "0"
+        shares_str = str(row.iloc[2]).strip().replace(",", "") if pd.notna(row.iloc[2]) else ""
         weight_str = str(row.iloc[3]).strip() if pd.notna(row.iloc[3]) else "0%"
-
-        if code and code != "nan" and len(code) >= 4:
-            shares = int(shares_str.replace(",", ""))
-            weight = float(weight_str.replace("%", "")) if "%" in weight_str else 0.0
-            stock_data.append({
-                "code": code,
-                "name": name,
-                "shares": shares,
-                "weight": weight,
-            })
+        if not re.fullmatch(r"\d{4,6}[A-Za-z]?", code):   # 非股票代號（標題/合計等）→ 跳過
+            continue
+        try:
+            shares = int(float(shares_str))
+        except ValueError:
+            continue
+        weight = float(weight_str.replace("%", "")) if "%" in weight_str else 0.0
+        stock_data.append({"code": code, "name": name, "shares": shares, "weight": weight})
     return stock_data
 
 
@@ -519,9 +524,9 @@ def main():
     # 3. Date matches today! Save and process
     log.info(f"File date matches today! Processing...")
 
-    # Save XLSX with proper name
+    # Save XLSX with proper name（os.replace 可覆蓋既有檔，避免 Windows rename 目標已存在時 WinError 183）
     final_xlsx = os.path.join(HOLDINGS_DIR, f"00981A_holdings_{today_str}.xlsx")
-    os.rename(xlsx_path, final_xlsx)
+    os.replace(xlsx_path, final_xlsx)
 
     # Parse today's holdings
     today_holdings = parse_holdings_from_xlsx(final_xlsx)

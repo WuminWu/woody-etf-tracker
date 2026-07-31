@@ -172,26 +172,29 @@ def download_xlsx():
 
 
 def parse_holdings_from_xlsx(xlsx_path):
-    """Parse the holdings Excel into a list of dicts."""
+    """Parse the holdings Excel into a list of dicts.
+
+    版面容錯（2026-07-31）：ezmoney xlsx 版面偶爾位移一列，寫死「row 19 起」會把標題列
+    當成持股解析而崩潰。改從第 15 列掃描；代號須以英數起首（排除中文標題列，00988A 為
+    美股混合，代號如 'MU US'/'2330'/'285A JP' 皆保留），股數不可解析則略過。
+    """
+    import re
     df = pd.read_excel(xlsx_path)
     stock_data = []
-    # Stock data starts around row 19 (0-indexed), with columns: code, name, shares, weight
-    for idx in range(19, len(df)):
+    for idx in range(max(0, min(15, len(df))), len(df)):
         row = df.iloc[idx]
         code = str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) else ""
         name = str(row.iloc[1]).strip() if pd.notna(row.iloc[1]) else ""
-        shares_str = str(row.iloc[2]).strip() if pd.notna(row.iloc[2]) else "0"
+        shares_str = str(row.iloc[2]).strip().replace(",", "") if pd.notna(row.iloc[2]) else ""
         weight_str = str(row.iloc[3]).strip() if pd.notna(row.iloc[3]) else "0%"
-
-        if code and code != "nan" and len(code) >= 4:
-            shares = int(shares_str.replace(",", ""))
-            weight = float(weight_str.replace("%", "")) if "%" in weight_str else 0.0
-            stock_data.append({
-                "code": code,
-                "name": name,
-                "shares": shares,
-                "weight": weight,
-            })
+        if len(code) < 4 or code == "nan" or not re.match(r"^[0-9A-Za-z]", code):
+            continue
+        try:
+            shares = int(float(shares_str))
+        except ValueError:
+            continue
+        weight = float(weight_str.replace("%", "")) if "%" in weight_str else 0.0
+        stock_data.append({"code": code, "name": name, "shares": shares, "weight": weight})
     return stock_data
 
 
@@ -600,7 +603,7 @@ def main():
 
     # Save XLSX with proper name
     final_xlsx = os.path.join(HOLDINGS_DIR, f"00988A_holdings_{prev_str}.xlsx")
-    os.rename(xlsx_path, final_xlsx)
+    os.replace(xlsx_path, final_xlsx)
 
     # Parse today's holdings
     today_holdings = parse_holdings_from_xlsx(final_xlsx)
