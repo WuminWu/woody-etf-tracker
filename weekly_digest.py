@@ -367,16 +367,24 @@ def _week_buckets(ref_day):
 def run_scheduled():
     now = datetime.now(timezone(timedelta(hours=8)))
     today = now.date()
-    wd = today.weekday()   # 0=Mon
-    if wd not in (4, 5):
-        log.info("非週五/週六，週報不執行。")
+    wd = today.weekday()   # 0=Mon .. 6=Sun
+    if wd >= 5:
+        log.info("週末，週報不執行。")
         return
-    cur, cur_dates, prev_dates, prev2_dates = _week_buckets(today)
+    # 週五：報「本週」（需今日 snapshot 已就緒）；週一~四：對象為「上週」，
+    # 且僅在上週週報漏發時補發（週五休市情境）——marker 已發則靜默跳過。
+    if wd == 4:
+        ref_day = today
+        need_today_snapshot = True
+    else:
+        ref_day = today - timedelta(days=wd + 3)   # 對齊上週五
+        need_today_snapshot = False
+
+    cur, cur_dates, prev_dates, prev2_dates = _week_buckets(ref_day)
     if not cur_dates or not prev_dates:
-        log.info("本週或上週無 snapshot，週報跳過。")
+        log.info(f"目標週 {cur} 或前一週無 snapshot，週報跳過。")
         return
-    # 週五：需當日 snapshot 已產生（pipeline 末段執行時通常已就緒）
-    if wd == 4 and cur_dates[-1] != today.isoformat():
+    if need_today_snapshot and cur_dates[-1] != today.isoformat():
         log.info("週五但今日 snapshot 尚未產生，待下一輪。")
         return
 

@@ -35,17 +35,14 @@ if ($hour -lt 14) {
     exit 0
 }
 
-# --- 週末守門：週日一律跳過；週六僅執行「週報補發」（週五休市時由此發出週報）---
-$weeklyOnly = $false
+# --- 週末守門：週六/日一律整個跳過（不跑爬蟲、不發任何報告）---
+# 註：週五休市導致週報漏發的情況，改由下一個交易日（週一）的 weekly_digest.py 自動補發，
+#     不再需要週六觸發（排程觸發日已改回週一~五）。
 $dow = (Get-Date).DayOfWeek
-if ($dow -eq "Sunday") {
-    Write-Log "今日為週日，台股休市，跳過更新。"
+if ($dow -eq "Saturday" -or $dow -eq "Sunday") {
+    Write-Log "今日為週末（$dow），台股休市，跳過更新。"
     Write-Log "===== run_update skipped (weekend) ====="
     exit 0
-}
-if ($dow -eq "Saturday") {
-    Write-Log "今日為週六：不跑爬蟲，僅檢查週報是否需補發（週五休市情境）。"
-    $weeklyOnly = $true
 }
 
 # --- 台股休市日守門：休市日整個跳過（不爬蟲、不發 Telegram、不 commit）---
@@ -102,7 +99,7 @@ if (Test-Path $saFile) {
 git pull --rebase 2>&1 | ForEach-Object { Write-Log "git: $_" }
 
 # --- 依序執行所有更新腳本（單支失敗不中斷整體）---
-# 週六（weeklyOnly）只跑週報補發；weekly_digest.py 自我守門（僅週五/六觸發、同週不重發）
+# weekly_digest.py 自我守門：週五發本週週報；週一~四若上週週報漏發（週五休市）則補發
 $scripts = @(
     "check_and_update_00981A.py",
     "check_and_update_00400A.py",
@@ -127,7 +124,6 @@ $scripts = @(
     "daily_digest.py",
     "weekly_digest.py"
 )
-if ($weeklyOnly) { $scripts = @("weekly_digest.py") }
 foreach ($s in $scripts) {
     Write-Log "--- 執行 $s ---"
     try {
