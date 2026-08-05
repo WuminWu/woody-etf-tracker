@@ -1,16 +1,17 @@
 {
     "meta": {
         "manager": "吳承恕",
-        "ytd": "12.30",
-        "etfPrice": 11.23,
-        "priceChange": 1.08,
+        "ytd": "17.70",
+        "etfPrice": 11.77,
+        "priceChange": 5.94,
         "prevPrice": 11.11,
         "dataDate": "2026-08-04",
         "lastUpdate": "2026-08-04 18:11",
         "totalShares": 1268877,
         "prevTotalShares": 1268877,
-        "totalMarketCap": 142.23,
-        "prevTotalMarketCap": 142.49
+        "totalMarketCap": 149.35,
+        "prevTotalMarketCap": 142.49,
+        "priceDate": "2026-08-05"
     },
     "holdings": [
         {
