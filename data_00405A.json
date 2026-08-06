@@ -1,16 +1,17 @@
 {
     "meta": {
         "manager": "高晧欣",
-        "ytd": "-19.50",
-        "etfPrice": 8.05,
-        "priceChange": 5.09,
-        "prevPrice": 7.66,
+        "ytd": "-17.50",
+        "etfPrice": 8.25,
+        "priceChange": 2.48,
+        "prevPrice": 8.05,
         "dataDate": "2026-08-05",
         "lastUpdate": "2026-08-05 18:09",
         "totalShares": 3749745,
         "prevTotalShares": 3759245,
-        "totalMarketCap": 303.73,
-        "prevTotalMarketCap": 302.62
+        "totalMarketCap": 309.35,
+        "prevTotalMarketCap": 302.62,
+        "priceDate": "2026-08-06"
     },
     "holdings": [
         {
