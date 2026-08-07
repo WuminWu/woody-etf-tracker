@@ -1,16 +1,17 @@
 {
     "meta": {
         "manager": "陳沅易",
-        "ytd": "63.45",
-        "etfPrice": 22.71,
-        "priceChange": 1.7,
-        "prevPrice": 22.33,
+        "ytd": "61.14",
+        "etfPrice": 22.39,
+        "priceChange": -1.41,
+        "prevPrice": 22.71,
         "dataDate": "2026-08-06",
         "lastUpdate": "2026-08-06 18:06",
         "totalShares": 2263936,
         "prevTotalShares": 2263936,
-        "totalMarketCap": 516.29,
-        "prevTotalMarketCap": 514.14
+        "totalMarketCap": 506.9,
+        "prevTotalMarketCap": 514.14,
+        "priceDate": "2026-08-07"
     },
     "holdings": [
         {
