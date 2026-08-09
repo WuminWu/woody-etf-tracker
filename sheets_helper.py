@@ -1,7 +1,7 @@
 """
 Google Sheets helper — append daily ETF holdings to the master sheet.
 
-Sheet: https://docs.google.com/spreadsheets/d/1oK8ICXl0euyxJocRxHLknzWD6bccukKoWQI_ke_XqA8
+Sheet: https://docs.google.com/spreadsheets/d/1Wrz6y-DJSTM0oWMa0JRztryEiPwLB8QRU8HJYxHra00
 Tab:   holdings
 
 Columns:
@@ -25,7 +25,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
-SHEET_ID   = "1oK8ICXl0euyxJocRxHLknzWD6bccukKoWQI_ke_XqA8"
+SHEET_ID   = "1Wrz6y-DJSTM0oWMa0JRztryEiPwLB8QRU8HJYxHra00"
 SHEET_TAB  = "holdings"
 SCOPES     = ["https://www.googleapis.com/auth/spreadsheets"]
 HEADER_ROW = ["日期", "ETF代號", "股票代號", "股票名稱",

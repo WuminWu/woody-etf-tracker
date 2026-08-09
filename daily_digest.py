@@ -127,8 +127,40 @@ _last_send_ts = 0.0
 _MIN_SEND_GAP = 1.5   # 同一聊天室每則至少間隔（秒），避免爆量觸發 Telegram 洪水保護
 
 
+def _split_message(message, limit=3900):
+    """把過長訊息以行為界切成多段（Telegram 單則上限 4096 字，留安全邊界）。"""
+    if len(message) <= limit:
+        return [message]
+    parts, buf = [], ""
+    for line in message.split("\n"):
+        # 單行本身就超長：硬切
+        while len(line) > limit:
+            if buf:
+                parts.append(buf); buf = ""
+            parts.append(line[:limit]); line = line[limit:]
+        if len(buf) + len(line) + 1 > limit:
+            parts.append(buf); buf = line
+        else:
+            buf = (buf + "\n" + line) if buf else line
+    if buf:
+        parts.append(buf)
+    return parts
+
+
 def send_telegram(message):
-    """發送 Telegram 訊息。主動節流（每則間隔 ≥1.5s）+ 429 洪水保護重試，確保訊息不被靜默丟棄。"""
+    """發送 Telegram 訊息。過長自動分段 + 主動節流（每則間隔 ≥1.5s）+ 429 洪水保護重試，確保訊息不被靜默丟棄。"""
+    parts = _split_message(message)
+    if len(parts) > 1:
+        n = len(parts)
+        ok_all = True
+        for i, p in enumerate(parts, 1):
+            ok_all = _send_telegram_one(f"（{i}/{n}）\n{p}") and ok_all
+        return ok_all
+    return _send_telegram_one(message)
+
+
+def _send_telegram_one(message):
+    """實際送出單一則（≤4096 字）。"""
     global _last_send_ts
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         log.warning("Telegram credentials not set — printing message instead.")

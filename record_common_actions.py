@@ -29,7 +29,7 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
-SHEET_ID = "1oK8ICXl0euyxJocRxHLknzWD6bccukKoWQI_ke_XqA8"
+SHEET_ID = "1Wrz6y-DJSTM0oWMa0JRztryEiPwLB8QRU8HJYxHra00"
 SHEET_TAB = "common_actions"
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 HEADER_ROW = ["日期", "類型", "股票代號", "股票名稱", "ETF數量", "ETF清單"]
