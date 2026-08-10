@@ -568,13 +568,18 @@ def render_digest(today_str, etf_data, updated, prev_snap,
         lines.append("")
 
     # 2c. 經理人分歧（同時有加碼與減碼，至少一邊 ≥1、合計 ≥3 家）
+    # 排序以「對立程度」為主：弱勢那一邊的家數 min(加,減) 越大代表越勢均力敵、
+    # 越是真正的分歧（如 3加vs4減 勝過 5加vs2減 的一面倒）；同分再看總家數。
     divergence = [s for s in stock.values()
                   if s["add_etfs"] and s["red_etfs"]
                   and (len(s["add_etfs"]) + len(s["red_etfs"])) >= 3]
-    divergence.sort(key=lambda x: -(len(x["add_etfs"]) + len(x["red_etfs"])))
+    divergence.sort(key=lambda x: (
+        -min(len(x["add_etfs"]), len(x["red_etfs"])),
+        -(len(x["add_etfs"]) + len(x["red_etfs"])),
+    ))
     if divergence:
         lines.append("⚔️ 經理人分歧最大：")
-        for s in divergence[:4]:
+        for s in divergence[:6]:
             lines.append(f"- {s['name']} {s['code']}（加碼：{'、'.join(sorted(s['add_etfs']))}｜"
                          f"減碼：{'、'.join(sorted(s['red_etfs']))}，淨 {yi_signed(s['net'])}億）")
         lines.append("")
