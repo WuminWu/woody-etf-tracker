@@ -113,7 +113,9 @@ def download_xlsx():
         page = context.new_page()
 
         log.info(f"Navigating to {FUND_URL} ...")
-        page.goto(FUND_URL, wait_until="networkidle")
+        # ezmoney 背景請求不斷，networkidle 常在 30s 內無法觸發而逾時；
+        # 改用 domcontentloaded（DOM 載好即可），後續已有明確等待/點擊。
+        page.goto(FUND_URL, wait_until="domcontentloaded")
         time.sleep(3)
 
         # Click 基金投資組合 tab
@@ -124,7 +126,7 @@ def download_xlsx():
             page.wait_for_timeout(5000)
         else:
             log.warning("基金投資組合 tab not found, trying anchor link")
-            page.goto(FUND_URL + "#asset", wait_until="networkidle")
+            page.goto(FUND_URL + "#asset", wait_until="domcontentloaded")
             page.wait_for_timeout(5000)
 
         # Scroll down to find export button
