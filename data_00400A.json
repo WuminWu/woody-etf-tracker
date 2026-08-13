@@ -1,16 +1,17 @@
 {
     "meta": {
         "manager": "梁恩溢",
-        "ytd": "43.60",
-        "etfPrice": 14.36,
-        "priceChange": 3.01,
-        "prevPrice": 13.94,
+        "ytd": "47.30",
+        "etfPrice": 14.73,
+        "priceChange": 5.21,
+        "prevPrice": 14.0,
         "dataDate": "2026-08-12",
         "lastUpdate": "2026-08-12 18:01",
         "totalShares": 2069640,
         "prevTotalShares": 2083140,
-        "totalMarketCap": 298.99,
-        "prevTotalMarketCap": 299.14
+        "totalMarketCap": 304.86,
+        "prevTotalMarketCap": 299.14,
+        "priceDate": "2026-08-13"
     },
     "holdings": [
         {
