@@ -1,0 +1,158 @@
+[
+  {
+    "code": "2330",
+    "name": "台積電",
+    "shares": 90000,
+    "weight": 7.8157
+  },
+  {
+    "code": "2383",
+    "name": "台光電",
+    "shares": 34000,
+    "weight": 7.6004
+  },
+  {
+    "code": "3037",
+    "name": "欣興",
+    "shares": 190000,
+    "weight": 7.0271
+  },
+  {
+    "code": "3017",
+    "name": "奇鋐",
+    "shares": 58000,
+    "weight": 6.8034
+  },
+  {
+    "code": "6223",
+    "name": "旺矽",
+    "shares": 27000,
+    "weight": 6.3048
+  },
+  {
+    "code": "3443",
+    "name": "創意",
+    "shares": 30000,
+    "weight": 5.9447
+  },
+  {
+    "code": "2454",
+    "name": "聯發科",
+    "shares": 32000,
+    "weight": 4.8849
+  },
+  {
+    "code": "6274",
+    "name": "台燿",
+    "shares": 75000,
+    "weight": 4.5551
+  },
+  {
+    "code": "2408",
+    "name": "南亞科",
+    "shares": 240000,
+    "weight": 4.4556
+  },
+  {
+    "code": "8046",
+    "name": "南電",
+    "shares": 91000,
+    "weight": 4.306
+  },
+  {
+    "code": "3665",
+    "name": "貿聯 -KY",
+    "shares": 50000,
+    "weight": 3.9885
+  },
+  {
+    "code": "3081",
+    "name": "聯亞",
+    "shares": 37800,
+    "weight": 3.4813
+  },
+  {
+    "code": "6805",
+    "name": "富世達",
+    "shares": 52000,
+    "weight": 3.4033
+  },
+  {
+    "code": "3653",
+    "name": "健策",
+    "shares": 18000,
+    "weight": 3.1687
+  },
+  {
+    "code": "7769",
+    "name": "鴻勁",
+    "shares": 12000,
+    "weight": 2.8674
+  },
+  {
+    "code": "2455",
+    "name": "全新",
+    "shares": 205000,
+    "weight": 2.8209
+  },
+  {
+    "code": "6683",
+    "name": "雍智科技",
+    "shares": 52000,
+    "weight": 2.5831
+  },
+  {
+    "code": "2345",
+    "name": "智邦",
+    "shares": 28000,
+    "weight": 2.3351
+  },
+  {
+    "code": "3363",
+    "name": "上詮",
+    "shares": 92729,
+    "weight": 1.9703
+  },
+  {
+    "code": "6515",
+    "name": "穎崴",
+    "shares": 8000,
+    "weight": 1.958
+  },
+  {
+    "code": "2308",
+    "name": "台達電",
+    "shares": 28000,
+    "weight": 1.9138
+  },
+  {
+    "code": "6739",
+    "name": "竹陞科技",
+    "shares": 50000,
+    "weight": 1.8311
+  },
+  {
+    "code": "8358",
+    "name": "金居",
+    "shares": 114000,
+    "weight": 1.7712
+  },
+  {
+    "code": "8996",
+    "name": "高力",
+    "shares": 35000,
+    "weight": 1.6244
+  },
+  {
+    "code": "3231",
+    "name": "緯創",
+    "shares": 162000,
+    "weight": 1.1366
+  },
+  {
+    "code": "5274",
+    "name": "信驊",
+    "shares": 300,
+    "weight": 0.1924
+  }
+]
