@@ -116,6 +116,7 @@ $scripts = @(
     "check_and_update_00405A.py",
     "check_and_update_00988A.py",   # 海外 T+1，一併在本機跑
     "check_and_update_00997A.py",   # 海外（美股為主），capitalfund
+    "check_and_update_00990A.py",   # 海外（全球AI），元大 Nuxt __NUXT__
     "check_and_update_index.py",
     "update_cost_basis.py",
     "record_common_actions.py",

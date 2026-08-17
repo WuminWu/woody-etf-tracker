@@ -493,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         : '';
                     const lastUpdateStr = meta.lastUpdate ? `最後更新：${meta.lastUpdate}` : '';
                     // Special note for ETFs with inherent 1-day delay (海外 ETF 因美股盤後資料隔日才公布)
-                    const GLOBAL_ETFS = ['00988A'];
+                    const GLOBAL_ETFS = ['00988A', '00997A', '00990A'];
                     let delayNote = '';
                     if (GLOBAL_ETFS.includes(etfId)) {
                         delayNote = '　<span style="color:#6b7280;font-size:0.78em;">（海外ETF，資料比台灣ETF晚1個交易日）</span>';
@@ -628,6 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00996A', name: '主動兆豐台灣豐收' },
         { id: '00405A', name: '主動富邦台灣龍耀' },
         { id: '00997A', name: '主動群益美國增長' },
+        { id: '00990A', name: '主動元大全球AI新經濟' },
     ];
 
     // ── TWII Amplitude Panel ───────────────────────────────────
@@ -722,6 +723,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00996A', name: '主動兆豐台灣豐收' },
         { id: '00405A', name: '主動富邦台灣龍耀' },
         { id: '00997A', name: '主動群益美國增長' },
+        { id: '00990A', name: '主動元大全球AI新經濟' },
     ];
 
     let crossSortAsc = false;
