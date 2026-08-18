@@ -1,0 +1,284 @@
+[
+  {
+    "code": "LITE US",
+    "name": "LUMENTUM HOLDINGS INC",
+    "shares": 101272,
+    "weight": 7.46
+  },
+  {
+    "code": "MU US",
+    "name": "MICRON TECHNOLOGY INC",
+    "shares": 80645,
+    "weight": 6.21
+  },
+  {
+    "code": "285A JP",
+    "name": "KIOXIA HOLDINGS CORP",
+    "shares": 147200,
+    "weight": 4.36
+  },
+  {
+    "code": "SNDK US",
+    "name": "SANDISK CORP",
+    "shares": 29303,
+    "weight": 3.98
+  },
+  {
+    "code": "009150 KP",
+    "name": "SAMSUNG ELECTRO-MECHANICS CO",
+    "shares": 42083,
+    "weight": 3.53
+  },
+  {
+    "code": "AMD US",
+    "name": "ADVANCED MICRO DEVICES",
+    "shares": 85079,
+    "weight": 3.27
+  },
+  {
+    "code": "6981 JP",
+    "name": "MURATA MANUFACTURING CO LTD",
+    "shares": 798800,
+    "weight": 3.17
+  },
+  {
+    "code": "3037",
+    "name": "欣興",
+    "shares": 1146000,
+    "weight": 3.07
+  },
+  {
+    "code": "COHR US",
+    "name": "COHERENT CORP",
+    "shares": 113979,
+    "weight": 3.04
+  },
+  {
+    "code": "CRDO US",
+    "name": "CREDO TECHNOLOGY GROUP HOLDI",
+    "shares": 138000,
+    "weight": 2.97
+  },
+  {
+    "code": "MRVL US",
+    "name": "MARVELL TECHNOLOGY INC",
+    "shares": 159600,
+    "weight": 2.84
+  },
+  {
+    "code": "TSEM US",
+    "name": "TOWER SEMICONDUCTOR LTD",
+    "shares": 139700,
+    "weight": 2.8
+  },
+  {
+    "code": "2383",
+    "name": "台光電",
+    "shares": 181000,
+    "weight": 2.75
+  },
+  {
+    "code": "DELL US",
+    "name": "DELL TECHNOLOGIES -C",
+    "shares": 75300,
+    "weight": 2.75
+  },
+  {
+    "code": "BE US",
+    "name": "BLOOM ENERGY CORP- A",
+    "shares": 144800,
+    "weight": 2.56
+  },
+  {
+    "code": "2454",
+    "name": "聯發科",
+    "shares": 245000,
+    "weight": 2.37
+  },
+  {
+    "code": "2330",
+    "name": "台積電",
+    "shares": 406000,
+    "weight": 2.33
+  },
+  {
+    "code": "WDC US",
+    "name": "WESTERN DIGITAL CORP",
+    "shares": 49262,
+    "weight": 2.01
+  },
+  {
+    "code": "2308",
+    "name": "台達電",
+    "shares": 441000,
+    "weight": 1.99
+  },
+  {
+    "code": "AXTI US",
+    "name": "AXT INC",
+    "shares": 267320,
+    "weight": 1.95
+  },
+  {
+    "code": "SMTC US",
+    "name": "SEMTECH CORP",
+    "shares": 164500,
+    "weight": 1.93
+  },
+  {
+    "code": "AMAT US",
+    "name": "APPLIED MATERIALS INC",
+    "shares": 47106,
+    "weight": 1.92
+  },
+  {
+    "code": "IFX GR",
+    "name": "INFINEON TECHNOLOGIES AG",
+    "shares": 332843,
+    "weight": 1.82
+  },
+  {
+    "code": "6857 JP",
+    "name": "ADVANTEST CORP",
+    "shares": 88100,
+    "weight": 1.59
+  },
+  {
+    "code": "TER US",
+    "name": "TERADYNE INC",
+    "shares": 46320,
+    "weight": 1.56
+  },
+  {
+    "code": "PANW US",
+    "name": "PALO ALTO NETWORKS INC",
+    "shares": 52800,
+    "weight": 1.51
+  },
+  {
+    "code": "INTC US",
+    "name": "INTEL CORP",
+    "shares": 182500,
+    "weight": 1.44
+  },
+  {
+    "code": "AEHR US",
+    "name": "AEHR TEST SYSTEMS",
+    "shares": 124354,
+    "weight": 1.38
+  },
+  {
+    "code": "6223",
+    "name": "旺矽",
+    "shares": 90000,
+    "weight": 1.25
+  },
+  {
+    "code": "WOLF US",
+    "name": "WOLFSPEED INC",
+    "shares": 401100,
+    "weight": 1.07
+  },
+  {
+    "code": "CIEN US",
+    "name": "CIENA CORP",
+    "shares": 30197,
+    "weight": 1.02
+  },
+  {
+    "code": "NBIS US",
+    "name": "NEBIUS GROUP NV",
+    "shares": 49800,
+    "weight": 1.02
+  },
+  {
+    "code": "NVDA US",
+    "name": "NVIDIA CORP",
+    "shares": 59700,
+    "weight": 1.02
+  },
+  {
+    "code": "SNOW US",
+    "name": "SNOWFLAKE INC",
+    "shares": 39800,
+    "weight": 1.0
+  },
+  {
+    "code": "U US",
+    "name": "UNITY SOFTWARE INC",
+    "shares": 287500,
+    "weight": 0.99
+  },
+  {
+    "code": "6274",
+    "name": "台燿",
+    "shares": 255000,
+    "weight": 0.97
+  },
+  {
+    "code": "LRCX US",
+    "name": "LAM RESEARCH CORP",
+    "shares": 37200,
+    "weight": 0.97
+  },
+  {
+    "code": "000660 KP",
+    "name": "SK HYNIX INC",
+    "shares": 10663,
+    "weight": 0.95
+  },
+  {
+    "code": "FSLY US",
+    "name": "FASTLY INC - CLASS A",
+    "shares": 429000,
+    "weight": 0.95
+  },
+  {
+    "code": "2345",
+    "name": "智邦",
+    "shares": 172000,
+    "weight": 0.94
+  },
+  {
+    "code": "3711",
+    "name": "日月光投控",
+    "shares": 641000,
+    "weight": 0.94
+  },
+  {
+    "code": "RBRK US",
+    "name": "RUBRIK INC-A",
+    "shares": 122500,
+    "weight": 0.94
+  },
+  {
+    "code": "4062 JP",
+    "name": "IBIDEN CO LTD",
+    "shares": 89700,
+    "weight": 0.93
+  },
+  {
+    "code": "8046",
+    "name": "南電",
+    "shares": 302000,
+    "weight": 0.93
+  },
+  {
+    "code": "DIOD US",
+    "name": "DIODES INC",
+    "shares": 111900,
+    "weight": 0.92
+  },
+  {
+    "code": "PLTR US",
+    "name": "PALANTIR TECHNOLOGIES INC-A",
+    "shares": 55726,
+    "weight": 0.73
+  },
+  {
+    "code": "2449",
+    "name": "京元電子",
+    "shares": 1008000,
+    "weight": 0.6
+  }
+]
