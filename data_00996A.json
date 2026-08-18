@@ -1,16 +1,17 @@
 {
     "meta": {
         "manager": "王仲良",
-        "ytd": "43.90",
-        "etfPrice": 14.39,
-        "priceChange": 0.49,
-        "prevPrice": 14.32,
+        "ytd": "39.00",
+        "etfPrice": 13.9,
+        "priceChange": -3.41,
+        "prevPrice": 14.39,
         "dataDate": "2026-08-17",
         "lastUpdate": "2026-08-17 18:09",
         "totalShares": 314899,
         "prevTotalShares": 315899,
-        "totalMarketCap": 45.46,
-        "prevTotalMarketCap": 45.46
+        "totalMarketCap": 43.77,
+        "prevTotalMarketCap": 45.46,
+        "priceDate": "2026-08-18"
     },
     "holdings": [
         {

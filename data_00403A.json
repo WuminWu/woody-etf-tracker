@@ -1,16 +1,17 @@
 {
     "meta": {
         "manager": "統一投信",
-        "ytd": "4.00",
-        "etfPrice": 10.4,
-        "priceChange": 0.78,
+        "ytd": "1.60",
+        "etfPrice": 10.16,
+        "priceChange": -1.55,
         "prevPrice": 10.32,
         "dataDate": "2026-08-17",
         "lastUpdate": "2026-08-17 18:03",
         "totalShares": 17071519,
         "prevTotalShares": 17296519,
-        "totalMarketCap": 1779.48,
-        "prevTotalMarketCap": 1798.84
+        "totalMarketCap": 1734.47,
+        "prevTotalMarketCap": 1798.84,
+        "priceDate": "2026-08-18"
     },
     "holdings": [
         {
