@@ -1,16 +1,17 @@
 {
     "meta": {
         "manager": "郭勁甫",
-        "ytd": "31.40",
-        "etfPrice": 13.14,
-        "priceChange": -4.37,
-        "prevPrice": 13.74,
+        "ytd": "33.00",
+        "etfPrice": 13.3,
+        "priceChange": -1.12,
+        "prevPrice": 13.45,
         "dataDate": "2026-08-19",
         "lastUpdate": "2026-08-19 18:08",
         "totalShares": 771591,
         "prevTotalShares": 744591,
-        "totalMarketCap": 101.77,
-        "prevTotalMarketCap": 97.84
+        "totalMarketCap": 102.62,
+        "prevTotalMarketCap": 97.84,
+        "priceDate": "2026-08-20"
     },
     "holdings": [
         {

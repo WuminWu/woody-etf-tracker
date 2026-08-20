@@ -1,16 +1,17 @@
 {
     "meta": {
         "manager": "元大投信",
-        "ytd": "54.78",
-        "etfPrice": 15.71,
-        "priceChange": -6.04,
-        "prevPrice": 16.72,
+        "ytd": "53.20",
+        "etfPrice": 15.55,
+        "priceChange": -5.87,
+        "prevPrice": 16.52,
         "dataDate": "2026-08-18",
         "lastUpdate": "2026-08-19 18:12",
         "totalShares": 2438022,
         "prevTotalShares": 2451022,
-        "totalMarketCap": 390.25,
-        "prevTotalMarketCap": 385.06
+        "totalMarketCap": 379.11,
+        "prevTotalMarketCap": 385.06,
+        "priceDate": "2026-08-20"
     },
     "holdings": [
         {
