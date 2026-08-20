@@ -10,7 +10,23 @@
         "totalShares": 3350437,
         "prevTotalShares": 3343437,
         "totalMarketCap": 549.56,
-        "prevTotalMarketCap": 552.0
+        "prevTotalMarketCap": 552.0,
+        "assetAllocation": {
+            "netAsset": 54956185726,
+            "stockPct": 95.39,
+            "cashPct": 7.03,
+            "cashAmount": 3862243752,
+            "futuresNotionalPct": 0.0,
+            "repoBondPct": 0.0,
+            "netReceivablePct": -0.63,
+            "futuresMarginPct": null,
+            "futuresMargin": {
+                "amount": 1001263,
+                "ccy": "USD"
+            },
+            "futures": [],
+            "hasFutures": false
+        }
     },
     "holdings": [
         {

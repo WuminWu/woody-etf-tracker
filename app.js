@@ -536,6 +536,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (elScale) {
                     elScale.style.display = 'none';
                 }
+
+                // 資產配置面板（統一投信系：股票/現金/期貨/附買回，來自 ezmoney 資產彙總）
+                const elAA = document.getElementById('etf-asset-alloc');
+                const aa = meta.assetAllocation;
+                if (elAA && aa && aa.stockPct != null) {
+                    const segDefs = [
+                        { k: '股票', v: aa.stockPct, c: '#3b82f6' },
+                        { k: '現金', v: aa.cashPct, c: '#22c55e' },
+                        { k: '附買回債券', v: aa.repoBondPct, c: '#f59e0b' },
+                        { k: '期貨保證金', v: aa.futuresMarginPct, c: '#8b5cf6' },
+                        { k: '應收付證券款', v: aa.netReceivablePct, c: '#94a3b8' },
+                    ].filter(s => s.v != null && s.v > 0.005);
+                    const sum = segDefs.reduce((a, s) => a + s.v, 0) || 1;
+                    const bar = segDefs.map(s =>
+                        `<div title="${s.k} ${s.v}%" style="width:${(s.v / sum * 100).toFixed(2)}%;background:${s.c};"></div>`).join('');
+                    const legend = segDefs.map(s =>
+                        `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:12px;white-space:nowrap;">
+                           <i style="width:9px;height:9px;border-radius:2px;background:${s.c};display:inline-block;"></i>
+                           ${s.k} <b style="color:var(--text-primary);">${s.v}%</b></span>`).join('');
+                    let futNote = '';
+                    if (aa.futures && aa.futures.length) {
+                        const list = aa.futures.map(f => `${f.code} ${f.name} <b>${f.weight}%</b>`).join('、');
+                        futNote = `<div style="margin-top:5px;font-size:0.82em;color:#a855f7;"><i class="fa-solid fa-bolt"></i> 期貨曝險：${list}（名目本金，做多台股）</div>`;
+                    }
+                    elAA.innerHTML =
+                        `<div style="font-size:0.82em;color:var(--text-secondary);margin:2px 0 4px;">
+                           <i class="fa-solid fa-chart-pie"></i> 資產配置（佔淨值）</div>
+                         <div style="display:flex;gap:2px;height:13px;border-radius:6px;overflow:hidden;max-width:560px;">${bar}</div>
+                         <div style="margin-top:5px;font-size:0.82em;color:var(--text-secondary);line-height:1.9;">${legend}</div>
+                         ${futNote}`;
+                    elAA.style.display = '';
+                } else if (elAA) {
+                    elAA.style.display = 'none';
+                }
                 // 00981A 專屬經理人卡片圖
                 const managerCardImg = document.getElementById('manager-card-img');
                 if (managerCardImg) {

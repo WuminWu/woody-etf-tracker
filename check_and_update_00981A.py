@@ -28,6 +28,7 @@ import pandas as pd
 import yfinance as yf
 from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
+from asset_allocation import parse_asset_allocation
 
 # --------------- Config ---------------
 FUND_URL = "https://www.ezmoney.com.tw/ETF/Fund/Info?fundCode=49YTW"
@@ -236,7 +237,7 @@ def get_price(code):
     return 0.0
 
 
-def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, units=0):
+def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, units=0, asset_alloc=None):
     """Compare today vs previous holdings, fetch prices, generate data_00981A.json."""
     prev_dict = {h["code"]: h for h in prev_holdings}
     # 讀取前一次 data JSON 取得各股前一交易日股價
@@ -383,6 +384,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
             "prevTotalShares": prev_total_shares,
             "totalMarketCap": total_market_cap,
             "prevTotalMarketCap": prev_total_market_cap,
+            "assetAllocation": asset_alloc or {},
         },
         "holdings": final_output,
     }
@@ -534,6 +536,9 @@ def main():
     today_holdings = parse_holdings_from_xlsx(final_xlsx)
     log.info(f"Parsed {len(today_holdings)} stocks from today's holdings")
     aum_ntd, units = parse_aum_from_xlsx(final_xlsx)
+    asset_alloc = parse_asset_allocation(final_xlsx)
+    if asset_alloc:
+        log.info(f"資產配置: 股票 {asset_alloc.get('stockPct')}% / 現金 {asset_alloc.get('cashPct')}% / 期貨 {asset_alloc.get('futuresNotionalPct')}%")
 
     # Save as JSON
     json_path = os.path.join(HOLDINGS_DIR, f"00981A_holdings_{today_str}.json")
@@ -542,7 +547,7 @@ def main():
 
     # 4. Load previous day's holdings and generate diff
     prev_holdings = get_previous_holdings()
-    wrapper = generate_data_json(today_holdings, prev_holdings, file_date.strftime("%Y-%m-%d"), aum_ntd=aum_ntd, units=units)
+    wrapper = generate_data_json(today_holdings, prev_holdings, file_date.strftime("%Y-%m-%d"), aum_ntd=aum_ntd, units=units, asset_alloc=asset_alloc)
     append_holdings_to_sheets("00981A", wrapper["meta"]["dataDate"], wrapper["holdings"], meta=wrapper["meta"])
 
     # 5. Send Telegram notification (git push handled by GitHub Actions workflow)

@@ -29,6 +29,7 @@ import pandas as pd
 import yfinance as yf
 from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
+from asset_allocation import parse_asset_allocation
 
 # --------------- Config ---------------
 ETF_CODE    = "00403A"
@@ -229,7 +230,7 @@ def get_price(code):
     return 0.0
 
 
-def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, units=0):
+def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, units=0, asset_alloc=None):
     """Compare today vs previous holdings, fetch prices, generate data_{ETF_CODE}.json."""
     prev_dict = {h["code"]: h for h in prev_holdings}
     prev_prices_map = {}
@@ -359,6 +360,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
             "prevTotalShares":  prev_total_shares,
             "totalMarketCap":   total_market_cap,
             "prevTotalMarketCap": prev_total_market_cap,
+            "assetAllocation": asset_alloc or {},
         },
         "holdings": final_output,
     }
@@ -467,13 +469,16 @@ def main():
     today_holdings = parse_holdings_from_xlsx(final_xlsx)
     log.info(f"Parsed {len(today_holdings)} stocks")
     aum_ntd, units = parse_aum_from_xlsx(final_xlsx)
+    asset_alloc = parse_asset_allocation(final_xlsx)
+    if asset_alloc:
+        log.info(f"資產配置: 股票 {asset_alloc.get('stockPct')}% / 現金 {asset_alloc.get('cashPct')}% / 期貨 {asset_alloc.get('futuresNotionalPct')}%")
 
     json_path = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{today_str}.json")
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(today_holdings, f, ensure_ascii=False, indent=2)
 
     prev_holdings = get_previous_holdings(exclude_date_str=today_str)
-    wrapper = generate_data_json(today_holdings, prev_holdings, today_str, aum_ntd=aum_ntd, units=units)
+    wrapper = generate_data_json(today_holdings, prev_holdings, today_str, aum_ntd=aum_ntd, units=units, asset_alloc=asset_alloc)
     append_holdings_to_sheets(ETF_CODE, wrapper["meta"]["dataDate"], wrapper["holdings"], meta=wrapper["meta"])
 
     send_telegram(build_notification(wrapper))

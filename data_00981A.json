@@ -10,7 +10,29 @@
         "totalShares": 9801709,
         "prevTotalShares": 9792709,
         "totalMarketCap": 2875.45,
-        "prevTotalMarketCap": 2864.37
+        "prevTotalMarketCap": 2864.37,
+        "assetAllocation": {
+            "netAsset": 287544965248,
+            "stockPct": 96.96,
+            "cashPct": 2.45,
+            "cashAmount": 7047956124,
+            "futuresNotionalPct": 2.12,
+            "repoBondPct": 1.14,
+            "netReceivablePct": 1.66,
+            "futuresMarginPct": 0.6,
+            "futuresMargin": {
+                "amount": 1729697138,
+                "ccy": "NTD"
+            },
+            "futures": [
+                {
+                    "code": "TX",
+                    "name": "台指期貨(B)",
+                    "weight": 2.12
+                }
+            ],
+            "hasFutures": true
+        }
     },
     "holdings": [
         {
