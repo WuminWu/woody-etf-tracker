@@ -1,0 +1,272 @@
+[
+  {
+    "code": "LITE US",
+    "name": "LUMENTUM HOLDINGS INC",
+    "shares": 117000,
+    "weight": 6.07
+  },
+  {
+    "code": "3037",
+    "name": "欣興",
+    "shares": 2600000,
+    "weight": 5.23
+  },
+  {
+    "code": "2383",
+    "name": "台光電",
+    "shares": 445000,
+    "weight": 4.57
+  },
+  {
+    "code": "009150 KS",
+    "name": "Samsung Electro-Mechanics co(009150 ks)",
+    "shares": 70000,
+    "weight": 4.07
+  },
+  {
+    "code": "MU US",
+    "name": "MICRON TECHNOLOGY INC",
+    "shares": 70000,
+    "weight": 3.83
+  },
+  {
+    "code": "AMD US",
+    "name": "ADVANCED MICRO DEVICES.amd us(超微半導體公司)",
+    "shares": 130000,
+    "weight": 3.65
+  },
+  {
+    "code": "6981 JP",
+    "name": "MURATA MANUFACTURING CO LTD",
+    "shares": 1350000,
+    "weight": 3.54
+  },
+  {
+    "code": "285A JP",
+    "name": "KIOXIA HOLDINGS CORP",
+    "shares": 180000,
+    "weight": 3.39
+  },
+  {
+    "code": "BE US",
+    "name": "BLOOM ENERGY CORP- A",
+    "shares": 250000,
+    "weight": 3.18
+  },
+  {
+    "code": "PANW US",
+    "name": "PALO ALTO NETWORKS INC",
+    "shares": 150000,
+    "weight": 2.99
+  },
+  {
+    "code": "CRDO US",
+    "name": "CREDO TECHNOLOGY GROUP HOLDI",
+    "shares": 225000,
+    "weight": 2.99
+  },
+  {
+    "code": "STX US",
+    "name": "SEAGATE TECHNOLOGY",
+    "shares": 60000,
+    "weight": 2.89
+  },
+  {
+    "code": "MRVL US",
+    "name": "MARVELL TECHNOLOGY INC",
+    "shares": 205000,
+    "weight": 2.89
+  },
+  {
+    "code": "2330",
+    "name": "台積電",
+    "shares": 650000,
+    "weight": 2.87
+  },
+  {
+    "code": "TSEM US",
+    "name": "TOWER SEMICONDUCTOR LTD",
+    "shares": 216825,
+    "weight": 2.7
+  },
+  {
+    "code": "CRCL US",
+    "name": "CIRCLE INTERNET GROUP INC",
+    "shares": 480000,
+    "weight": 2.59
+  },
+  {
+    "code": "6223",
+    "name": "旺矽",
+    "shares": 242000,
+    "weight": 2.49
+  },
+  {
+    "code": "SPCX US",
+    "name": "SPACE EXPLORATION TECHN-CL A",
+    "shares": 300000,
+    "weight": 2.42
+  },
+  {
+    "code": "SNOW US",
+    "name": "SNOWFLAKE INC-CLASS A(Snowflake公司)",
+    "shares": 130000,
+    "weight": 2.41
+  },
+  {
+    "code": "2308",
+    "name": "台達電",
+    "shares": 720000,
+    "weight": 2.26
+  },
+  {
+    "code": "6871 JP",
+    "name": "MICRONICS JAPAN CO LTD",
+    "shares": 370000,
+    "weight": 1.89
+  },
+  {
+    "code": "PLTR US",
+    "name": "PALANTIR TECHNOLOGIES INC-A",
+    "shares": 180000,
+    "weight": 1.82
+  },
+  {
+    "code": "SNDK US",
+    "name": "SANDISK CORP",
+    "shares": 21000,
+    "weight": 1.82
+  },
+  {
+    "code": "300408 CH",
+    "name": "CHAOZHOU THREE-CIRCLE GROU-A",
+    "shares": 1749879,
+    "weight": 1.66
+  },
+  {
+    "code": "COHR US",
+    "name": "COHERENT INC",
+    "shares": 95000,
+    "weight": 1.6
+  },
+  {
+    "code": "IFX GY",
+    "name": "INFINEON TECHNOLOGIES AG",
+    "shares": 425000,
+    "weight": 1.59
+  },
+  {
+    "code": "2327",
+    "name": "國巨*",
+    "shares": 1550000,
+    "weight": 1.55
+  },
+  {
+    "code": "3017",
+    "name": "奇鋐",
+    "shares": 275000,
+    "weight": 1.49
+  },
+  {
+    "code": "MPWR US",
+    "name": "MONOLITHIC POWER SYSTEMS INC",
+    "shares": 18000,
+    "weight": 1.38
+  },
+  {
+    "code": "2454",
+    "name": "聯發科",
+    "shares": 200000,
+    "weight": 1.37
+  },
+  {
+    "code": "6997 JP",
+    "name": "NIPPON CHEMI-CON CORP",
+    "shares": 1275100,
+    "weight": 1.26
+  },
+  {
+    "code": "TER US",
+    "name": "TERADYNE INC",
+    "shares": 55000,
+    "weight": 1.18
+  },
+  {
+    "code": "000660 KS",
+    "name": "SK HYNIX INC",
+    "shares": 15000,
+    "weight": 1.09
+  },
+  {
+    "code": "301377 CH",
+    "name": "GUANGDONG DTECH TECHNOLOGY-A",
+    "shares": 291988,
+    "weight": 1.0
+  },
+  {
+    "code": "FORM US",
+    "name": "FORMFACTOR INC",
+    "shares": 150454,
+    "weight": 0.95
+  },
+  {
+    "code": "3308 HK",
+    "name": "ZHONGJI INNOLIGHT CO LTD-H",
+    "shares": 110000,
+    "weight": 0.83
+  },
+  {
+    "code": "4979",
+    "name": "華星光",
+    "shares": 735000,
+    "weight": 0.81
+  },
+  {
+    "code": "AEM US",
+    "name": "AGNICO EAGLE MINES LTD",
+    "shares": 60000,
+    "weight": 0.79
+  },
+  {
+    "code": "NET US",
+    "name": "CLOUDFLARE INC - CLASS A",
+    "shares": 45000,
+    "weight": 0.73
+  },
+  {
+    "code": "5801 JP",
+    "name": "FURUKAWA ELECTRIC CO LTD",
+    "shares": 500000,
+    "weight": 0.73
+  },
+  {
+    "code": "TWLO US",
+    "name": "TWILIO INC - A",
+    "shares": 55000,
+    "weight": 0.72
+  },
+  {
+    "code": "AIXA GY",
+    "name": "AIXTRON SE",
+    "shares": 200000,
+    "weight": 0.51
+  },
+  {
+    "code": "4180 JP",
+    "name": "APPIER GROUP INC",
+    "shares": 950000,
+    "weight": 0.45
+  },
+  {
+    "code": "AEHR US",
+    "name": "AEHR TEST SYSTEMS",
+    "shares": 70000,
+    "weight": 0.39
+  },
+  {
+    "code": "095340 KS",
+    "name": "ISC CO LTD",
+    "shares": 50000,
+    "weight": 0.35
+  }
+]
