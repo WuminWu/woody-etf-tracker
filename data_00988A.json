@@ -1,15 +1,15 @@
 {
     "meta": {
         "manager": "陳意婷",
-        "ytd": "63.34",
-        "etfPrice": 16.53,
-        "priceChange": 2.48,
+        "ytd": "nan",
+        "etfPrice": NaN,
+        "priceChange": NaN,
         "prevPrice": 16.13,
         "dataDate": "2026-08-26",
         "lastUpdate": "2026-08-27 18:15",
         "totalShares": 3321937,
         "prevTotalShares": 3353437,
-        "totalMarketCap": 543.7,
+        "totalMarketCap": NaN,
         "prevTotalMarketCap": 544.4,
         "assetAllocation": {
             "netAsset": 54369965859,
@@ -26,7 +26,8 @@
             },
             "futures": [],
             "hasFutures": false
-        }
+        },
+        "priceDate": "2026-08-28"
     },
     "holdings": [
         {
