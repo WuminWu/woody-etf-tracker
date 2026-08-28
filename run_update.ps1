@@ -123,7 +123,8 @@ $scripts = @(
     "export_history.py",
     "export_snapshots.py",
     "daily_digest.py",
-    "weekly_digest.py"
+    "weekly_digest.py",
+    "sanitize_data.py"   # 最後一道防線：清除 data_*.json 內的 NaN/Inf（非法 JSON 會讓前端整頁掛掉）
 )
 foreach ($s in $scripts) {
     Write-Log "--- 執行 $s ---"
