@@ -122,6 +122,29 @@ def parse_asset_allocation(xlsx_path, sheet=0):
     return alloc
 
 
+def format_alloc_lines(alloc):
+    """把資產配置 dict 轉成 Telegram 通知用的文字列（list[str]）；無資料回傳 []。"""
+    if not alloc or alloc.get("stockPct") is None:
+        return []
+    parts = []
+    for label, key in (("股票", "stockPct"), ("現金", "cashPct"),
+                       ("附買回", "repoBondPct"), ("期貨保證金", "futuresMarginPct"),
+                       ("應收付", "netReceivablePct")):
+        v = alloc.get(key)
+        if v is not None and v > 0.005:
+            parts.append(f"{label} {v}%")
+    lines = []
+    if parts:
+        lines.append("🧩 資產配置：" + "｜".join(parts))
+    futs = alloc.get("futures") or []
+    if futs:
+        fl = "、".join(f"{f['code']} {f['name']} {f['weight']}%" for f in futs)
+        lines.append(f"⚡ 期貨曝險：{fl}（名目本金，做多台股）")
+    elif alloc.get("futuresNotionalPct"):
+        lines.append(f"⚡ 期貨曝險 {alloc['futuresNotionalPct']}%（名目本金）")
+    return lines
+
+
 if __name__ == "__main__":
     import sys, json
     print(json.dumps(parse_asset_allocation(sys.argv[1]), ensure_ascii=False, indent=2))

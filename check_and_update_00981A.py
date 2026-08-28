@@ -28,7 +28,7 @@ import pandas as pd
 import yfinance as yf
 from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
-from asset_allocation import parse_asset_allocation
+from asset_allocation import parse_asset_allocation, format_alloc_lines
 
 # --------------- Config ---------------
 FUND_URL = "https://www.ezmoney.com.tw/ETF/Fund/Info?fundCode=49YTW"
@@ -453,6 +453,10 @@ def build_notification(wrapper, etf_code="00981A", etf_name="統一台股增長"
         f"🔴 加碼：{len(increased)} 檔　🟢 減碼：{len(decreased)} 檔",
         f"🟣 新增：{len(added)} 檔　🟠 出清：{len(removed)} 檔",
     ]
+
+    _alloc = format_alloc_lines(meta.get("assetAllocation"))
+    if _alloc:
+        lines[4:4] = _alloc   # 插在「持股數量」與空行之間
 
     if added:
         lines.append("\n✨ 新增持股：")
