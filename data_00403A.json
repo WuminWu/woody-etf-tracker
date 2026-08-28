@@ -1,15 +1,15 @@
 {
     "meta": {
         "manager": "統一投信",
-        "ytd": "3.60",
-        "etfPrice": 10.36,
-        "priceChange": 1.97,
+        "ytd": "nan",
+        "etfPrice": NaN,
+        "priceChange": NaN,
         "prevPrice": 10.16,
         "dataDate": "2026-08-28",
         "lastUpdate": "2026-08-28 18:03",
         "totalShares": 16093519,
         "prevTotalShares": 16339519,
-        "totalMarketCap": 1676.66,
+        "totalMarketCap": NaN,
         "prevTotalMarketCap": 1682.27,
         "assetAllocation": {
             "netAsset": 167665738622,
@@ -34,7 +34,8 @@
                 "netReceivablePct": 1.51,
                 "futuresMarginPct": 0.0
             }
-        }
+        },
+        "priceDate": "2026-08-29"
     },
     "holdings": [
         {
