@@ -31,7 +31,18 @@
                     "weight": 2.15
                 }
             ],
-            "hasFutures": true
+            "hasFutures": true,
+            "delta": {
+                "stockPct": 0.0,
+                "cashPct": -0.23,
+                "futuresNotionalPct": 0.0,
+                "repoBondPct": 0.0,
+                "netReceivablePct": 0.92,
+                "futuresMarginPct": 0.01,
+                "futures": {
+                    "TX": 0.0
+                }
+            }
         }
     },
     "holdings": [

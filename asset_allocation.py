@@ -122,26 +122,76 @@ def parse_asset_allocation(xlsx_path, sheet=0):
     return alloc
 
 
+def _xlsx_date(path, code):
+    import os
+    b = os.path.basename(path)
+    pre = f"{code}_holdings_"
+    return b[len(pre):-5] if (b.startswith(pre) and b.endswith(".xlsx")) else ""
+
+
+def find_prev_alloc(holdings_dir, code, data_date):
+    """找「data_date 之前」最近一個 xlsx，解析其資產配置。找不到回傳 {}。"""
+    import glob
+    import os
+    dated = [(_xlsx_date(f, code), f)
+             for f in glob.glob(os.path.join(holdings_dir, f"{code}_holdings_*.xlsx"))
+             if "_temp" not in f]
+    prev = sorted([(d, f) for d, f in dated if d and d < data_date])
+    return parse_asset_allocation(prev[-1][1]) if prev else {}
+
+
+def attach_delta(alloc, prev_alloc):
+    """在 alloc 內加入 'delta'（今日 − 前一日，百分點 pp）；就地修改並回傳 alloc。"""
+    if not alloc or not prev_alloc:
+        return alloc
+    d = {}
+    for k in ("stockPct", "cashPct", "futuresNotionalPct",
+              "repoBondPct", "netReceivablePct", "futuresMarginPct"):
+        a, b = alloc.get(k), prev_alloc.get(k)
+        if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+            d[k] = round(a - b, 2)
+    prevf = {f.get("code"): f.get("weight") for f in (prev_alloc.get("futures") or [])}
+    fd = {}
+    for f in (alloc.get("futures") or []):
+        pw = prevf.get(f.get("code"))
+        if isinstance(f.get("weight"), (int, float)) and isinstance(pw, (int, float)):
+            fd[f["code"]] = round(f["weight"] - pw, 2)
+    if fd:
+        d["futures"] = fd
+    if d:
+        alloc["delta"] = d
+    return alloc
+
+
+def _fmt_pp(delta):
+    """百分點變化 → '（↑0.31）'；|Δ|<0.01 視為持平回傳空字串。"""
+    if delta is None or abs(delta) < 0.01:
+        return ""
+    return f"（{'↑' if delta > 0 else '↓'}{abs(delta):.2f}）"
+
+
 def format_alloc_lines(alloc):
-    """把資產配置 dict 轉成 Telegram 通知用的文字列（list[str]）；無資料回傳 []。"""
+    """把資產配置 dict 轉成 Telegram 通知用的文字列（list[str]）；含與前一日的 pp 變化。無資料回傳 []。"""
     if not alloc or alloc.get("stockPct") is None:
         return []
+    delta = alloc.get("delta") or {}
     parts = []
     for label, key in (("股票", "stockPct"), ("現金", "cashPct"),
                        ("附買回", "repoBondPct"), ("期貨保證金", "futuresMarginPct"),
                        ("應收付", "netReceivablePct")):
         v = alloc.get(key)
         if v is not None and v > 0.005:
-            parts.append(f"{label} {v}%")
+            parts.append(f"{label} {v}%{_fmt_pp(delta.get(key))}")
     lines = []
     if parts:
-        lines.append("🧩 資產配置：" + "｜".join(parts))
+        lines.append("🧩 資產配置（括號為較前一日 pp 變化）：" + "｜".join(parts))
     futs = alloc.get("futures") or []
+    fdelta = delta.get("futures") or {}
     if futs:
-        fl = "、".join(f"{f['code']} {f['name']} {f['weight']}%" for f in futs)
+        fl = "、".join(f"{f['code']} {f['name']} {f['weight']}%{_fmt_pp(fdelta.get(f['code']))}" for f in futs)
         lines.append(f"⚡ 期貨曝險：{fl}（名目本金，做多台股）")
     elif alloc.get("futuresNotionalPct"):
-        lines.append(f"⚡ 期貨曝險 {alloc['futuresNotionalPct']}%（名目本金）")
+        lines.append(f"⚡ 期貨曝險 {alloc['futuresNotionalPct']}%{_fmt_pp(delta.get('futuresNotionalPct'))}（名目本金）")
     return lines
 
 

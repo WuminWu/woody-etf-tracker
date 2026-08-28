@@ -25,7 +25,14 @@
                 "ccy": "USD"
             },
             "futures": [],
-            "hasFutures": false
+            "hasFutures": false,
+            "delta": {
+                "stockPct": -0.53,
+                "cashPct": -0.01,
+                "futuresNotionalPct": 0.0,
+                "repoBondPct": 0.0,
+                "netReceivablePct": 0.39
+            }
         }
     },
     "holdings": [

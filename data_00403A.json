@@ -25,7 +25,15 @@
                 "ccy": "NTD"
             },
             "futures": [],
-            "hasFutures": false
+            "hasFutures": false,
+            "delta": {
+                "stockPct": 0.44,
+                "cashPct": -0.29,
+                "futuresNotionalPct": 0.0,
+                "repoBondPct": -0.37,
+                "netReceivablePct": 1.51,
+                "futuresMarginPct": 0.0
+            }
         }
     },
     "holdings": [

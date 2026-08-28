@@ -35,7 +35,7 @@ import pandas as pd
 import yfinance as yf
 from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
-from asset_allocation import parse_asset_allocation, format_alloc_lines
+from asset_allocation import parse_asset_allocation, format_alloc_lines, find_prev_alloc, attach_delta
 
 # --------------- Taiwan Market Holidays 2026 ---------------
 TW_MARKET_HOLIDAYS = {
@@ -618,7 +618,8 @@ def main():
     aum_ntd, units = parse_aum_from_xlsx(final_xlsx)
     asset_alloc = parse_asset_allocation(final_xlsx)
     if asset_alloc:
-        log.info(f"資產配置: 股票 {asset_alloc.get('stockPct')}% / 現金 {asset_alloc.get('cashPct')}% / 期貨 {asset_alloc.get('futuresNotionalPct')}%")
+        attach_delta(asset_alloc, find_prev_alloc(HOLDINGS_DIR, "00988A", prev_str))
+        log.info(f"資產配置: 股票 {asset_alloc.get('stockPct')}% / 現金 {asset_alloc.get('cashPct')}% / 期貨 {asset_alloc.get('futuresNotionalPct')}% / Δ={asset_alloc.get('delta')}")
 
     # Save as JSON
     json_path = os.path.join(HOLDINGS_DIR, f"00988A_holdings_{prev_str}.json")
