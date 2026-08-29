@@ -1,9 +1,12 @@
 name: Midday ETF Price Update
 
 on:
-  schedule:
-    # 05:30 UTC = 13:30 Taiwan (UTC+8) — market closes at 13:30
-    - cron: '30 5 * * 1-5'
+  # 已停用雲端排程：改由本機 run_update.ps1 每日更新（含價格）。
+  # 此雲端 job 在 GitHub runner 上 yfinance 常被限流回傳空值 → 寫入 NaN（非法 JSON）
+  # 直接 push，會繞過本機 sanitize 防線並讓網頁整頁掛掉（2026-08-28 事故）。
+  # 僅保留手動觸發作為備援；恢復排程請取消下列 schedule 註解。
+  # schedule:
+  #   - cron: '30 5 * * 1-5'   # 05:30 UTC = 13:30 Taiwan
   workflow_dispatch:
 
 permissions:

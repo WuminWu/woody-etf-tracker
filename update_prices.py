@@ -4,6 +4,7 @@ Holdings data is left unchanged.
 Also refreshes data_index.json (TWII YTD).
 """
 import json
+import math
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -56,6 +57,11 @@ def fetch_ytd_price(ticker_symbol, code=None):
         hist = yf.Ticker(ticker_symbol).history(period="ytd", timeout=10)
         if len(hist) >= 2:
             last = hist["Close"].iloc[-1]
+            # yfinance 偶爾（尤其 GitHub runner 被限流）回傳 NaN close；
+            # 絕不可寫入 NaN（非法 JSON 會讓整個網頁掛掉）→ 直接放棄本檔更新。
+            if last is None or (isinstance(last, float) and math.isnan(last)):
+                print(f"  Warning: {ticker_symbol} 收盤價為 NaN，跳過（保留原值）", file=sys.stderr)
+                return None, None
             price = round(float(last), 2)
 
             # 若是 IPO 當年的新 ETF，以 IPO 掛牌價當 baseline
