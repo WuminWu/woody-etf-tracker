@@ -125,7 +125,9 @@ def _sector(code):
 
 import time as _time
 _last_send_ts = 0.0
-_MIN_SEND_GAP = 1.5   # 同一聊天室每則至少間隔（秒），避免爆量觸發 Telegram 洪水保護
+_MIN_SEND_GAP = 4.0   # 同一聊天室每則至少間隔（秒）=15 則/分鐘，安全低於 Telegram 約 20 則/分鐘上限。
+                      # 先前 1.5 秒=40 則/分鐘（超速 2 倍），週五爆量（日報+週報+單檔共 ~27 則同程序）
+                      # 會被 Telegram 靜默丟棄（有時不回 429），導致週報「已發送卻收不到」。
 
 
 def _split_message(message, limit=3900):
