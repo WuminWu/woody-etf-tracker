@@ -170,6 +170,39 @@ def _fmt_pp(delta):
     return f"（{'↑' if delta > 0 else '↓'}{abs(delta):.2f}）"
 
 
+def _fmt_zhang(n):
+    """張數 → '7.0萬張' / '500張'（取絕對值格式化，符號另外處理）。"""
+    n = abs(n)
+    return f"{n / 10000:.1f}萬張" if n >= 10000 else f"{int(round(n)):,}張"
+
+
+def format_scale_line(meta):
+    """基金規模（在外流通張數）與較前一日的淨申購/淨贖回；回傳 list[str]。"""
+    ts = meta.get("totalShares")
+    pts = meta.get("prevTotalShares")
+    if not ts:
+        return []
+    line = f"📈 基金規模：{_fmt_zhang(ts)}"
+    if pts and pts > 0:
+        diff = ts - pts
+        pct = diff / pts * 100
+        if abs(diff) < 500:                       # <0.5 張以下視為持平
+            line += "（較前一日持平）"
+        else:
+            word = "淨申購" if diff > 0 else "淨贖回"
+            arrow = "↑" if diff > 0 else "↓"
+            line += f"（較前一日{word} {_fmt_zhang(diff)}，{arrow}{abs(pct):.1f}%）"
+    mc = meta.get("totalMarketCap")
+    pmc = meta.get("prevTotalMarketCap")
+    if mc:
+        seg = f"　💵 市值 {mc:,.1f}億"
+        if pmc and pmc > 0 and abs(mc - pmc) >= 0.01:
+            md = mc - pmc
+            seg += f"（{'↑' if md > 0 else '↓'}{abs(md):.1f}億）"
+        line += seg
+    return [line]
+
+
 def format_alloc_lines(alloc):
     """把資產配置 dict 轉成 Telegram 通知用的文字列（list[str]）；含與前一日的 pp 變化。無資料回傳 []。"""
     if not alloc or alloc.get("stockPct") is None:

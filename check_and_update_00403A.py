@@ -29,7 +29,7 @@ import pandas as pd
 import yfinance as yf
 from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
-from asset_allocation import parse_asset_allocation, format_alloc_lines, find_prev_alloc, attach_delta
+from asset_allocation import parse_asset_allocation, format_alloc_lines, find_prev_alloc, attach_delta, format_scale_line
 
 # --------------- Config ---------------
 ETF_CODE    = "00403A"
@@ -408,9 +408,9 @@ def build_notification(wrapper):
         f"🔴 加碼：{len(increased)} 檔　🟢 減碼：{len(decreased)} 檔",
         f"🟣 新增：{len(added)} 檔　🟠 出清：{len(removed)} 檔",
     ]
-    _alloc = format_alloc_lines(meta.get("assetAllocation"))
-    if _alloc:
-        lines[4:4] = _alloc   # 插在「持股數量」與空行之間
+    _extra = format_scale_line(meta) + format_alloc_lines(meta.get("assetAllocation"))
+    if _extra:
+        lines[4:4] = _extra   # 插在「持股數量」與空行之間：基金規模(贖回/申購) + 資產配置
     if added:
         lines.append("\n✨ 新增持股：")
         for h in added:
