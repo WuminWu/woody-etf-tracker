@@ -1,0 +1,278 @@
+[
+  {
+    "code": "LITE US",
+    "name": "LUMENTUM HOLDINGS INC",
+    "shares": 75352,
+    "weight": 5.62
+  },
+  {
+    "code": "NVDA US",
+    "name": "NVIDIA CORP",
+    "shares": 249100,
+    "weight": 5.01
+  },
+  {
+    "code": "SNOW US",
+    "name": "SNOWFLAKE INC",
+    "shares": 109800,
+    "weight": 3.45
+  },
+  {
+    "code": "MSFT US",
+    "name": "MICROSOFT CORP",
+    "shares": 71120,
+    "weight": 3.19
+  },
+  {
+    "code": "META US",
+    "name": "META PLATFORMS INC-CLASS A",
+    "shares": 59120,
+    "weight": 3.18
+  },
+  {
+    "code": "2383",
+    "name": "台光電",
+    "shares": 212000,
+    "weight": 3.11
+  },
+  {
+    "code": "BE US",
+    "name": "BLOOM ENERGY CORP- A",
+    "shares": 144800,
+    "weight": 3.0
+  },
+  {
+    "code": "AMZN US",
+    "name": "AMAZON.COM INC",
+    "shares": 130300,
+    "weight": 2.97
+  },
+  {
+    "code": "3037",
+    "name": "欣興",
+    "shares": 1146000,
+    "weight": 2.93
+  },
+  {
+    "code": "NOW US",
+    "name": "SERVICENOW INC",
+    "shares": 221400,
+    "weight": 2.84
+  },
+  {
+    "code": "2330",
+    "name": "台積電",
+    "shares": 406000,
+    "weight": 2.69
+  },
+  {
+    "code": "6981 JP",
+    "name": "MURATA MANUFACTURING CO LTD",
+    "shares": 674300,
+    "weight": 2.61
+  },
+  {
+    "code": "MU US",
+    "name": "MICRON TECHNOLOGY INC",
+    "shares": 30005,
+    "weight": 2.53
+  },
+  {
+    "code": "SMTC US",
+    "name": "SEMTECH CORP",
+    "shares": 206700,
+    "weight": 2.46
+  },
+  {
+    "code": "TEAM US",
+    "name": "ATLASSIAN CORP-CL A",
+    "shares": 143300,
+    "weight": 2.46
+  },
+  {
+    "code": "AMD US",
+    "name": "ADVANCED MICRO DEVICES",
+    "shares": 59979,
+    "weight": 2.41
+  },
+  {
+    "code": "GOOGL US",
+    "name": "ALPHABET INC-CL A",
+    "shares": 77640,
+    "weight": 2.34
+  },
+  {
+    "code": "2308",
+    "name": "台達電",
+    "shares": 441000,
+    "weight": 2.15
+  },
+  {
+    "code": "PLTR US",
+    "name": "PALANTIR TECHNOLOGIES INC-A",
+    "shares": 131442,
+    "weight": 2.11
+  },
+  {
+    "code": "TSEM US",
+    "name": "TOWER SEMICONDUCTOR LTD",
+    "shares": 111100,
+    "weight": 2.02
+  },
+  {
+    "code": "285A JP",
+    "name": "KIOXIA HOLDINGS CORP",
+    "shares": 68900,
+    "weight": 2.0
+  },
+  {
+    "code": "PANW US",
+    "name": "PALO ALTO NETWORKS INC",
+    "shares": 65355,
+    "weight": 1.91
+  },
+  {
+    "code": "MRVL US",
+    "name": "MARVELL TECHNOLOGY INC",
+    "shares": 102700,
+    "weight": 1.89
+  },
+  {
+    "code": "NTRA US",
+    "name": "NATERA INC",
+    "shares": 61200,
+    "weight": 1.77
+  },
+  {
+    "code": "SPCX US",
+    "name": "SPACE EXPLORATION TECHN-CL A",
+    "shares": 134300,
+    "weight": 1.77
+  },
+  {
+    "code": "2454",
+    "name": "聯發科",
+    "shares": 142000,
+    "weight": 1.71
+  },
+  {
+    "code": "009150 KP",
+    "name": "SAMSUNG ELECTRO-MECHANICS CO",
+    "shares": 18688,
+    "weight": 1.63
+  },
+  {
+    "code": "6857 JP",
+    "name": "ADVANTEST CORP",
+    "shares": 88100,
+    "weight": 1.59
+  },
+  {
+    "code": "SPOT US",
+    "name": "SPOTIFY TECHNOLOGY SA",
+    "shares": 30240,
+    "weight": 1.49
+  },
+  {
+    "code": "INTC US",
+    "name": "INTEL CORP",
+    "shares": 182500,
+    "weight": 1.47
+  },
+  {
+    "code": "3017",
+    "name": "奇鋐",
+    "shares": 158000,
+    "weight": 1.44
+  },
+  {
+    "code": "WDC US",
+    "name": "WESTERN DIGITAL CORP",
+    "shares": 36702,
+    "weight": 1.43
+  },
+  {
+    "code": "6274",
+    "name": "台燿",
+    "shares": 376000,
+    "weight": 1.4
+  },
+  {
+    "code": "SNDK US",
+    "name": "SANDISK CORP",
+    "shares": 9543,
+    "weight": 1.31
+  },
+  {
+    "code": "6223",
+    "name": "旺矽",
+    "shares": 90000,
+    "weight": 1.26
+  },
+  {
+    "code": "2449",
+    "name": "京元電子",
+    "shares": 1665000,
+    "weight": 1.2
+  },
+  {
+    "code": "DELL US",
+    "name": "DELL TECHNOLOGIES -C",
+    "shares": 25400,
+    "weight": 1.16
+  },
+  {
+    "code": "3711",
+    "name": "日月光投控",
+    "shares": 641000,
+    "weight": 1.05
+  },
+  {
+    "code": "2345",
+    "name": "智邦",
+    "shares": 172000,
+    "weight": 1.0
+  },
+  {
+    "code": "4062 JP",
+    "name": "IBIDEN CO LTD",
+    "shares": 89700,
+    "weight": 0.99
+  },
+  {
+    "code": "8046",
+    "name": "南電",
+    "shares": 302000,
+    "weight": 0.9
+  },
+  {
+    "code": "TWST US",
+    "name": "TWIST BIOSCIENCE CORP",
+    "shares": 55700,
+    "weight": 0.63
+  },
+  {
+    "code": "3665",
+    "name": "貿聯-KY",
+    "shares": 94000,
+    "weight": 0.55
+  },
+  {
+    "code": "RVMD US",
+    "name": "REVOLUTION MEDICINES INC",
+    "shares": 27600,
+    "weight": 0.51
+  },
+  {
+    "code": "ALNY US",
+    "name": "ALNYLAM PHARMACEUTICALS INC",
+    "shares": 21080,
+    "weight": 0.49
+  },
+  {
+    "code": "HOOD US",
+    "name": "ROBINHOOD MARKETS INC - A",
+    "shares": 3855,
+    "weight": 0.04
+  }
+]
