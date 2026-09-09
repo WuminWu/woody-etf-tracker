@@ -1,0 +1,296 @@
+[
+  {
+    "code": "LITE US",
+    "name": "LUMENTUM HOLDINGS INC",
+    "shares": 76919,
+    "weight": 6.47
+  },
+  {
+    "code": "NVDA US",
+    "name": "NVIDIA CORP",
+    "shares": 249100,
+    "weight": 4.83
+  },
+  {
+    "code": "MU US",
+    "name": "MICRON TECHNOLOGY INC",
+    "shares": 41325,
+    "weight": 3.55
+  },
+  {
+    "code": "BE US",
+    "name": "BLOOM ENERGY CORP- A",
+    "shares": 144800,
+    "weight": 3.45
+  },
+  {
+    "code": "SNOW US",
+    "name": "SNOWFLAKE INC",
+    "shares": 109800,
+    "weight": 3.16
+  },
+  {
+    "code": "2454",
+    "name": "聯發科",
+    "shares": 243000,
+    "weight": 3.12
+  },
+  {
+    "code": "2383",
+    "name": "台光電",
+    "shares": 212000,
+    "weight": 3.09
+  },
+  {
+    "code": "MSFT US",
+    "name": "MICROSOFT CORP",
+    "shares": 71120,
+    "weight": 3.02
+  },
+  {
+    "code": "SMTC US",
+    "name": "SEMTECH CORP",
+    "shares": 206700,
+    "weight": 2.89
+  },
+  {
+    "code": "PLTR US",
+    "name": "PALANTIR TECHNOLOGIES INC-A",
+    "shares": 187342,
+    "weight": 2.74
+  },
+  {
+    "code": "2330",
+    "name": "台積電",
+    "shares": 406000,
+    "weight": 2.73
+  },
+  {
+    "code": "META US",
+    "name": "META PLATFORMS INC-CLASS A",
+    "shares": 49800,
+    "weight": 2.62
+  },
+  {
+    "code": "SPCX US",
+    "name": "SPACE EXPLORATION TECHN-CL A",
+    "shares": 195500,
+    "weight": 2.58
+  },
+  {
+    "code": "SNDK US",
+    "name": "SANDISK CORP",
+    "shares": 16143,
+    "weight": 2.41
+  },
+  {
+    "code": "AMZN US",
+    "name": "AMAZON.COM INC",
+    "shares": 108000,
+    "weight": 2.38
+  },
+  {
+    "code": "285A JP",
+    "name": "KIOXIA HOLDINGS CORP",
+    "shares": 68900,
+    "weight": 2.21
+  },
+  {
+    "code": "INTC US",
+    "name": "INTEL CORP",
+    "shares": 242600,
+    "weight": 2.18
+  },
+  {
+    "code": "2308",
+    "name": "台達電",
+    "shares": 441000,
+    "weight": 2.17
+  },
+  {
+    "code": "TSEM US",
+    "name": "TOWER SEMICONDUCTOR LTD",
+    "shares": 111100,
+    "weight": 2.1
+  },
+  {
+    "code": "AMD US",
+    "name": "ADVANCED MICRO DEVICES",
+    "shares": 47579,
+    "weight": 2.07
+  },
+  {
+    "code": "MRVL US",
+    "name": "MARVELL TECHNOLOGY INC",
+    "shares": 102700,
+    "weight": 1.99
+  },
+  {
+    "code": "PANW US",
+    "name": "PALO ALTO NETWORKS INC",
+    "shares": 65355,
+    "weight": 1.89
+  },
+  {
+    "code": "6981 JP",
+    "name": "MURATA MANUFACTURING CO LTD",
+    "shares": 477100,
+    "weight": 1.87
+  },
+  {
+    "code": "HOOD US",
+    "name": "ROBINHOOD MARKETS INC - A",
+    "shares": 185955,
+    "weight": 1.87
+  },
+  {
+    "code": "3037",
+    "name": "欣興",
+    "shares": 716000,
+    "weight": 1.86
+  },
+  {
+    "code": "GOOGL US",
+    "name": "ALPHABET INC-CL A",
+    "shares": 60640,
+    "weight": 1.76
+  },
+  {
+    "code": "6857 JP",
+    "name": "ADVANTEST CORP",
+    "shares": 88100,
+    "weight": 1.66
+  },
+  {
+    "code": "DELL US",
+    "name": "DELL TECHNOLOGIES -C",
+    "shares": 36300,
+    "weight": 1.66
+  },
+  {
+    "code": "009150 KP",
+    "name": "SAMSUNG ELECTRO-MECHANICS CO",
+    "shares": 18688,
+    "weight": 1.64
+  },
+  {
+    "code": "6223",
+    "name": "旺矽",
+    "shares": 90000,
+    "weight": 1.42
+  },
+  {
+    "code": "3017",
+    "name": "奇鋐",
+    "shares": 158000,
+    "weight": 1.41
+  },
+  {
+    "code": "KGC US",
+    "name": "KINROSS GOLD CORP",
+    "shares": 539200,
+    "weight": 1.4
+  },
+  {
+    "code": "TEAM US",
+    "name": "ATLASSIAN CORP-CL A",
+    "shares": 82500,
+    "weight": 1.25
+  },
+  {
+    "code": "2449",
+    "name": "京元電子",
+    "shares": 1665000,
+    "weight": 1.22
+  },
+  {
+    "code": "NTRA US",
+    "name": "NATERA INC",
+    "shares": 43700,
+    "weight": 1.22
+  },
+  {
+    "code": "NOW US",
+    "name": "SERVICENOW INC",
+    "shares": 99000,
+    "weight": 1.14
+  },
+  {
+    "code": "4062 JP",
+    "name": "IBIDEN CO LTD",
+    "shares": 89700,
+    "weight": 1.04
+  },
+  {
+    "code": "WDC US",
+    "name": "WESTERN DIGITAL CORP",
+    "shares": 23862,
+    "weight": 0.98
+  },
+  {
+    "code": "000660 KP",
+    "name": "SK HYNIX INC",
+    "shares": 8301,
+    "weight": 0.95
+  },
+  {
+    "code": "2345",
+    "name": "智邦",
+    "shares": 172000,
+    "weight": 0.92
+  },
+  {
+    "code": "SPOT US",
+    "name": "SPOTIFY TECHNOLOGY SA",
+    "shares": 19600,
+    "weight": 0.89
+  },
+  {
+    "code": "6274",
+    "name": "台燿",
+    "shares": 236000,
+    "weight": 0.87
+  },
+  {
+    "code": "8046",
+    "name": "南電",
+    "shares": 302000,
+    "weight": 0.84
+  },
+  {
+    "code": "7769",
+    "name": "鴻勁",
+    "shares": 41000,
+    "weight": 0.78
+  },
+  {
+    "code": "TWST US",
+    "name": "TWIST BIOSCIENCE CORP",
+    "shares": 55700,
+    "weight": 0.61
+  },
+  {
+    "code": "2360",
+    "name": "致茂",
+    "shares": 85000,
+    "weight": 0.52
+  },
+  {
+    "code": "3665",
+    "name": "貿聯-KY",
+    "shares": 94000,
+    "weight": 0.5
+  },
+  {
+    "code": "ALNY US",
+    "name": "ALNYLAM PHARMACEUTICALS INC",
+    "shares": 21080,
+    "weight": 0.47
+  },
+  {
+    "code": "3529",
+    "name": "力旺",
+    "shares": 22000,
+    "weight": 0.17
+  }
+]
