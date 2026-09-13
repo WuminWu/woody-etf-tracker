@@ -48,17 +48,52 @@ $settings = New-ScheduledTaskSettingsSet `
     -ExecutionTimeLimit (New-TimeSpan -Minutes 20) `
     -MultipleInstances IgnoreNew
 
-# 以目前使用者身分執行（需登入；可讀取 .env / google_sa.json）
-$principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Limited
+# 以目前使用者身分執行，但採 S4U：「不論使用者是否登入都執行」。
+# 原本用 Interactive（需登入）→ 2026-09-11 Windows Update 半夜強制重開機後停在登入畫面，
+# 當天 7 次觸發全部無法執行（NumberOfMissedRuns=6），整天資料與訊息全漏。
+# S4U 不需儲存密碼，仍以本使用者身分執行，可讀取 .env / google_sa.json 並連外網。
+$principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType S4U -RunLevel Limited
 
-Register-ScheduledTask -TaskName $taskName `
-    -Action $action -Trigger $trigger -Settings $settings -Principal $principal `
-    -Description "每日抓取主動式 ETF 持股並推送至 GitHub Pages（取代 GitHub Actions cron）" `
-    -Force
+try {
+    Register-ScheduledTask -TaskName $taskName `
+        -Action $action -Trigger $trigger -Settings $settings -Principal $principal `
+        -Description "每日抓取主動式 ETF 持股並推送至 GitHub Pages（取代 GitHub Actions cron）" `
+        -Force -ErrorAction Stop | Out-Null
+    Write-Host "已註冊工作排程：$taskName（S4U：不需登入即可執行）"
+} catch {
+    Write-Error "註冊 $taskName 失敗：$($_.Exception.Message)"
+    Write-Error "S4U 需要系統管理員權限 —— 請以「系統管理員」重新開啟 PowerShell 再執行本腳本。"
+    exit 1
+}
+
+# ------------------------------------------------------------
+# 看門狗：每日檢查資料是否落後最後一個交易日，落後就發 Telegram 警報。
+# 獨立於主排程，才能在「主排程整個沒跑」時仍發出警示（2026-09-11 事故）。
+# 週末也跑（週末若發現週五資料缺漏，一樣要通知）。
+# ------------------------------------------------------------
+$wdName = "ETF_Tracker_Freshness_Watchdog"
+$wdVbs  = Join-Path (Split-Path -Parent $script) "run_watchdog.vbs"
+if (Test-Path $wdVbs) {
+    $wdAction  = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$wdVbs`""
+    $wdTrigger = New-ScheduledTaskTrigger -Daily -At 22:30
+    $wdSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+        -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 10) -MultipleInstances IgnoreNew
+    try {
+        Register-ScheduledTask -TaskName $wdName `
+            -Action $wdAction -Trigger $wdTrigger -Settings $wdSettings -Principal $principal `
+            -Description "ETF 資料過期警報：資料落後最後一個交易日就發 Telegram 通知" `
+            -Force -ErrorAction Stop | Out-Null
+        Write-Host "已註冊工作排程：$wdName（每日 22:30）"
+    } catch {
+        Write-Error "註冊 $wdName 失敗：$($_.Exception.Message)"
+    }
+} else {
+    Write-Warning "找不到 $wdVbs，略過看門狗註冊"
+}
 
 Write-Host ""
-Write-Host "已註冊工作排程：$taskName"
-Write-Host "  觸發：週一～五 18:00–21:00，每 30 分鐘一次"
+Write-Host "  主排程觸發：週一～五 18:00–21:00，每 30 分鐘一次"
+Write-Host "  看門狗觸發：每日 22:30"
 Write-Host "  立即測試： Start-ScheduledTask -TaskName `"$taskName`""
 Write-Host "  查看狀態： Get-ScheduledTask -TaskName `"$taskName`" | Get-ScheduledTaskInfo"
-Write-Host "  日誌： D:\Self_Tools\ETF_Tracker\logs\run_<日期>.log"
+Write-Host "  日誌： D:\Self_Tools\ETF_Tracker\logs\run_<日期>.log / watchdog_<日期>.log"
