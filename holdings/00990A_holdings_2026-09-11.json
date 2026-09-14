@@ -1,0 +1,272 @@
+[
+  {
+    "code": "LITE US",
+    "name": "LUMENTUM HOLDINGS INC",
+    "shares": 87599,
+    "weight": 7.14
+  },
+  {
+    "code": "BE US",
+    "name": "BLOOM ENERGY CORP- A",
+    "shares": 166800,
+    "weight": 4.05
+  },
+  {
+    "code": "MU US",
+    "name": "MICRON TECHNOLOGY INC",
+    "shares": 46965,
+    "weight": 4.03
+  },
+  {
+    "code": "NVDA US",
+    "name": "NVIDIA CORP",
+    "shares": 197000,
+    "weight": 3.78
+  },
+  {
+    "code": "SMTC US",
+    "name": "SEMTECH CORP",
+    "shares": 242500,
+    "weight": 3.57
+  },
+  {
+    "code": "META US",
+    "name": "META PLATFORMS INC-CLASS A",
+    "shares": 58680,
+    "weight": 3.35
+  },
+  {
+    "code": "AMD US",
+    "name": "ADVANCED MICRO DEVICES",
+    "shares": 70579,
+    "weight": 3.2
+  },
+  {
+    "code": "SNOW US",
+    "name": "SNOWFLAKE INC",
+    "shares": 109800,
+    "weight": 3.18
+  },
+  {
+    "code": "2383",
+    "name": "台光電",
+    "shares": 212000,
+    "weight": 3.16
+  },
+  {
+    "code": "2454",
+    "name": "聯發科",
+    "shares": 243000,
+    "weight": 3.1
+  },
+  {
+    "code": "MSFT US",
+    "name": "MICROSOFT CORP",
+    "shares": 71120,
+    "weight": 3.1
+  },
+  {
+    "code": "PLTR US",
+    "name": "PALANTIR TECHNOLOGIES INC-A",
+    "shares": 187342,
+    "weight": 2.76
+  },
+  {
+    "code": "2330",
+    "name": "台積電",
+    "shares": 406000,
+    "weight": 2.72
+  },
+  {
+    "code": "MRVL US",
+    "name": "MARVELL TECHNOLOGY INC",
+    "shares": 127400,
+    "weight": 2.65
+  },
+  {
+    "code": "INTC US",
+    "name": "INTEL CORP",
+    "shares": 287200,
+    "weight": 2.6
+  },
+  {
+    "code": "SPCX US",
+    "name": "SPACE EXPLORATION TECHN-CL A",
+    "shares": 195500,
+    "weight": 2.6
+  },
+  {
+    "code": "HOOD US",
+    "name": "ROBINHOOD MARKETS INC - A",
+    "shares": 235555,
+    "weight": 2.33
+  },
+  {
+    "code": "SNDK US",
+    "name": "SANDISK CORP",
+    "shares": 16143,
+    "weight": 2.32
+  },
+  {
+    "code": "285A JP",
+    "name": "KIOXIA HOLDINGS CORP",
+    "shares": 68900,
+    "weight": 2.12
+  },
+  {
+    "code": "AAPL US",
+    "name": "APPLE INC",
+    "shares": 69880,
+    "weight": 2.04
+  },
+  {
+    "code": "6981 JP",
+    "name": "MURATA MANUFACTURING CO LTD",
+    "shares": 477100,
+    "weight": 2.0
+  },
+  {
+    "code": "2308",
+    "name": "台達電",
+    "shares": 441000,
+    "weight": 1.99
+  },
+  {
+    "code": "3037",
+    "name": "欣興",
+    "shares": 716000,
+    "weight": 1.94
+  },
+  {
+    "code": "000660 KP",
+    "name": "SK HYNIX INC",
+    "shares": 16304,
+    "weight": 1.93
+  },
+  {
+    "code": "DELL US",
+    "name": "DELL TECHNOLOGIES -C",
+    "shares": 36300,
+    "weight": 1.81
+  },
+  {
+    "code": "009150 KP",
+    "name": "SAMSUNG ELECTRO-MECHANICS CO",
+    "shares": 18688,
+    "weight": 1.71
+  },
+  {
+    "code": "6857 JP",
+    "name": "ADVANTEST CORP",
+    "shares": 88100,
+    "weight": 1.59
+  },
+  {
+    "code": "NOK US",
+    "name": "NOKIA CORP-SPON ADR",
+    "shares": 1615000,
+    "weight": 1.58
+  },
+  {
+    "code": "3017",
+    "name": "奇鋐",
+    "shares": 158000,
+    "weight": 1.48
+  },
+  {
+    "code": "4062 JP",
+    "name": "IBIDEN CO LTD",
+    "shares": 130900,
+    "weight": 1.46
+  },
+  {
+    "code": "6223",
+    "name": "旺矽",
+    "shares": 90000,
+    "weight": 1.41
+  },
+  {
+    "code": "PANW US",
+    "name": "PALO ALTO NETWORKS INC",
+    "shares": 47955,
+    "weight": 1.39
+  },
+  {
+    "code": "NTRA US",
+    "name": "NATERA INC",
+    "shares": 43700,
+    "weight": 1.26
+  },
+  {
+    "code": "2449",
+    "name": "京元電子",
+    "shares": 1665000,
+    "weight": 1.22
+  },
+  {
+    "code": "AMZN US",
+    "name": "AMAZON.COM INC",
+    "shares": 48000,
+    "weight": 1.08
+  },
+  {
+    "code": "FSLY US",
+    "name": "FASTLY INC - CLASS A",
+    "shares": 509700,
+    "weight": 1.04
+  },
+  {
+    "code": "NET US",
+    "name": "CLOUDFLARE INC - CLASS A",
+    "shares": 36800,
+    "weight": 0.99
+  },
+  {
+    "code": "WDC US",
+    "name": "WESTERN DIGITAL CORP",
+    "shares": 23862,
+    "weight": 0.94
+  },
+  {
+    "code": "8046",
+    "name": "南電",
+    "shares": 302000,
+    "weight": 0.91
+  },
+  {
+    "code": "2360",
+    "name": "致茂",
+    "shares": 130000,
+    "weight": 0.78
+  },
+  {
+    "code": "3529",
+    "name": "力旺",
+    "shares": 106000,
+    "weight": 0.76
+  },
+  {
+    "code": "GOOGL US",
+    "name": "ALPHABET INC-CL A",
+    "shares": 25400,
+    "weight": 0.76
+  },
+  {
+    "code": "7769",
+    "name": "鴻勁",
+    "shares": 41000,
+    "weight": 0.72
+  },
+  {
+    "code": "TWST US",
+    "name": "TWIST BIOSCIENCE CORP",
+    "shares": 55700,
+    "weight": 0.62
+  },
+  {
+    "code": "3665",
+    "name": "貿聯-KY",
+    "shares": 94000,
+    "weight": 0.49
+  }
+]
