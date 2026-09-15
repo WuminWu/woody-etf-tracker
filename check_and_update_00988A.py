@@ -35,6 +35,7 @@ import pandas as pd
 import yfinance as yf
 from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
+from market_utils import yf_symbol, ccy_of
 from asset_allocation import parse_asset_allocation, format_alloc_lines, find_prev_alloc, attach_delta, format_scale_line
 
 # --------------- Taiwan Market Holidays 2026 ---------------
@@ -292,14 +293,14 @@ def get_price(code_str):
             except: pass
         return 0.0
     market = parts[1].upper()
-    yf_ticker = f"{base}{MARKET_MAP.get(market, '')}"
+    yf_ticker = yf_symbol(base, market)   # CH→.SS/.SZ、HK 補零（market_utils）
     try:
         hist = yf.Ticker(yf_ticker).history(period="1d", timeout=10)
         if hist.empty: return 0.0
         local_price = float(hist["Close"].iloc[-1])
     except Exception:
         return 0.0
-    fx = _fx_to_twd(MARKET_CCY.get(market, "USD"))
+    fx = _fx_to_twd(ccy_of(market))
     return round(local_price * fx, 2) if fx > 0 else 0.0
 
 

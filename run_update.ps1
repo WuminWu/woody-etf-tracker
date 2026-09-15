@@ -114,10 +114,12 @@ $scripts = @(
     "check_and_update_00995A.py",
     "check_and_update_00996A.py",
     "check_and_update_00405A.py",
+    "check_and_update_00407A.py",   # 台股，凱基 J024 申購買回清單 xlsx（純 HTTP）
     "check_and_update_00988A.py",   # 海外 T+1，一併在本機跑
     "check_and_update_00997A.py",   # 海外（美股為主），capitalfund
     "check_and_update_00990A.py",   # 海外（全球AI），元大 Nuxt __NUXT__
     "check_and_update_00411A.py",   # 海外（全球科技），統一 ezmoney，T+1
+    "check_and_update_00409A.py",   # 海外（全球50），復華 API ETF26，T+1
     "check_and_update_index.py",
     "update_cost_basis.py",
     "record_common_actions.py",
