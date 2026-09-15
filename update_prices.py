@@ -19,6 +19,7 @@ IPO_BASELINE = {
     "00400A": ("2026-04-09", 10.0),
     "00405A": ("2026-06-09", 10.0),
     "00997A": ("2026-04-14", 10.0),
+    "00411A": ("2026-08-26", 10.0),
 }
 
 
@@ -49,6 +50,7 @@ ETFS = [
     ("00405A", "data_00405A.json"),
     ("00997A", "data_00997A.json"),
     ("00990A", "data_00990A.json"),
+    ("00411A", "data_00411A.json"),
 ]
 
 
@@ -88,7 +90,12 @@ def update_etf_prices():
             print(f"  Skip {data_file} (not found)")
             continue
 
-        ytd, price = fetch_ytd_price(f"{code}.TW", code=code)
+        ticker = f"{code}.TW"
+        ytd, price = fetch_ytd_price(ticker, code=code)
+        if ytd is None:
+            # 上櫃（TPEx）掛牌的 ETF 在 yfinance 為 .TWO（例如 00411A）
+            ticker = f"{code}.TWO"
+            ytd, price = fetch_ytd_price(ticker, code=code)
         if ytd is None:
             print(f"  {code}: no data, skipping")
             continue
@@ -101,7 +108,7 @@ def update_etf_prices():
         data["meta"]["priceDate"] = now_str[:10]  # YYYY-MM-DD only
         # Update priceChange & prevPrice based on ytd history
         try:
-            hist = yf.Ticker(f"{code}.TW").history(period="ytd", timeout=10)
+            hist = yf.Ticker(ticker).history(period="ytd", timeout=10)
             if len(hist) >= 2:
                 prev_p = round(float(hist["Close"].iloc[-2]), 2)
                 data["meta"]["prevPrice"] = prev_p
