@@ -38,3 +38,29 @@ def yf_symbol(base, market):
 def ccy_of(market):
     """市場碼 → 計價幣別；未知市場預設 USD。"""
     return CCY.get(market.upper(), "USD")
+
+
+# 非股票部位（期貨、現金等）不可混進個股統計。
+# 00993A 的持股清單含一筆 'TX 台指期貨'（19 口、權重約 1~2%），yfinance 無此代號 → 價格 0；
+# 2026-05-15 它口數變動時，日報把它當成「新建倉」的股票列出，
+# 且 daily_digest._best_amount 會在 diffAmount=0 但股數有變動時用『權重×淨資產』回推金額，
+# 可能報出憑空推算的巨額「台指期貨」交易。
+import re as _re
+
+_TW_STOCK = _re.compile(r'^[0-9]{4,6}[A-Z]?$')
+
+
+def is_stock_code(code):
+    """判斷是否為個股代號。台股為 4~6 碼數字(+英文)；海外為「TICKER 市場」且市場碼已知。
+
+    期貨（TX）、現金等非股票部位一律回傳 False，不納入個股統計。
+    """
+    c = str(code or '').strip()
+    if not c:
+        return False
+    parts = c.split()
+    if len(parts) == 1:
+        return bool(_TW_STOCK.match(c))
+    if len(parts) == 2:
+        return parts[1].upper() in YF_SUFFIX or parts[1].upper() in CCY
+    return False

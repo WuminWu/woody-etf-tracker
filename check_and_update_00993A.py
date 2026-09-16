@@ -365,6 +365,10 @@ def fmt_zhang(shares):
 
 def build_notification(wrapper):
     meta, holdings = wrapper["meta"], wrapper["holdings"]
+    # 期貨（TX 台指期貨）不是個股：單位是「口」不是「張」、也沒有股價，
+    # 不列入加減碼／新建倉統計，改在下方單獨顯示曝險。
+    futures = [h for h in holdings if h.get("isFutures")]
+    holdings = [h for h in holdings if not h.get("isFutures")]
     added     = [h for h in holdings if h.get("prevShares", 0) == 0 and h["shares"] > 0]
     removed   = [h for h in holdings if h["shares"] == 0 and h.get("prevShares", 0) > 0]
     increased = sorted([h for h in holdings if h["shares"] > 0 and h.get("diffShares", 0) > 0 and h.get("prevShares", 0) > 0], key=lambda x: x["diffShares"], reverse=True)
@@ -379,6 +383,9 @@ def build_notification(wrapper):
         f"🔴 加碼：{len(increased)} 檔　🟢 減碼：{len(decreased)} 檔",
         f"🟣 新增：{len(added)} 檔　🟠 出清：{len(removed)} 檔",
     ]
+    if futures:
+        fl = "、".join(f"{h['code']} {h['name']} {h['shares']} 口（{h['todayWeight']}%）" for h in futures)
+        lines.insert(4, f"⚡ 期貨部位：{fl}")
     if added:
         lines.append("\n新增持股：")
         for h in added:

@@ -41,6 +41,8 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 DIGESTS_FILE = "digests.json"   # 供網站「每日分析」分頁讀取（{date: text}）
 SITE_URL = "https://wuminwu.github.io/woody-etf-tracker/"
+from market_utils import is_stock_code   # 排除期貨等非股票部位
+
 PROVENANCE = "報告來源: 854-Woody (狼群專用未經同意請勿轉傳，若數據有誤請通知我)"
 
 # 台股 ETF（純台股；海外/混合另成一組）
@@ -199,7 +201,8 @@ def _gather_overseas_tw_contributors():
             d = json.loads(open(path, encoding="utf-8").read())
         except Exception:
             continue
-        tw_holdings = [h for h in d.get("holdings", []) if " " not in str(h.get("code", ""))]
+        tw_holdings = [h for h in d.get("holdings", [])
+                       if " " not in str(h.get("code", "")) and is_stock_code(h.get("code", ""))]
         if tw_holdings:
             etf_data[code] = {"holdings": tw_holdings, "meta": d.get("meta", {})}
             codes.append(code)
@@ -265,6 +268,8 @@ def _recent_snapshot_dirs(ref_date_str, n=12):
         net = defaultdict(float)
         for _etf, blk in snap.items():
             for h in blk.get("holdings", []):
+                if h.get("isFutures") or not is_stock_code(h.get("code", "")):
+                    continue
                 ds = h.get("diffShares", 0)
                 net[h["code"]] += h.get("diffAmount", 0) or 0
                 if ds > 0:
@@ -370,6 +375,11 @@ def render_digest(today_str, etf_data, updated, prev_snap,
             ds = h.get("diffShares", 0)
             if ds == 0:
                 continue
+            # 非股票部位（期貨、現金等）不納入個股統計。00993A 持股含一筆 TX 台指期貨，
+            # 2026-05-15 口數變動時被列成「新建倉」股票；且價格為 0 時 _best_amount 會用
+            # 權重×淨資產回推單價，可能報出憑空推算的巨額「台指期貨」交易。
+            if h.get("isFutures") or not is_stock_code(h.get("code", "")):
+                continue
             amt = _best_amount(h, meta)
             wt_up = h.get("todayWeight", 0) > h.get("yestWeight", 0)
             wt_dn = h.get("todayWeight", 0) < h.get("yestWeight", 0)
@@ -400,6 +410,8 @@ def render_digest(today_str, etf_data, updated, prev_snap,
         name_of = {}
         for etf_id, blk in prev_snap.items():
             for h in blk.get("holdings", []):
+                if h.get("isFutures") or not is_stock_code(h.get("code", "")):
+                    continue
                 name_of.setdefault(h["code"], h.get("name", h["code"]))
                 if h.get("diffShares", 0) > 0:
                     y_add[h["code"]].append(etf_id)
