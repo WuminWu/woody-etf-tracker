@@ -18,7 +18,7 @@ echo.
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0register_task.ps1"
 echo.
 echo ============== 驗證結果 ==============
-powershell -NoProfile -Command "Get-ScheduledTask ETF_Tracker_Daily_Update,ETF_Tracker_Freshness_Watchdog -ErrorAction SilentlyContinue | Select-Object TaskName,@{N=LogonType;E={$_.Principal.LogonType}},State | Format-Table -AutoSize"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0verify_tasks.ps1"
 echo  （兩個任務都要出現，且 LogonType 必須是 S4U）
 echo.
 pause
