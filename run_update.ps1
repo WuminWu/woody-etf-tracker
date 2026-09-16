@@ -46,22 +46,21 @@ if ($dow -eq "Saturday" -or $dow -eq "Sunday") {
 }
 
 # --- 台股休市日守門：休市日整個跳過（不爬蟲、不發 Telegram、不 commit）---
-# 日期 → 休市原因（僅列平日；週末排程本就不跑）。每年初更新固定假日；
-# 颱風假等臨時休市依中央氣象署/證交所公告隨時加入。
-# 來源：臺灣證券交易所 https://www.twse.com.tw/zh/trading/holiday.html
-$TW_HOLIDAYS_2026 = @{
-    "2026-01-01" = "元旦"
-    "2026-02-12" = "春節(封關結算)"; "2026-02-13" = "春節(封關結算)"
-    "2026-02-16" = "春節"; "2026-02-17" = "春節"; "2026-02-18" = "春節"
-    "2026-02-19" = "春節"; "2026-02-20" = "春節"
-    "2026-02-27" = "和平紀念日補假"
-    "2026-04-03" = "兒童節補假"; "2026-04-06" = "清明節補假"
-    "2026-05-01" = "勞動節"
-    "2026-06-19" = "端午節"
-    "2026-07-10" = "颱風假（臨時休市）"
-    "2026-09-25" = "中秋節"; "2026-09-28" = "教師節"
-    "2026-10-09" = "國慶日補假"; "2026-10-26" = "光復節補假"
-    "2026-12-25" = "行憲紀念日"
+# 唯一來源為 tw_calendar.py（Python 端各爬蟲直接 import，這裡讀它匯出的 holidays.json），
+# 避免假日表在兩處各存一份、更新年度假日時漏改其中一邊。
+$TW_HOLIDAYS_2026 = @{}
+try {
+    & python (Join-Path $root "tw_calendar.py") | Out-Null    # 重新匯出，確保與 Python 端一致
+} catch {
+    Write-Log "WARNING: 匯出 holidays.json 失敗：$_"
+}
+$holidayFile = Join-Path $root "holidays.json"
+if (Test-Path $holidayFile) {
+    (Get-Content $holidayFile -Raw -Encoding UTF8 | ConvertFrom-Json).PSObject.Properties |
+        ForEach-Object { $TW_HOLIDAYS_2026[$_.Name] = $_.Value }
+    Write-Log ("休市日表已載入 {0} 天（來源：tw_calendar.py）" -f $TW_HOLIDAYS_2026.Count)
+} else {
+    Write-Log "WARNING: 找不到 holidays.json，本次略過休市日判斷"
 }
 $todayStr = Get-Date -Format "yyyy-MM-dd"
 if ($TW_HOLIDAYS_2026.ContainsKey($todayStr)) {
@@ -129,15 +128,25 @@ $scripts = @(
     "weekly_digest.py",
     "sanitize_data.py"   # 最後一道防線：清除 data_*.json 內的 NaN/Inf（非法 JSON 會讓前端整頁掛掉）
 )
+$results = @()
 foreach ($s in $scripts) {
     Write-Log "--- 執行 $s ---"
+    $sw = [Diagnostics.Stopwatch]::StartNew()
+    $code = 0
     try {
         $out = & python $s 2>&1
+        $code = $LASTEXITCODE
         $out | ForEach-Object { Write-Log "  $_" }
     } catch {
         Write-Log "  ERROR: $_"
+        $code = 1
     }
+    $sw.Stop()
+    if ($code -ne 0) { Write-Log "  !! $s 以 exit=$code 結束" }
+    $results += [pscustomobject]@{ script = $s; exit = $code; sec = [math]::Round($sw.Elapsed.TotalSeconds, 1) }
 }
+# 供 run_summary.py 產生每日執行摘要（某支腳本失敗時原本是靜默的）
+$results | ConvertTo-Json -Compress | Set-Content -Path (Join-Path $logDir "last_run_results.json") -Encoding UTF8
 
 # --- 提交並推送（有變動才做）---
 git add data_*.json holdings/ data_index.json 2>&1 | Out-Null

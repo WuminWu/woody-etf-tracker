@@ -23,6 +23,8 @@ import json
 import os
 import logging
 
+from sanity import holdings_count_check
+
 log = logging.getLogger(__name__)
 
 SHEET_ID   = "1Wrz6y-DJSTM0oWMa0JRztryEiPwLB8QRU8HJYxHra00"
@@ -243,6 +245,23 @@ def append_holdings_to_sheets(etf_code, data_date, holdings, meta=None):
 
     if not rows:
         log.warning(f"Sheets: no rows to append for {etf_code} {data_date}.")
+        return
+
+    # 解析異常守門：持股檔數相對前一交易日驟降（來源版面變動的典型徵兆）就不寫入，
+    # 避免壞資料污染試算表（快照、歷史、日報全由它衍生）。
+    ok, why = holdings_count_check(etf_code, len(rows), data_date)
+    if not ok:
+        log.error(f"Sheets: {etf_code} {data_date} 已擋下寫入 — {why}")
+        try:
+            from notify import send_telegram
+            send_telegram(chr(10).join([
+                f"⚠️ {etf_code} 疑似解析異常，已擋下寫入試算表",
+                f"📅 資料日期：{data_date}",
+                why,
+                "請檢查該來源版面是否變動（持股檔數突然大幅減少）。",
+            ]))
+        except Exception:
+            pass
         return
 
     try:

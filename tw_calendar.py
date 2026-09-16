@@ -16,23 +16,31 @@ from datetime import date, timedelta
 
 # 2026 年台股休市日（僅列平日；週末本來就跳過）
 # 來源：臺灣證券交易所 https://www.twse.com.tw/zh/trading/holiday.html
-TW_MARKET_HOLIDAYS = {
-    date(2026, 1, 1),    # 元旦
-    date(2026, 2, 12), date(2026, 2, 13),                       # 春節封關結算
-    date(2026, 2, 16), date(2026, 2, 17), date(2026, 2, 18),
-    date(2026, 2, 19), date(2026, 2, 20),                       # 春節
-    date(2026, 2, 27),   # 和平紀念日補假
-    date(2026, 4, 3),    # 兒童節補假
-    date(2026, 4, 6),    # 清明節補假
-    date(2026, 5, 1),    # 勞動節
-    date(2026, 6, 19),   # 端午節
-    date(2026, 7, 10),   # 颱風假（臨時休市）
-    date(2026, 9, 25),   # 中秋節
-    date(2026, 9, 28),   # 教師節
-    date(2026, 10, 9),   # 國慶日補假
-    date(2026, 10, 26),  # 光復節補假
-    date(2026, 12, 25),  # 行憲紀念日
+# 這是全專案唯一來源：Python 端直接 import；PowerShell 端讀 holidays.json（由本檔匯出）。
+TW_HOLIDAY_REASONS = {
+    date(2026, 1, 1): "元旦",
+    date(2026, 2, 12): "春節(封關結算)",
+    date(2026, 2, 13): "春節(封關結算)",
+    date(2026, 2, 16): "春節",
+    date(2026, 2, 17): "春節",
+    date(2026, 2, 18): "春節",
+    date(2026, 2, 19): "春節",
+    date(2026, 2, 20): "春節",
+    date(2026, 2, 27): "和平紀念日補假",
+    date(2026, 4, 3): "兒童節補假",
+    date(2026, 4, 6): "清明節補假",
+    date(2026, 5, 1): "勞動節",
+    date(2026, 6, 19): "端午節",
+    date(2026, 7, 10): "颱風假(臨時休市)",
+    date(2026, 9, 25): "中秋節",
+    date(2026, 9, 28): "教師節",
+    date(2026, 10, 9): "國慶日補假",
+    date(2026, 10, 26): "光復節補假",
+    date(2026, 12, 25): "行憲紀念日",
 }
+
+# 各爬蟲以 `d in TW_MARKET_HOLIDAYS` 判斷，維持原本用法不變
+TW_MARKET_HOLIDAYS = set(TW_HOLIDAY_REASONS)
 
 
 def is_trading_day(d):
@@ -51,3 +59,18 @@ def next_trading_day(d):
     while not is_trading_day(d):
         d += timedelta(days=1)
     return d
+
+
+def export_json(path="holidays.json"):
+    """匯出 {YYYY-MM-DD: 原因} 給 PowerShell 端（run_update.ps1）讀取，
+    避免假日表在 Python 與 PowerShell 各留一份、更新時漏改其中一邊。"""
+    import json
+    data = {d.isoformat(): r for d, r in sorted(TW_HOLIDAY_REASONS.items())}
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    return data
+
+
+if __name__ == "__main__":
+    d = export_json()
+    print(f"holidays.json exported: {len(d)} days")
