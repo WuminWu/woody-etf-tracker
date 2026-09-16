@@ -229,8 +229,14 @@ def _section(lines, title, items, fmt):
         lines.append(f"  …及其他 {len(items) - SECTION_CAP} 檔")
 
 
-def build_etf_weekly_msg(etf, syn, rng, d1, d0):
-    """單檔 ETF 的週持股異動訊息；本週無任何異動回傳 None。"""
+def build_etf_weekly_block(etf, syn, d1, d0):
+    """單檔 ETF 的週持股異動「區塊」（不含報告抬頭，供合併訊息使用）。
+
+    本週無任何異動回傳 None。
+    2026-09-16 改版前這裡產生的是「一檔一則 Telegram」，週五連同個股通知、日報、
+    彙總週報一次會送出約 30 則，踩到 Telegram 洪水保護、也把聊天室洗版。
+    現在同組別的各檔合併成一則（過長由 notify._split_message 自動分段）。
+    """
     hs = syn["holdings"]
     added     = [h for h in hs if h["prevShares"] == 0 and h["shares"] > 0]
     removed   = [h for h in hs if h["shares"] == 0 and h["prevShares"] > 0]
@@ -244,23 +250,17 @@ def build_etf_weekly_msg(etf, syn, rng, d1, d0):
     name = ALL_ETF_NAMES.get(etf, "")
     m = syn["meta"]
     lines = [
-        "報告來源: 854-Woody (狼群專用未經同意請勿轉傳，若數據有誤請通知我)",
-        "",
-        f"📆 {etf} {name} 本週持股變化（{rng}）",
-        f"📅 比較基準：{d1} vs {d0}",
-        f"📦 持股數量：{len([h for h in hs if h['shares'] > 0])} 檔",
+        f"📊 {etf} {name}　（{d1[5:].replace('-', '/')} vs {d0[5:].replace('-', '/')}）",
+        f"📦 持股 {len([h for h in hs if h['shares'] > 0])} 檔　"
+        f"🔴 加碼 {len(increased)}　🟢 減碼 {len(decreased)}　"
+        f"🟣 新增 {len(added)}　🟠 出清 {len(removed)}",
     ]
     ts, pts = m.get("totalShares", 0), m.get("prevTotalShares", 0)
     if ts and pts:
         chg = (ts - pts) / pts * 100
         if abs(chg) >= 1:
             lines.append(f"⚙️ 基金規模：{'申購' if chg > 0 else '贖回'}約 {abs(chg):.0f}%（持股增減部分為被動）")
-    lines += [
-        "",
-        f"🔴 加碼：{len(increased)} 檔　🟢 減碼：{len(decreased)} 檔",
-        f"🟣 新增：{len(added)} 檔　🟠 出清：{len(removed)} 檔",
-        "",
-    ]
+
     _section(lines, "✨ 本週新增持股：", sorted(added, key=lambda x: -x["diffShares"]),
              lambda h: f"  • {h['code']} {h['name']}　{fmt_zhang(h['shares'])}（0% → {h['todayWeight']}%）")
     _section(lines, "🚫 本週出清持股：", sorted(removed, key=lambda x: -x["prevShares"]),
@@ -272,39 +272,125 @@ def build_etf_weekly_msg(etf, syn, rng, d1, d0):
     return "\n".join(lines)
 
 
-def run_per_etf(cur_dates, prev_dates, marker, cur_week, today, wd):
-    """每檔 ETF 各發一則週報。marker['per_etf'] = {etf: 已發送的 ISO 週}。"""
-    sent_map = marker.setdefault("per_etf", {})
-    for etf, _n in list(ALL_ETF_NAMES.items()):
-        if sent_map.get(etf) == cur_week:
+PER_ETF_GROUPS = {
+    "tw":       {"etfs": TW_ETFS,       "label": "台股"},
+    "overseas": {"etfs": OVERSEAS_ETFS, "label": "海外/混合"},
+}
+_SEP = "\n" + "─" * 22 + "\n"
+
+
+def build_group_per_etf_msg(group, cur_dates, prev_dates, today=None, wd=None, exclude=()):
+    """把同組別各檔 ETF 的週異動合併成一則訊息。
+
+    回傳 (text, included, skipped)：
+      included 本次納入的 ETF 代號（不論有無異動，之後不再重複考慮）
+      skipped  週五當日尚未更新、要等後續輪次補送的代號
+    全部都無異動時 text 為 None。exclude 內的 ETF 略過（前幾輪已送過）。
+    """
+    g = PER_ETF_GROUPS[group]
+    blocks, included, skipped = [], [], []
+    for etf, _n in g["etfs"]:
+        if etf in exclude:
             continue
         d1 = etf_latest_in(cur_dates, etf)
         if not d1:
             continue
-        # 週五需該檔當日已更新（否則等後續輪次或週六補發）
-        if wd == 4 and d1 != today.isoformat():
+        if wd == 4 and today is not None and d1 != today.isoformat():
+            skipped.append(etf)          # 週五當日尚未更新
             continue
         d0 = etf_latest_in(prev_dates, etf)
+        included.append(etf)
         if not d0:
-            log.info(f"[per-etf {etf}] 無上週基準（新納入），跳過。")
-            sent_map[etf] = cur_week
-            continue
+            continue                     # 新納入、無上週基準
         syn = build_week_diff(etf, d1, d0)
         if not syn:
             continue
-        rng = f"{cur_dates[0][5:].replace('-', '/')}~{d1[5:].replace('-', '/')}"
-        msg = build_etf_weekly_msg(etf, syn, rng, d1, d0)
+        block = build_etf_weekly_block(etf, syn, d1, d0)
+        if block:
+            blocks.append(block)
+    if not blocks:
+        return None, included, skipped
+
+    rng = f"{cur_dates[0][5:].replace('-', '/')}~{cur_dates[-1][5:].replace('-', '/')}"
+    head = [
+        "報告來源: 854-Woody (狼群專用未經同意請勿轉傳，若數據有誤請通知我)",
+        "",
+        f"📆 各檔 ETF 本週持股變化（{g['label']}）　{rng}"
+        + ("　※補送（前一輪尚未更新的部分）" if exclude else ""),
+        "🗓 比較基準：本週 vs 上週各檔最後揭露日",
+        f"📈 本則含 {len(blocks)} 檔有異動",
+    ]
+    if skipped:
+        head.append(f"⏳ 尚未更新，待後續輪次補送：{'、'.join(skipped)}")
+    return "\n".join(head) + _SEP + _SEP.join(blocks), included, skipped
+
+
+def _legacy_done(marker, group, cur_week):
+    """相容 2026-09-16 合併前的舊 marker。
+
+    舊格式是 per_etf = {ETF: 已發送的ISO週}（逐檔一則）；新格式是
+    per_etf_{group} = {week, done, sent, total}。若不處理，換新程式後第一次遇到
+    「上週已用舊格式發過」的那一週，會因為找不到新鍵而把整組週報再發一次。
+    """
+    legacy = marker.get("per_etf") or {}
+    codes = {e for e, _ in PER_ETF_GROUPS[group]["etfs"]}
+    return [e for e, w in legacy.items() if w == cur_week and e in codes]
+
+
+def run_per_etf(cur_dates, prev_dates, marker, cur_week, today, wd):
+    """各組別各發一則合併後的單檔週報（過長自動分段）。
+
+    marker[f"per_etf_{group}"] = {"week": ISO週, "sent": 已送出的段數, "total": 總段數}
+    分段層級續傳：某一段送失敗時，下一輪只補送沒送成功的段，不會重覆前面的段。
+    （合併前是逐檔 marker，本來就有續傳能力，改成合併後要保留同等可靠度。）
+    """
+    from notify import _split_message
+    for group in PER_ETF_GROUPS:
+        key = f"per_etf_{group}"
+        st = marker.get(key) or {}
+        if st.get("week") != cur_week:           # 換週，狀態重來
+            st = {"week": cur_week, "done": _legacy_done(marker, group, cur_week),
+                  "sent": 0, "total": 0}
+        done = list(st.get("done", []))
+
+        msg, included, skipped = build_group_per_etf_msg(
+            group, cur_dates, prev_dates, today, wd, exclude=set(done))
         if msg is None:
-            log.info(f"[per-etf {etf}] 本週無持股異動，不發送。")
-            sent_map[etf] = cur_week
-            save_marker(marker)
+            if included:                          # 這批都沒異動，記下來不再考慮
+                st["done"] = done + included
+                st["sent"], st["total"] = 0, 0
+                marker[key] = st
+                save_marker(marker)
+                log.info(f"[per-etf {group}] 本批 {len(included)} 檔無持股異動，不發送。")
+            elif skipped:
+                log.info(f"[per-etf {group}] 尚有 {len(skipped)} 檔當日未更新，等下一輪。")
             continue
-        if send_telegram(msg):
-            sent_map[etf] = cur_week
+
+        parts = _split_message(msg)
+        total = len(parts)
+        # 只有「同一批訊息」才能續傳；段數對不上就整則重送，避免接到錯的位置
+        start = st["sent"] if (st.get("total") == total and st.get("sent", 0) < total) else 0
+        ok_upto = start
+        for i in range(start, total):
+            body = parts[i] if total == 1 else f"（{i+1}/{total}）\n{parts[i]}"
+            if not send_telegram(body):
+                log.warning(f"[per-etf {group}] 第 {i+1}/{total} 段發送失敗，下輪自該段續送。")
+                st["sent"], st["total"] = ok_upto, total
+                marker[key] = st
+                save_marker(marker)
+                break
+            ok_upto = i + 1
+            st["sent"], st["total"] = ok_upto, total
+            marker[key] = st
             save_marker(marker)
-            log.info(f"[per-etf {etf}] 單檔週報已發送。")   # send_telegram 已內建節流+429重試
-        else:
-            log.warning(f"[per-etf {etf}] 發送失敗，下輪重試。")
+        if ok_upto >= total:
+            # 整則送完才把這批記入 done，並清掉分段狀態讓下一批（補送）從頭開始
+            st["done"] = done + included
+            st["sent"], st["total"] = 0, 0
+            marker[key] = st
+            save_marker(marker)
+            log.info(f"[per-etf {group}] 已發送 {total} 則，涵蓋 {len(included)} 檔"
+                     + (f"；另 {len(skipped)} 檔當日未更新，待後續輪次補送。" if skipped else "。"))
 
 
 # 把日報措辭轉為週報語意（render_digest 為日報用語，此處統一轉換）
@@ -414,21 +500,15 @@ def run_preview():
         out = f"_weekly_{group}.txt"
         open(out, "w", encoding="utf-8").write(msg or "(無資料)")
         log.info(f"[{group}] preview → {out}（{cnt} 檔，報告日 {report_date}）")
-    # 單檔 ETF 週報全部寫入一個檔
-    parts = []
-    for etf in ALL_ETF_NAMES:
-        d1 = etf_latest_in(cur_dates, etf)
-        d0 = etf_latest_in(prev_dates, etf) if d1 else None
-        if not (d1 and d0):
-            continue
-        syn = build_week_diff(etf, d1, d0)
-        if not syn:
-            continue
-        rng = f"{cur_dates[0][5:].replace('-', '/')}~{d1[5:].replace('-', '/')}"
-        msg = build_etf_weekly_msg(etf, syn, rng, d1, d0)
-        parts.append(msg or f"（{etf} 本週無持股異動）")
-    open("_weekly_per_etf.txt", "w", encoding="utf-8").write("\n\n" + ("\n\n" + "=" * 30 + "\n\n").join(parts))
-    log.info(f"[per-etf] preview → _weekly_per_etf.txt（{len(parts)} 檔）")
+    # 合併後的單檔週報（每組一則，過長才分段）
+    from notify import _split_message
+    for group in PER_ETF_GROUPS:
+        msg, included, skipped = build_group_per_etf_msg(group, cur_dates, prev_dates)
+        out = f"_weekly_per_etf_{group}.txt"
+        open(out, "w", encoding="utf-8").write(msg or "(本週無異動)")
+        n = len(_split_message(msg)) if msg else 0
+        log.info(f"[per-etf {group}] preview → {out}（涵蓋 {len(included)} 檔，"
+                 f"{len(msg) if msg else 0} 字，實際會送 {n} 則）")
 
 
 def run_backfill():
