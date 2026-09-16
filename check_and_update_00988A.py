@@ -273,7 +273,7 @@ def main():
     log.info(f"=== Check & Update started. Today: {today_str}, checking for: {prev_str} ===")
 
     # 1. Skip if previous trading day already done
-    if holdings_exist_for(CFG, prev_trading_day(today_tw()).strftime("%Y-%m-%d")):
+    if holdings_exist_for(CFG, prev_str):
         log.info(f"Holdings for {prev_str} already downloaded. Nothing to do.")
         return
 
@@ -293,9 +293,9 @@ def main():
     # 00988A 含海外（美股）成分，ezmoney 可能以台灣時間編製日期標記 XLSX（比實際交易日多1天）。
     # 因此同時接受 file_date == prev_trading_day（正常）及 file_date 超前1~2天（全球ETF慣例）。
     # 無論哪種情況，一律以 prev_str 作為 dataDate，與統一官方網站標示一致。
-    date_delta = (file_date - prev_trading_day).days
+    date_delta = (file_date - prev_td).days
     if date_delta < 0 or date_delta > 2:
-        log.info(f"File date ({file_date}) not compatible with prev trading day ({prev_trading_day}) "
+        log.info(f"File date ({file_date}) not compatible with prev trading day ({prev_td}) "
                  f"(delta={date_delta} days). Not yet updated.")
         if os.path.exists(xlsx_path):
             os.remove(xlsx_path)
@@ -303,7 +303,7 @@ def main():
         return
 
     if date_delta > 0:
-        log.info(f"File date ({file_date}) is {date_delta} day(s) ahead of prev trading day ({prev_trading_day}). "
+        log.info(f"File date ({file_date}) is {date_delta} day(s) ahead of prev trading day ({prev_td}). "
                  f"Using {prev_str} as canonical dataDate (aligns with official source).")
 
     # 3. Date matches (or is within tolerance)! Save and process
