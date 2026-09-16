@@ -61,6 +61,15 @@ def next_trading_day(d):
     return d
 
 
+def last_trading_day(d=None):
+    """d（預設今天）當天或之前最近的一個交易日。d 本身是交易日就回傳 d。
+    與 prev_trading_day 的差別：prev 一定往前跳一天，這個不會。"""
+    d = d or date.today()
+    while not is_trading_day(d):
+        d -= timedelta(days=1)
+    return d
+
+
 def export_json(path="holidays.json"):
     """匯出 {YYYY-MM-DD: 原因} 給 PowerShell 端（run_update.ps1）讀取，
     避免假日表在 Python 與 PowerShell 各留一份、更新時漏改其中一邊。"""

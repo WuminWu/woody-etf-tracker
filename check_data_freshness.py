@@ -26,25 +26,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 from daily_digest import send_telegram, TW_ETFS, OVERSEAS_ETFS, SITE_URL  # noqa: E402
 
-from tw_calendar import TW_MARKET_HOLIDAYS   # 單一來源：台股休市日（tw_calendar.py）
-
-
-def is_trading_day(d):
-    return d.weekday() < 5 and d not in TW_MARKET_HOLIDAYS
-
-
-def last_trading_day(today=None):
-    d = today or date.today()
-    while not is_trading_day(d):
-        d -= timedelta(days=1)
-    return d
-
-
-def prev_trading_day(d):
-    c = d - timedelta(days=1)
-    while not is_trading_day(c):
-        c -= timedelta(days=1)
-    return c
+from tw_calendar import is_trading_day, prev_trading_day, last_trading_day   # 單一來源：休市日與交易日判斷
 
 
 def _data_date(code):

@@ -34,11 +34,17 @@ from datetime import datetime, timedelta, timezone
 import yfinance as yf
 
 from market_utils import yf_symbol, ccy_of
-from tw_calendar import prev_trading_day
+# 休市日與交易日判斷只有 tw_calendar 一個來源（假日表曾在 17/19 支各存一份而漏更新）
+from tw_calendar import is_trading_day, prev_trading_day, next_trading_day
 
 log = logging.getLogger(__name__)
 
 TPE = timezone(timedelta(hours=8))
+
+
+def today_tw():
+    """台灣時間的今天（伺服器時區不一定是 +8，一律顯式換算）。"""
+    return datetime.now(TPE).date()
 
 
 # ============================================================================

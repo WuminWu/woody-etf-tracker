@@ -26,6 +26,8 @@ import sys
 import logging
 from datetime import date, datetime, timedelta, timezone
 
+from etf_core import fmt_zhang   # 單一來源：股數 -> 張（原本這裡自己有一份）
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 from daily_digest import (
@@ -217,12 +219,6 @@ ALL_ETF_NAMES = dict(TW_ETFS) | dict(OVERSEAS_ETFS)
 SECTION_CAP = 15   # 每區塊最多列 N 檔，其餘收合（防超過 Telegram 4096 字上限）
 
 
-def _fmt_zhang(shares):
-    zhang = shares / 1000
-    sign = "+" if zhang > 0 else ""
-    return f"{sign}{int(zhang):,}張" if zhang == int(zhang) else f"{sign}{zhang:,.1f}張"
-
-
 def _section(lines, title, items, fmt):
     if not items:
         return
@@ -266,13 +262,13 @@ def build_etf_weekly_msg(etf, syn, rng, d1, d0):
         "",
     ]
     _section(lines, "✨ 本週新增持股：", sorted(added, key=lambda x: -x["diffShares"]),
-             lambda h: f"  • {h['code']} {h['name']}　{_fmt_zhang(h['shares'])}（0% → {h['todayWeight']}%）")
+             lambda h: f"  • {h['code']} {h['name']}　{fmt_zhang(h['shares'])}（0% → {h['todayWeight']}%）")
     _section(lines, "🚫 本週出清持股：", sorted(removed, key=lambda x: -x["prevShares"]),
-             lambda h: f"  • {h['code']} {h['name']}　{_fmt_zhang(-h['prevShares'])}")
+             lambda h: f"  • {h['code']} {h['name']}　{fmt_zhang(-h['prevShares'])}")
     _section(lines, "🔴 加碼明細：", increased,
-             lambda h: f"  • {h['code']} {h['name']}　{_fmt_zhang(h['diffShares'])}（{h['yestWeight']}% → {h['todayWeight']}%）")
+             lambda h: f"  • {h['code']} {h['name']}　{fmt_zhang(h['diffShares'])}（{h['yestWeight']}% → {h['todayWeight']}%）")
     _section(lines, "🟢 減碼明細：", decreased,
-             lambda h: f"  • {h['code']} {h['name']}　{_fmt_zhang(h['diffShares'])}（{h['yestWeight']}% → {h['todayWeight']}%）")
+             lambda h: f"  • {h['code']} {h['name']}　{fmt_zhang(h['diffShares'])}（{h['yestWeight']}% → {h['todayWeight']}%）")
     return "\n".join(lines)
 
 

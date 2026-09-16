@@ -13,8 +13,6 @@ Logic:
 import json
 import os
 import sys
-import glob
-import subprocess
 import time
 import logging
 from datetime import date, datetime, timedelta, timezone
@@ -26,7 +24,6 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 import pandas as pd
-import yfinance as yf
 from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
 from notify import send_telegram   # 單一來源：節流＋429重試＋自動分段
@@ -59,8 +56,16 @@ if not os.path.exists(HOLDINGS_DIR):
     os.makedirs(HOLDINGS_DIR)
 
 
-# --------------- Taiwan Market Holidays ---------------
-from tw_calendar import TW_MARKET_HOLIDAYS   # 單一來源：台股休市日（tw_calendar.py）
+# --- 共用核心（等價重構，見 etf_core.py 檔頭）---
+from etf_core import (
+    FundConfig, build_data_json, get_price, fmt_zhang, today_tw,
+    holdings_exist_for, load_prev_holdings, save_holdings,
+    is_trading_day, prev_trading_day, next_trading_day,
+)
+
+# --- 本基金設定：所有與其他基金不同之處都集中在這裡 ---
+CFG = FundConfig(code="00403A", name="統一升級50", manager="統一投信",
+                 ipo_date="2026-05-12", ipo_price=10.0, has_asset_alloc=True)
 
 
 # --------------- Helpers ---------------
@@ -72,10 +77,6 @@ def minguo_to_date(minguo_str):
     month = int(parts[1])
     day   = int(parts[2])
     return datetime(year, month, day).date()
-
-
-def holdings_exist_for(date_str):
-    return os.path.exists(os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_{date_str}.json"))
 
 
 def download_xlsx():
@@ -196,179 +197,6 @@ def parse_aum_from_xlsx(xlsx_path):
         return 0, 0
 
 
-def get_previous_holdings(exclude_date_str):
-    """Find the most recent holdings JSON excluding the given date."""
-    pattern = os.path.join(HOLDINGS_DIR, f"{ETF_CODE}_holdings_*.json")
-    files   = sorted(glob.glob(pattern))
-    prev_files = [f for f in files if exclude_date_str not in os.path.basename(f) and "_temp" not in f]
-    if prev_files:
-        latest = prev_files[-1]
-        log.info(f"Previous holdings file: {os.path.basename(latest)}")
-        with open(latest, "r", encoding="utf-8") as f:
-            return json.load(f)
-    log.warning("No previous holdings file found.")
-    return []
-
-
-def get_price(code):
-    for suffix in [".TW", ".TWO"]:
-        try:
-            hist = yf.Ticker(f"{code}{suffix}").history(period="1d", timeout=10)
-            hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
-            if not hist.empty:
-                return float(hist["Close"].iloc[-1])
-        except Exception:
-            pass
-    return 0.0
-
-
-def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, units=0, asset_alloc=None):
-    """Compare today vs previous holdings, fetch prices, generate data_{ETF_CODE}.json."""
-    prev_dict = {h["code"]: h for h in prev_holdings}
-    prev_prices_map = {}
-    if os.path.exists(DATA_FILE):
-        try:
-            with open(DATA_FILE, "r", encoding="utf-8") as f:
-                _prev = json.load(f)
-            for ph in _prev.get("holdings", []):
-                if ph.get("price", 0) > 0:
-                    prev_prices_map[ph["code"]] = ph["price"]
-        except Exception:
-            pass
-
-    final_output = []
-    total = len(today_holdings)
-    log.info(f"Fetching prices for {total} stocks...")
-
-    for i, h in enumerate(today_holdings):
-        prev_data  = prev_dict.get(h["code"], {})
-        shares_prev = prev_data.get("shares", 0)
-        diff_shares = h["shares"] - shares_prev
-        price       = get_price(h["code"])
-        final_output.append({
-            "code":       h["code"],
-            "name":       h["name"],
-            "shares":     h["shares"],
-            "prevShares": shares_prev,
-            "price":      round(price, 2),
-            "prevPrice":  prev_prices_map.get(h["code"], 0),
-            "yestWeight": prev_data.get("weight", 0.0),
-            "todayWeight": h["weight"],
-            "diffShares": diff_shares,
-            "diffAmount": round(diff_shares * price, 2),
-        })
-        if (i + 1) % 10 == 0:
-            log.info(f"  Progress: {i + 1}/{total}")
-
-    today_codes = {h["code"] for h in today_holdings}
-    for prev_h in prev_holdings:
-        if prev_h["code"] not in today_codes:
-            price       = get_price(prev_h["code"])
-            diff_shares = -prev_h["shares"]
-            final_output.append({
-                "code":       prev_h["code"],
-                "name":       prev_h["name"],
-                "shares":     0,
-                "prevShares": prev_h["shares"],
-                "price":      round(price, 2),
-                "prevPrice":  prev_prices_map.get(prev_h["code"], 0),
-                "yestWeight": prev_h["weight"],
-                "todayWeight": 0.0,
-                "diffShares": diff_shares,
-                "diffAmount": round(diff_shares * price, 2),
-            })
-
-    final_output = sorted(final_output, key=lambda x: x["todayWeight"], reverse=True)
-    for idx, item in enumerate(final_output):
-        item["rank"] = idx + 1
-
-    # ETF price & YTD
-    # 00403A 為 2026/5/12 掛牌新 ETF，掛牌價 10 元；YTD 以掛牌價為基準計算
-    # (yfinance 回傳的「年內第一筆」收盤不見得等於 IPO 價，會造成 YTD 失真)
-    IPO_DATE  = "2026-05-12"
-    IPO_PRICE = 10.0
-    ipo_year  = int(IPO_DATE.split("-")[0])
-    ytd_val, etf_price, price_change, prev_price = "0.00", 0.0, 0.0, 0.0
-    try:
-        hist = yf.Ticker(f"{ETF_CODE}.TW").history(period="ytd", timeout=10)
-        hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
-        if len(hist) >= 2:
-            etf_price    = round(float(hist["Close"].iloc[-1]), 2)
-            price_change = round(float((hist["Close"].iloc[-1] - hist["Close"].iloc[-2]) / hist["Close"].iloc[-2] * 100), 2)
-            prev_price   = round(float(hist["Close"].iloc[-2]), 2)
-            current_year = datetime.now(timezone(timedelta(hours=8))).year
-            if current_year == ipo_year:
-                ytd_val = f"{((etf_price - IPO_PRICE) / IPO_PRICE) * 100:.2f}"
-                log.info(f"ETF Price: {etf_price}, YTD (IPO baseline {IPO_PRICE}): {ytd_val}%")
-            else:
-                ytd_val = f"{((hist['Close'].iloc[-1] - hist['Close'].iloc[0]) / hist['Close'].iloc[0]) * 100:.2f}"
-                log.info(f"ETF Price: {etf_price}, YTD: {ytd_val}%")
-    except Exception as e:
-        log.warning(f"Failed to fetch ETF price/YTD: {e}")
-
-    # AUM
-    total_market_cap = round(aum_ntd / 1e8, 2) if aum_ntd > 0 else 0.0
-    total_shares_raw = units if units > 0 else (round(aum_ntd / etf_price) if aum_ntd > 0 and etf_price > 0 else 0)
-
-    prev_total_shares, prev_total_market_cap = 0, 0.0
-    if os.path.exists(DATA_FILE):
-        try:
-            with open(DATA_FILE, "r", encoding="utf-8") as f:
-                _prev = json.load(f)
-            prev_meta = _prev.get("meta", {})
-            _d = datetime.strptime(data_date_str, "%Y-%m-%d").date()
-            _cand = _d - timedelta(days=1)
-            while _cand.weekday() >= 5 or _cand in TW_MARKET_HOLIDAYS:
-                _cand -= timedelta(days=1)
-            _prev_td = _cand.strftime("%Y-%m-%d")
-            if prev_meta.get("dataDate", "") == _prev_td:
-                prev_total_shares     = prev_meta.get("totalShares", 0)
-                prev_total_market_cap = prev_meta.get("totalMarketCap", 0.0)
-            else:
-                log.info(f"AUM 比較跳過：JSON dataDate={prev_meta.get('dataDate')} 非前一交易日({_prev_td})")
-        except Exception:
-            pass
-
-    total_shares_zhang = total_shares_raw // 1000
-    if total_shares_zhang > 0 and prev_total_shares > 0:
-        ratio = total_shares_zhang / prev_total_shares
-        if ratio < 0.1 or ratio > 5.0:
-            log.warning(f"AUM 異常：{total_shares_zhang} vs 前一交易日 {prev_total_shares}（{ratio:.1%}），改用前值")
-            total_shares_zhang    = prev_total_shares
-            total_market_cap      = prev_total_market_cap
-    if total_shares_zhang == 0 and prev_total_shares > 0:
-        total_shares_zhang = prev_total_shares
-        total_market_cap   = round(etf_price * prev_total_shares * 1000 / 1e8, 2) if etf_price > 0 else prev_total_market_cap
-
-    wrapper = {
-        "meta": {
-            "manager":          MANAGER,
-            "ytd":              ytd_val,
-            "etfPrice":         etf_price,
-            "priceChange":      price_change,
-            "prevPrice":        prev_price,
-            "dataDate":         data_date_str,
-            "lastUpdate":       datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M"),
-            "totalShares":      total_shares_zhang,
-            "prevTotalShares":  prev_total_shares,
-            "totalMarketCap":   total_market_cap,
-            "prevTotalMarketCap": prev_total_market_cap,
-            "assetAllocation": asset_alloc or {},
-        },
-        "holdings": final_output,
-    }
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(wrapper, f, ensure_ascii=False, indent=4)
-    log.info(f"{DATA_FILE} updated with {len(final_output)} holdings")
-    return wrapper
-
-
-def fmt_zhang(shares):
-    zhang = shares / 1000
-    sign  = "+" if zhang > 0 else ""
-    return f"{sign}{int(zhang):,}張" if zhang == int(zhang) else f"{sign}{zhang:,.1f}張"
-
-
 def build_notification(wrapper):
     meta, holdings = wrapper["meta"], wrapper["holdings"]
     added     = [h for h in holdings if h.get("prevShares", 0) == 0 and h["shares"] > 0]
@@ -417,7 +245,7 @@ def main():
     log.info(f"=== {ETF_CODE} Check & Update started. Today: {today_str} ===")
 
     # 1. Skip if today's holdings already exist
-    if holdings_exist_for(today_str):
+    if holdings_exist_for(CFG, today_str):
         log.info(f"Holdings for {today_str} already exist. Nothing to do.")
         return
 
@@ -458,8 +286,8 @@ def main():
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(today_holdings, f, ensure_ascii=False, indent=2)
 
-    prev_holdings = get_previous_holdings(exclude_date_str=today_str)
-    wrapper = generate_data_json(today_holdings, prev_holdings, today_str, aum_ntd=aum_ntd, units=units, asset_alloc=asset_alloc)
+    prev_holdings = load_prev_holdings(CFG, today_str)
+    wrapper = build_data_json(CFG, today_holdings, prev_holdings, today_str, aum_ntd=aum_ntd, units=units, asset_alloc=asset_alloc)
     append_holdings_to_sheets(ETF_CODE, wrapper["meta"]["dataDate"], wrapper["holdings"], meta=wrapper["meta"])
 
     send_telegram(build_notification(wrapper))

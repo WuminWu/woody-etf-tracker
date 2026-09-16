@@ -48,8 +48,13 @@ def backfill_one(code, target):
     if not hasattr(mod, "datetime") or not hasattr(mod, "main"):
         return code, False, "模組沒有 datetime/main，無法套用日期覆寫"
 
-    original = mod.datetime
-    mod.datetime = _make_fake_datetime(target)
+    # etf_core 也要一起覆寫：爬蟲的「今天」有一部分是透過 etf_core.today_tw()
+    # 取得（共用核心重構後），只改 mod.datetime 會讓那些判斷仍看到真實日期。
+    import etf_core
+    fake = _make_fake_datetime(target)
+    original, original_core = mod.datetime, etf_core.datetime
+    mod.datetime = fake
+    etf_core.datetime = fake
     try:
         mod.main()
         return code, True, "完成"
@@ -59,6 +64,7 @@ def backfill_one(code, target):
         return code, False, f"{type(e).__name__}: {e}\n{traceback.format_exc(limit=3)}"
     finally:
         mod.datetime = original
+        etf_core.datetime = original_core
 
 
 def main():
