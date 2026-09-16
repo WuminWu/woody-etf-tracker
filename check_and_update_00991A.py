@@ -67,22 +67,33 @@ CFG = FundConfig(code="00991A", name="復華未來50", manager="呂宏宇")
 # --------------- Helpers ---------------
 
 def download_xlsx(date_str):
-    """Download holdings Excel from fhtrust API. date_str format: YYYY-MM-DD"""
-    date_nodash = date_str.replace("-", "")
-    url = f"{API_BASE}/{date_nodash}"
+    """下載 fhtrust API 的持股 xlsx（date_str 格式 YYYY-MM-DD）；尚未揭露回傳 None。
+
+    該日資料還沒公布時，API 回的是 HTTP 200 但內容不是 xlsx（短短的錯誤字串），
+    存檔後交給 pandas 會炸：
+        ValueError: Excel file format cannot be determined, you must specify an engine manually.
+    例外往上拋 → 腳本非零結束，而其他爬蟲在這種情況是送出「持股尚未更新」後正常退出。
+    所以這裡先檢查 zip magic（xlsx 就是 zip，開頭必為 PK），不是就當成尚未揭露。
+    （00409A 用同一個 API，本來就有這道檢查，只是 00991A 寫得比較早。）
+    """
+    url = f"{API_BASE}/{date_str.replace('-', '')}"
     tmp_path = os.path.join(HOLDINGS_DIR, f"_{ETF_CODE}_temp.xlsx")
 
     log.info(f"Downloading from {url} ...")
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=30) as resp:
-            with open(tmp_path, "wb") as f:
-                f.write(resp.read())
-        log.info(f"Downloaded to {tmp_path}")
-        return tmp_path
+            raw = resp.read()
     except Exception as e:
         log.error(f"Download failed: {e}")
         return None
+    if raw[:2] != b"PK":
+        log.info(f"{date_str} 尚未公布（回應 {len(raw)} bytes，非 xlsx）")
+        return None
+    with open(tmp_path, "wb") as f:
+        f.write(raw)
+    log.info(f"Downloaded to {tmp_path}")
+    return tmp_path
 
 
 def parse_holdings_from_xlsx(xlsx_path):

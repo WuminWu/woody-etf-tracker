@@ -16,7 +16,6 @@
 import json
 import os
 import sys
-import time
 import logging
 from datetime import date, datetime, timedelta, timezone
 
@@ -27,7 +26,6 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 import pandas as pd
-from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
 from notify import send_telegram   # 單一來源：節流＋429重試＋自動分段
 from market_utils import yf_symbol, ccy_of
@@ -66,6 +64,7 @@ from etf_core import (
     holdings_exist_for, load_prev_holdings, save_holdings,
     is_trading_day, prev_trading_day, next_trading_day,
 )
+from capitalfund import download_holdings_xlsx   # 群益三支共用下載器（含來源未揭露偵測）
 
 # --- 本基金設定：所有與其他基金不同之處都集中在這裡 ---
 CFG = FundConfig(code="00997A", name="主動群益美國增長", manager="吳承恕",
@@ -73,45 +72,13 @@ CFG = FundConfig(code="00997A", name="主動群益美國增長", manager="吳承
 
 
 def download_xlsx(date_str):
-    tmp_path = os.path.join(HOLDINGS_DIR, f"_{ETF_CODE}_temp.xlsx")
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        context = browser.new_context(accept_downloads=True)
-        page = context.new_page()
-        log.info(f"Navigating to {FUND_URL} ...")
-        page.goto(FUND_URL, wait_until="networkidle", timeout=30000)
-        time.sleep(3)
+    """下載查詢日 date_str（yyyy/mm/dd）的持股 xlsx；來源尚未揭露回傳 None。
 
-        date_input = page.locator("#condition-date")
-        if not date_input.is_visible():
-            log.error("Date input not found!")
-            browser.close()
-            return None
-        page.evaluate(f"""
-            var input = document.getElementById('condition-date');
-            var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-            setter.call(input, '{date_str}');
-            input.dispatchEvent(new Event('input', {{bubbles: true}}));
-            input.dispatchEvent(new Event('change', {{bubbles: true}}));
-        """)
-        time.sleep(1)
-        log.info(f"Date input set to: {date_input.input_value()}")
-
-        btn = page.locator("button.buyback-search-section-btn")
-        if btn.count() == 0:
-            log.error("Download button not found!")
-            browser.close()
-            return None
-        log.info(f"Clicking download button for date {date_str}...")
-        with page.expect_download(timeout=30000) as dl_info:
-            btn.first.click()
-        dl = dl_info.value
-        dl.save_as(tmp_path)
-        log.info(f"Downloaded: {dl.suggested_filename}")
-        browser.close()
-    return tmp_path
-
-
+    實作在 capitalfund.py（00982A/00992A/00997A 共用，含「查無資料」對話框偵測，
+    避免點到被對話框攔截的下載鈕而白等 30 秒逾時並拋例外）。
+    """
+    return download_holdings_xlsx(
+        FUND_URL, date_str, os.path.join(HOLDINGS_DIR, f"_{ETF_CODE}_temp.xlsx"))
 def parse_holdings_from_xlsx(xlsx_path):
     """參股分頁（index 1）：代號(0)/名稱(1)/權重(2)/股數(3)。代號可為美股 TICKER（無數字）。"""
     df = pd.read_excel(xlsx_path, sheet_name=1, header=0)
