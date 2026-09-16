@@ -35,21 +35,12 @@ import pandas as pd
 import yfinance as yf
 from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
+from notify import send_telegram   # 單一來源：節流＋429重試＋自動分段
 from market_utils import yf_symbol, ccy_of
 from asset_allocation import parse_asset_allocation, format_alloc_lines, find_prev_alloc, attach_delta, format_scale_line
 
 # --------------- Taiwan Market Holidays 2026 ---------------
-TW_MARKET_HOLIDAYS = {
-    date(2026, 1, 1),   # 元旦
-    date(2026, 2, 16),  # 農曆除夕
-    date(2026, 2, 17),  # 農曆初一
-    date(2026, 2, 18),  # 農曆初二
-    date(2026, 2, 19),  # 農曆初三
-    date(2026, 2, 20),  # 農曆初四
-    date(2026, 2, 28),  # 和平紀念日
-    date(2026, 5, 1),   # 勞動節
-    date(2026, 10, 10), # 國慶日
-}
+from tw_calendar import TW_MARKET_HOLIDAYS   # 單一來源：台股休市日（tw_calendar.py）
 
 # --------------- Config ---------------
 FUND_URL = "https://www.ezmoney.com.tw/ETF/Fund/Info?fundCode=61YTW"
@@ -272,6 +263,7 @@ def _fx_to_twd(ccy):
     rate = 0.0
     try:
         hist = yf.Ticker(f"{ccy}TWD=X").history(period="5d", timeout=10)
+        hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
         if not hist.empty:
             rate = float(hist["Close"].iloc[-1])
     except Exception:
@@ -289,6 +281,7 @@ def get_price(code_str):
         for suffix in (".TW", ".TWO"):
             try:
                 hist = yf.Ticker(f"{base}{suffix}").history(period="1d", timeout=10)
+                hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
                 if not hist.empty: return float(hist["Close"].iloc[-1])
             except: pass
         return 0.0
@@ -296,6 +289,7 @@ def get_price(code_str):
     yf_ticker = yf_symbol(base, market)   # CH→.SS/.SZ、HK 補零（market_utils）
     try:
         hist = yf.Ticker(yf_ticker).history(period="1d", timeout=10)
+        hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
         if hist.empty: return 0.0
         local_price = float(hist["Close"].iloc[-1])
     except Exception:
@@ -389,6 +383,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
     try:
         etf_ticker = yf.Ticker("00988A.TW")
         ytd_hist = etf_ticker.history(period="ytd", timeout=10)
+        ytd_hist = ytd_hist[ytd_hist["Close"].notna()] if not ytd_hist.empty else ytd_hist   # 去掉未收盤的 NaN 列
         if len(ytd_hist) >= 2:
             first_price = ytd_hist["Close"].iloc[0]
             last_price = ytd_hist["Close"].iloc[-1]
@@ -461,28 +456,6 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
 
     log.info(f"data_00988A.json updated with {len(final_output)} holdings")
     return wrapper
-
-
-def send_telegram(message):
-    """Send a Telegram message via Bot API."""
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        log.warning("Telegram credentials not set. Skipping notification.")
-        return
-    try:
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        payload = urllib.parse.urlencode({
-            "chat_id": TELEGRAM_CHAT_ID,
-            "text": message,
-        }).encode()
-        req = urllib.request.Request(url, data=payload, method="POST")
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            result = json.loads(resp.read())
-            if result.get("ok"):
-                log.info("Telegram notification sent.")
-            else:
-                log.warning(f"Telegram API error: {result}")
-    except Exception as e:
-        log.warning(f"Failed to send Telegram notification: {e}")
 
 
 def fmt_zhang(shares):

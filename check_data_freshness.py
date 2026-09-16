@@ -26,17 +26,11 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 from daily_digest import send_telegram, TW_ETFS, OVERSEAS_ETFS, SITE_URL  # noqa: E402
 
-# 平日休市日（與 run_update.ps1 的表一致；每年初更新）
-TW_HOLIDAYS = {
-    "2026-01-01", "2026-02-12", "2026-02-13", "2026-02-16", "2026-02-17",
-    "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-27", "2026-04-03",
-    "2026-04-06", "2026-05-01", "2026-06-19", "2026-07-10", "2026-09-25",
-    "2026-09-28", "2026-10-09", "2026-10-26", "2026-12-25",
-}
+from tw_calendar import TW_MARKET_HOLIDAYS   # 單一來源：台股休市日（tw_calendar.py）
 
 
 def is_trading_day(d):
-    return d.weekday() < 5 and d.isoformat() not in TW_HOLIDAYS
+    return d.weekday() < 5 and d not in TW_MARKET_HOLIDAYS
 
 
 def last_trading_day(today=None):

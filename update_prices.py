@@ -61,6 +61,7 @@ ETFS = [
 def fetch_ytd_price(ticker_symbol, code=None):
     try:
         hist = yf.Ticker(ticker_symbol).history(period="ytd", timeout=10)
+        hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
         if len(hist) >= 2:
             last = hist["Close"].iloc[-1]
             # yfinance 偶爾（尤其 GitHub runner 被限流）回傳 NaN close；
@@ -113,6 +114,7 @@ def update_etf_prices():
         # Update priceChange & prevPrice based on ytd history
         try:
             hist = yf.Ticker(ticker).history(period="ytd", timeout=10)
+            hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
             if len(hist) >= 2:
                 prev_p = round(float(hist["Close"].iloc[-2]), 2)
                 data["meta"]["prevPrice"] = prev_p

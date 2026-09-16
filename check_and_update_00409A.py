@@ -31,6 +31,7 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 import pandas as pd
 import yfinance as yf
 from sheets_helper import append_holdings_to_sheets
+from notify import send_telegram   # 單一來源：節流＋429重試＋自動分段
 from market_utils import yf_symbol, ccy_of
 from asset_allocation import format_scale_line
 
@@ -63,13 +64,7 @@ if not os.path.exists(HOLDINGS_DIR):
     os.makedirs(HOLDINGS_DIR)
 
 # 2026 平日休市日（與 run_update.ps1 一致）
-TW_MARKET_HOLIDAYS = {
-    date(2026, 1, 1), date(2026, 2, 12), date(2026, 2, 13), date(2026, 2, 16),
-    date(2026, 2, 17), date(2026, 2, 18), date(2026, 2, 19), date(2026, 2, 20),
-    date(2026, 2, 27), date(2026, 4, 3), date(2026, 4, 6), date(2026, 5, 1),
-    date(2026, 6, 19), date(2026, 7, 10), date(2026, 9, 25), date(2026, 9, 28),
-    date(2026, 10, 9), date(2026, 10, 26), date(2026, 12, 25),
-}
+from tw_calendar import TW_MARKET_HOLIDAYS   # 單一來源：台股休市日（tw_calendar.py）
 
 
 # --------------- Helpers ---------------
@@ -162,6 +157,7 @@ def _fx_to_twd(ccy):
     rate = 0.0
     try:
         hist = yf.Ticker(f"{ccy}TWD=X").history(period="5d", timeout=10)
+        hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
         closes = hist["Close"].dropna() if not hist.empty else []
         if len(closes):
             rate = float(closes.iloc[-1])
@@ -179,6 +175,7 @@ def get_price(code_str):
         for suffix in (".TW", ".TWO"):
             try:
                 hist = yf.Ticker(f"{base}{suffix}").history(period="1d", timeout=10)
+                hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
                 if not hist.empty:
                     return float(hist["Close"].iloc[-1])
             except Exception:
@@ -187,6 +184,7 @@ def get_price(code_str):
     market = parts[1].upper()
     try:
         hist = yf.Ticker(yf_symbol(base, market)).history(period="1d", timeout=10)
+        hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
         if hist.empty:
             return 0.0
         local_price = float(hist["Close"].iloc[-1])
@@ -246,6 +244,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
     ytd_val, etf_price, price_change, prev_price = "0.00", 0.0, 0.0, 0.0
     try:
         hist = yf.Ticker(f"{ETF_CODE}.TW").history(period="ytd", timeout=10)
+        hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
         if len(hist) >= 2:
             last, prev = float(hist["Close"].iloc[-1]), float(hist["Close"].iloc[-2])
             base = IPO_PRICE if datetime.now(timezone(timedelta(hours=8))).year == int(IPO_DATE[:4]) \
@@ -297,21 +296,6 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
         json.dump(wrapper, f, ensure_ascii=False, indent=4)
     log.info(f"{DATA_FILE} updated with {len(final_output)} holdings")
     return wrapper
-
-
-def send_telegram(message):
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        log.warning("Telegram credentials not set. Skipping notification.")
-        return
-    try:
-        payload = urllib.parse.urlencode({"chat_id": TELEGRAM_CHAT_ID, "text": message}).encode()
-        req = urllib.request.Request(f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-                                     data=payload, method="POST")
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            if json.loads(resp.read()).get("ok"):
-                log.info("Telegram notification sent.")
-    except Exception as e:
-        log.warning(f"Failed to send Telegram notification: {e}")
 
 
 def fmt_zhang(shares):

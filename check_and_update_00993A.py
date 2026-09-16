@@ -22,6 +22,7 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 import yfinance as yf
 from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
+from notify import send_telegram   # 單一來源：節流＋429重試＋自動分段
 
 # --------------- Config ---------------
 ETF_CODE = "00993A"
@@ -42,17 +43,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 # Update this set annually. Weekends are already skipped by weekday() check.
 # Source: https://www.twse.com.tw/ (TWSE official holiday calendar)
 from datetime import date as _date
-TW_MARKET_HOLIDAYS = {
-    _date(2026, 1, 1),   # 元旦 New Year's Day
-    _date(2026, 2, 16),  # 農曆除夕 (Chinese New Year Eve)
-    _date(2026, 2, 17),  # 農曆初一 (Chinese New Year)
-    _date(2026, 2, 18),  # 農曆初二
-    _date(2026, 2, 19),  # 農曆初三
-    _date(2026, 2, 20),  # 農曆初四
-    _date(2026, 2, 28),  # 和平紀念日 (Peace Memorial Day)
-    _date(2026, 5, 1),   # 勞動節 (Labor Day)
-    _date(2026, 10, 10), # 國慶日 (National Day)
-}
+from tw_calendar import TW_MARKET_HOLIDAYS   # 單一來源：台股休市日（tw_calendar.py）
 
 
 def prev_trading_day(d):
@@ -222,6 +213,7 @@ def get_price(code):
     for suffix in [".TW", ".TWO"]:
         try:
             hist = yf.Ticker(f"{code}{suffix}").history(period="1d", timeout=10)
+            hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
             if not hist.empty:
                 return float(hist["Close"].iloc[-1])
         except Exception:
@@ -296,6 +288,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str,
     ytd_val, etf_price, price_change, prev_price = "0.00", 0.0, 0.0, 0.0
     try:
         hist = yf.Ticker(f"{ETF_CODE}.TW").history(period="ytd", timeout=10)
+        hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
         if len(hist) >= 2:
             ytd_val = f"{((hist['Close'].iloc[-1] - hist['Close'].iloc[0]) / hist['Close'].iloc[0]) * 100:.2f}"
             etf_price = round(float(hist["Close"].iloc[-1]), 2)
@@ -362,23 +355,6 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str,
         json.dump(wrapper, f, ensure_ascii=False, indent=4)
     log.info(f"{DATA_FILE} updated: {len(final_output)} holdings, {total_shares_zhang:,}張, {total_market_cap}億")
     return wrapper
-
-
-def send_telegram(message):
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        return
-    try:
-        payload = urllib.parse.urlencode({"chat_id": TELEGRAM_CHAT_ID, "text": message}).encode()
-        req = urllib.request.Request(
-            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-            data=payload, method="POST"
-        )
-        with urllib.request.urlopen(req, timeout=10) as r:
-            result = json.loads(r.read())
-            if result.get("ok"):
-                log.info("Telegram notification sent.")
-    except Exception as e:
-        log.warning(f"Telegram failed: {e}")
 
 
 def fmt_zhang(shares):

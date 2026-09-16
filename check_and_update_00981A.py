@@ -28,6 +28,8 @@ import pandas as pd
 import yfinance as yf
 from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
+from notify import send_telegram   # 單一來源：節流＋429重試＋自動分段
+from tw_calendar import TW_MARKET_HOLIDAYS   # 單一來源：台股休市日（tw_calendar.py）
 from asset_allocation import parse_asset_allocation, format_alloc_lines, find_prev_alloc, attach_delta, format_scale_line
 
 # --------------- Config ---------------
@@ -230,6 +232,7 @@ def get_price(code):
         try:
             ticker = yf.Ticker(f"{code}{suffix}")
             hist = ticker.history(period="1d", timeout=10)
+            hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
             if not hist.empty:
                 return float(hist["Close"].iloc[-1])
         except Exception:
@@ -322,6 +325,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
     try:
         etf_ticker = yf.Ticker("00981A.TW")
         ytd_hist = etf_ticker.history(period="ytd", timeout=10)
+        ytd_hist = ytd_hist[ytd_hist["Close"].notna()] if not ytd_hist.empty else ytd_hist   # 去掉未收盤的 NaN 列
         if len(ytd_hist) >= 2:
             first_price = ytd_hist["Close"].iloc[0]
             last_price = ytd_hist["Close"].iloc[-1]
@@ -350,7 +354,7 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
             _delta = 1
             while True:
                 _candidate = _d - timedelta(days=_delta)
-                if _candidate.weekday() < 5:
+                if _candidate.weekday() < 5 and _candidate not in TW_MARKET_HOLIDAYS:
                     _prev_trading_day = _candidate.strftime("%Y-%m-%d")
                     break
                 _delta += 1
@@ -394,28 +398,6 @@ def generate_data_json(today_holdings, prev_holdings, data_date_str, aum_ntd=0, 
 
     log.info(f"data_00981A.json updated with {len(final_output)} holdings")
     return wrapper
-
-
-def send_telegram(message):
-    """Send a Telegram message via Bot API."""
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        log.warning("Telegram credentials not set. Skipping notification.")
-        return
-    try:
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        payload = urllib.parse.urlencode({
-            "chat_id": TELEGRAM_CHAT_ID,
-            "text": message,
-        }).encode()
-        req = urllib.request.Request(url, data=payload, method="POST")
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            result = json.loads(resp.read())
-            if result.get("ok"):
-                log.info("Telegram notification sent.")
-            else:
-                log.warning(f"Telegram API error: {result}")
-    except Exception as e:
-        log.warning(f"Failed to send Telegram notification: {e}")
 
 
 def fmt_zhang(shares):
