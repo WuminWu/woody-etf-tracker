@@ -10,7 +10,9 @@ daily_digest.py
    或 TW 時間已過 21:00 且至少 6 檔更新（部分來源當日故障時的 fallback）
 
 統計規則：
-- 00988A（海外 T+1）不列入當日統計
+- 海外/混合 ETF（OVERSEAS_ETFS）另發一份海外日報；它們持有的「台股部位」也計入台股日報的
+  個股統計（不算進「X/14 檔已更新」分母）。因 T+1 揭露，D 日台股日報裡的是它們 D-1 的異動；
+  每個資料日只計入一次（contrib_dates.json 記錄，見 _gather_overseas_tw_contributors）
 - 「首日 ETF」（>80% 持股 prevShares=0，例如剛納入追蹤的新 ETF）不列入
   買賣金額統計，避免整個投資組合被當成「新增買入」的雜訊
 - 共識升溫/退潮：與前一交易日 snapshot 比較各股「加碼 ETF 家數」
@@ -186,13 +188,69 @@ def _gather_latest(etfs):
     return etf_data, updated, (max(dates) if dates else None)
 
 
-def _gather_overseas_tw_contributors():
+# 海外 ETF 台股部位「已計入哪一天的日報」的紀錄：{報告日: {ETF: 當時計入的 dataDate}}
+#
+# 為什麼需要：海外 ETF 大多 T+1 揭露，而且 data_*.json 只保留「最近一次」的持股變化。
+# 某檔若當天來不及更新，它的 data 檔仍是前一天已經計入過的那份，舊版會再算一次。
+# 2026-08-25 ~ 09-17 回查共 3 次（8/31、9/8 的 00990A，9/11 的 00997A），其中 9/8 那次
+# 欣興 -430 張、聯發科 +41 張被重複計入台股日報。
+# 現在每檔 ETF 的每個 dataDate 只會被「一個」報告日計入。
+CONTRIB_STATE_FILE = "contrib_dates.json"
+CONTRIB_STATE_KEEP = 40   # 只保留最近 N 個報告日的紀錄
+
+
+def _load_contrib_state():
+    if not os.path.exists(CONTRIB_STATE_FILE):
+        return {}
+    try:
+        return json.loads(open(CONTRIB_STATE_FILE, encoding="utf-8").read())
+    except Exception as e:
+        log.warning(f"讀取 {CONTRIB_STATE_FILE} 失敗（{e}），視為無紀錄")
+        return {}
+
+
+def _save_contrib_state(report_date, used):
+    """記下 report_date 這份日報計入了哪些海外 ETF 的哪一天資料。
+
+    同一報告日重跑（更新版）會覆蓋自己那一筆；只比對「更早」的報告日，
+    所以同一天重算多次也不會把自己排除掉。
+    """
+    state = _load_contrib_state()
+    state[report_date] = used
+    state = dict(sorted(state.items())[-CONTRIB_STATE_KEEP:])
+    tmp = CONTRIB_STATE_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(state, f, ensure_ascii=False, indent=1, sort_keys=True)
+    os.replace(tmp, CONTRIB_STATE_FILE)
+
+
+def _claimed_before(state, report_date):
+    """report_date 之前的日報已計入的各 ETF 最新 dataDate。"""
+    claimed = {}
+    for rd, used in state.items():
+        if rd >= report_date:
+            continue
+        for etf, dd in (used or {}).items():
+            if dd and dd > claimed.get(etf, ""):
+                claimed[etf] = dd
+    return claimed
+
+
+def _gather_overseas_tw_contributors(report_date, state=None):
     """
     海外 ETF（OVERSEAS_ETFS）持有的「台股部位」——代號無市場後綴者（如 2330；US/JP 為 'MU US'）。
     供台股報告一併計入個股統計（2330 的加碼家數/淨額要含海外 ETF 的台股部位）。
-    回傳 (etf_data, codes)；這些 ETF 不計入台股報告的「X/13 已更新」分母。
+    這些 ETF 不計入台股報告的「X/13 已更新」分母。
+
+    只計入「還沒被更早的日報計入過」的資料日（見 CONTRIB_STATE_FILE 的說明）；
+    dataDate 晚於報告日的也不算（重算過去日期時，資料檔已是之後的內容）。
+    state 只為測試保留；正式執行讀 CONTRIB_STATE_FILE。
+
+    回傳 (etf_data, codes, used)；used = {ETF: 本次計入的 dataDate}，
+    由 run_group 在日報實際存檔時寫回紀錄。
     """
-    etf_data, codes = {}, []
+    claimed = _claimed_before(_load_contrib_state() if state is None else state, report_date)
+    etf_data, codes, used = {}, [], {}
     for code, _name in OVERSEAS_ETFS:
         path = f"data_{code}.json"
         if not os.path.exists(path):
@@ -201,12 +259,21 @@ def _gather_overseas_tw_contributors():
             d = json.loads(open(path, encoding="utf-8").read())
         except Exception:
             continue
+        meta = d.get("meta", {})
+        dd = meta.get("dataDate", "")
+        if dd and dd > report_date:
+            log.info(f"[tw] 海外 {code} 資料日 {dd} 晚於報告日 {report_date}，不計入")
+            continue
+        if dd and claimed.get(code, "") >= dd:
+            log.info(f"[tw] 海外 {code} 台股部位（資料日 {dd}）已計入先前日報，本次不重複計算")
+            continue
         tw_holdings = [h for h in d.get("holdings", [])
                        if " " not in str(h.get("code", "")) and is_stock_code(h.get("code", ""))]
         if tw_holdings:
-            etf_data[code] = {"holdings": tw_holdings, "meta": d.get("meta", {})}
+            etf_data[code] = {"holdings": tw_holdings, "meta": meta}
             codes.append(code)
-    return etf_data, codes
+            used[code] = dd
+    return etf_data, codes, used
 
 
 def _filter_snapshot(snap, etfs):
@@ -311,19 +378,23 @@ def yi_signed(amount):
     return f"{'+' if v >= 0 else ''}{v:.1f}"
 
 
-def build_digest(ref_date, group="tw"):
+def build_digest(ref_date, group="tw", contrib_state=None):
     """
     為指定群組產生分析。tw 用 ref_date 為報告日；overseas（T+1）用該組最新資料日。
-    回傳 (report_date, message, updated_count)。
+    回傳 (report_date, message, updated_count, contrib_used)；
+    contrib_used = 本份台股日報計入了哪些海外 ETF 的哪一天台股部位（overseas 組為空）。
+    本函式只讀不寫，紀錄由 run_group 在實際存檔時寫回。
     """
     g = GROUPS[group]
     etfs = g["etfs"]
-    contributors = []
+    contributors, contrib_used = [], {}
     if g["use_today"]:
         report_date = ref_date
         etf_data, updated = _gather_from_live(report_date, etfs)
-        # 海外 ETF 的台股部位也計入台股報告（額外貢獻者，不算進 X/13 分母）
-        contrib_data, contributors = _gather_overseas_tw_contributors()
+        # 海外 ETF 的台股部位也計入台股報告（額外貢獻者，不算進 X/13 分母），
+        # 但已被更早日報計入過的資料日不再重算
+        contrib_data, contributors, contrib_used = _gather_overseas_tw_contributors(
+            report_date, contrib_state)
         etf_data.update(contrib_data)
     else:
         etf_data, updated, report_date = _gather_latest(etfs)
@@ -333,7 +404,7 @@ def build_digest(ref_date, group="tw"):
                              total_tracked=len(etfs),
                              title_tmpl=g["title"], subhead_tmpl=g["subhead"],
                              contributors=contributors)
-    return report_date, msg, cnt
+    return report_date, msg, cnt, contrib_used
 
 
 def render_digest(today_str, etf_data, updated, prev_snap,
@@ -656,12 +727,14 @@ def run_group(group, now):
     """
     g = GROUPS[group]
     today_str = now.strftime("%Y-%m-%d")
-    report_date, message, count = build_digest(today_str, group=group)
+    report_date, message, count, contrib_used = build_digest(today_str, group=group)
     threshold = g["threshold_std"] if now.hour < g["fallback_hour"] else g["threshold_fallback"]
 
-    # 資料夠完整才存檔給網站（重跑覆蓋成最新版）
+    # 資料夠完整才存檔給網站（重跑覆蓋成最新版），同時記下這份計入了哪些海外資料日
     if count >= threshold:
         save_digest(report_date, message, path=g["digests_file"])
+        if g["use_today"]:
+            _save_contrib_state(report_date, contrib_used)
 
     marker = g["marker"]
     m_date, m_count = _read_marker(marker)

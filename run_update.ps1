@@ -156,6 +156,7 @@ if (Test-Path "last_digest.txt"){ git add last_digest.txt 2>&1 | Out-Null }
 if (Test-Path "last_digest_overseas.txt"){ git add last_digest_overseas.txt 2>&1 | Out-Null }
 if (Test-Path "digests.json")   { git add digests.json   2>&1 | Out-Null }
 if (Test-Path "digests_overseas.json") { git add digests_overseas.json 2>&1 | Out-Null }
+if (Test-Path "contrib_dates.json") { git add contrib_dates.json 2>&1 | Out-Null }   # 海外台股部位已計入哪天日報（防重複計算）
 if (Test-Path "cost_basis.json") { git add cost_basis.json 2>&1 | Out-Null }
 if (Test-Path "last_weekly.txt") { git add last_weekly.txt 2>&1 | Out-Null }
 if (Test-Path "digests_weekly.json") { git add digests_weekly.json 2>&1 | Out-Null }
