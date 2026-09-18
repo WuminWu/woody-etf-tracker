@@ -56,7 +56,7 @@ if not os.path.exists(HOLDINGS_DIR):
 
 # --- 共用核心（等價重構，見 etf_core.py 檔頭）---
 from etf_core import (
-    FundConfig, build_data_json, get_price, fmt_zhang, today_tw,
+    FundConfig, build_data_json, get_price, fmt_zhang, format_trade_line, today_tw,
     holdings_exist_for, load_prev_holdings, save_holdings,
     is_trading_day, prev_trading_day, next_trading_day,
 )
@@ -140,6 +140,7 @@ def build_notification(wrapper, etf_code="00992A", etf_name="群益科技創新"
         "",
         f"🔴 加碼：{len(increased)} 檔　🟢 減碼：{len(decreased)} 檔",
         f"🟣 新增：{len(added)} 檔　🟠 出清：{len(removed)} 檔",
+        format_trade_line(wrapper),   # 💰 當日買超/賣超/淨額（etf_core，與日報同一套算法）
     ]
 
     if added:

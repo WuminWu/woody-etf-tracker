@@ -296,29 +296,8 @@ def _gather_from_snapshot(snap):
     return etf_data, updated
 
 
-def _best_amount(h, meta):
-    """
-    回傳該持股的變動金額（元）。優先用 diffAmount；若為 0 但有股數變動，
-    代表 yfinance 抓不到價（常見於上櫃/小型股）→ 用官方權重×淨資產回推單價估算，
-    修正金額被系統性低估的偏差。
-    """
-    ds = h.get("diffShares", 0)
-    if ds == 0:
-        return 0.0
-    amt = h.get("diffAmount", 0) or 0
-    if amt != 0:
-        return float(amt)
-    price = h.get("price", 0) or 0
-    if price <= 0:
-        aum_now = (meta.get("totalMarketCap") or 0) * 1e8
-        aum_prev = (meta.get("prevTotalMarketCap") or 0) * 1e8
-        if h.get("shares", 0) > 0 and h.get("todayWeight", 0) > 0 and aum_now > 0:
-            price = (h["todayWeight"] / 100) * aum_now / h["shares"]
-        elif h.get("prevShares", 0) > 0 and h.get("yestWeight", 0) > 0:
-            base = aum_prev or aum_now
-            if base > 0:
-                price = (h["yestWeight"] / 100) * base / h["prevShares"]
-    return ds * price
+# 單檔變動金額：與單檔 Telegram 通知共用同一份（etf_core.trade_amount），兩邊數字才對得起來
+from etf_core import trade_amount as _best_amount   # noqa: E402
 
 
 def _recent_snapshot_dirs(ref_date_str, n=12):

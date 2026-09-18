@@ -10,8 +10,9 @@
     python tests/golden_master.py --mode wired --out /tmp/now.json --sandbox /tmp/sb
     python tests/cmp_snapshots.py tests/reference_snapshot.json /tmp/now.json
 
-reference_snapshot.json 是重構前 19 支各自 generate_data_json 的輸出，
+reference_snapshot.json 是重構前 19 支各自 generate_data_json 的輸出（輸入為 tests/fixtures），
 之後改 etf_core 只要比對這份快照，就知道有沒有不小心動到數字。
+輸入固定在 tests/fixtures，不隨每日新資料變動，所以任何時候跑都應該相同。
 --mode old 只在重構前可用（那些函式已被刪除）。
 """
 import argparse
@@ -69,7 +70,12 @@ def fingerprint():
 
 BEFORE_FP = fingerprint()
 
-# ---- 建沙箱：.py + holidays.json + 每檔最後 6 天 holdings + data_*.json ----
+# ---- 建沙箱：程式碼取自 ROOT，輸入資料取自固定的 tests/fixtures ----
+# 輸入必須凍結：若讀 repo 裡「最新兩天」的持股檔，隔天有新資料後輸入就變了，
+# 參考快照自然對不上（2026-09-18 發現：建立快照後第三天跑，19 檔全報差異）。
+# fixtures 是建立 reference_snapshot.json 當下（git 5696456）的輸入：
+# 每檔最後兩份持股 JSON + data_*.json（00407A/00409A/00411A 當時只有一天，會合成前一日）。
+FIXTURES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures")
 SB = os.path.abspath(a.sandbox)
 if os.path.isdir(SB):
     shutil.rmtree(SB)
@@ -77,9 +83,9 @@ os.makedirs(os.path.join(SB, "holdings"))
 for p in glob.glob(os.path.join(ROOT, "*.py")) + glob.glob(os.path.join(ROOT, "holidays.json")):
     shutil.copy2(p, os.path.join(SB, os.path.basename(p)))
 for c in codes:
-    for f in sorted(glob.glob(os.path.join(ROOT, "holdings", f"{c}_holdings_*.json")))[-6:]:
+    for f in sorted(glob.glob(os.path.join(FIXTURES, "holdings", f"{c}_holdings_*.json"))):
         shutil.copy2(f, os.path.join(SB, "holdings", os.path.basename(f)))
-    d = os.path.join(ROOT, f"data_{c}.json")
+    d = os.path.join(FIXTURES, f"data_{c}.json")
     if os.path.exists(d):
         shutil.copy2(d, os.path.join(SB, f"data_{c}.json"))
 
@@ -115,6 +121,16 @@ nt._split_message = lambda t, limit=3900: [t]
 sys.modules["notify"] = nt
 
 sys.path.insert(0, SB)          # 從沙箱 import，讓 __file__ 指向沙箱
+
+# 固定「現在」：etf_core 的 YTD 在掛牌當年度改用發行價當基準（datetime.now().year），
+# 若不固定，這份測試到 2027 年 1 月會自己失敗。釘在建立快照的那一天。
+import datetime as _dt
+class _FrozenDT(_dt.datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return cls(2026, 9, 16, 11, 0, tzinfo=tz)
+import etf_core as _core
+_core.datetime = _FrozenDT
 os.chdir(SB)
 
 

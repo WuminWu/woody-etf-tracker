@@ -33,7 +33,7 @@ from datetime import datetime, timedelta, timezone
 
 import yfinance as yf
 
-from market_utils import yf_symbol, ccy_of
+from market_utils import yf_symbol, ccy_of, is_stock_code
 # 休市日與交易日判斷只有 tw_calendar 一個來源（假日表曾在 17/19 支各存一份而漏更新）
 from tw_calendar import is_trading_day, prev_trading_day, next_trading_day
 
@@ -214,6 +214,83 @@ def fmt_zhang(shares):
     if zhang == int(zhang):
         return f"{sign}{int(zhang):,}張"
     return f"{sign}{zhang:,.1f}張"
+
+
+def fmt_money(amount):
+    """元 → 「1.23億」或「8,400萬」（取絕對值，正負號由呼叫端決定）。"""
+    a = abs(amount)
+    if a < 5e3:            # 不到 0.5 萬就四捨五入成 0，別顯示成「0萬」
+        return "0"
+    return f"{a / 1e8:,.2f}億" if a >= 1e8 else f"{a / 1e4:,.0f}萬"
+
+
+# ============================================================================
+# 買賣超金額（單檔通知與台股/海外日報共用，兩邊數字才對得起來）
+# ============================================================================
+
+def trade_amount(h, meta):
+    """該持股當日的變動金額（元，正=買、負=賣）。
+
+    優先用 diffAmount；若為 0 但有股數變動，代表 yfinance 抓不到價（常見於上櫃/小型股）
+    → 用官方權重×淨資產回推單價估算，修正金額被系統性低估的偏差。
+    （原本是 daily_digest._best_amount，2026-09-18 搬來這裡讓單檔通知共用。）
+    """
+    ds = h.get("diffShares", 0)
+    if ds == 0:
+        return 0.0
+    amt = h.get("diffAmount", 0) or 0
+    if amt != 0:
+        return float(amt)
+    price = h.get("price", 0) or 0
+    if price <= 0:
+        aum_now = (meta.get("totalMarketCap") or 0) * 1e8
+        aum_prev = (meta.get("prevTotalMarketCap") or 0) * 1e8
+        if h.get("shares", 0) > 0 and h.get("todayWeight", 0) > 0 and aum_now > 0:
+            price = (h["todayWeight"] / 100) * aum_now / h["shares"]
+        elif h.get("prevShares", 0) > 0 and h.get("yestWeight", 0) > 0:
+            base = aum_prev or aum_now
+            if base > 0:
+                price = (h["yestWeight"] / 100) * base / h["prevShares"]
+    return ds * price
+
+
+def is_first_day(holdings):
+    """剛納入追蹤（或剛掛牌）的第一天：>80% 現有持股的前一日股數為 0。
+    這天整份持股都會被當成「新增買入」，不能當成真的買超（與日報的判定相同）。"""
+    active = [h for h in holdings if h.get("shares", 0) > 0]
+    return bool(active) and sum(1 for h in active if h.get("prevShares", 0) == 0) / len(active) > 0.8
+
+
+def trade_totals(holdings, meta):
+    """(買超, 賣超) 元；賣超為負數。期貨（如 00993A 的 TX）與非股票部位不計入。"""
+    buy = sell = 0.0
+    for h in holdings:
+        if h.get("isFutures") or not is_stock_code(h.get("code", "")):
+            continue
+        a = trade_amount(h, meta)
+        if a > 0:
+            buy += a
+        elif a < 0:
+            sell += a
+    return buy, sell
+
+
+def format_trade_line(wrapper):
+    """單檔通知的買賣超金額行，例：💰 買超 1.23億　賣超 8,400萬　淨 +3,900萬
+
+    買超＝新增＋加碼、賣超＝減碼＋出清，以當日收盤價計（海外持股已換算新台幣）。
+    基金有大額申購/贖回時，持股增減有一部分是被動的（通知的「基金規模」行會標示）。
+    """
+    hs, meta = wrapper.get("holdings", []), wrapper.get("meta", {})
+    if is_first_day(hs):
+        return "💰 買賣超：首日建倉（整份持股皆為新進），不列計"
+    buy, sell = trade_totals(hs, meta)
+    if not buy and not sell:
+        return "💰 買賣超：今日無持股異動"
+    net = buy + sell
+    net_s = fmt_money(net)
+    sign = "" if net_s == "0" else ("+" if net > 0 else "-")
+    return f"💰 買超 {fmt_money(buy)}　賣超 {fmt_money(sell)}　淨 {sign}{net_s}"
 
 
 # ============================================================================
