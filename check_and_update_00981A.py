@@ -229,7 +229,7 @@ def build_notification(wrapper, etf_code="00981A", etf_name="統一台股增長"
         "",
         f"🔴 加碼：{len(increased)} 檔　🟢 減碼：{len(decreased)} 檔",
         f"🟣 新增：{len(added)} 檔　🟠 出清：{len(removed)} 檔",
-        format_trade_line(wrapper),   # 💰 當日買超/賣超/淨額（etf_core，與日報同一套算法）
+        format_trade_line(wrapper),   # 💹 當日買超/賣超/淨額（etf_core，與日報同一套算法）
     ]
 
     _extra = format_scale_line(meta) + format_alloc_lines(meta.get("assetAllocation"))

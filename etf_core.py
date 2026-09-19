@@ -276,21 +276,21 @@ def trade_totals(holdings, meta):
 
 
 def format_trade_line(wrapper):
-    """單檔通知的買賣超金額行，例：💰 買超 1.23億　賣超 8,400萬　淨 +3,900萬
+    """單檔通知的買賣超金額行，例：💹 買超 1.23億　賣超 8,400萬　淨 +3,900萬
 
     買超＝新增＋加碼、賣超＝減碼＋出清，以當日收盤價計（海外持股已換算新台幣）。
     基金有大額申購/贖回時，持股增減有一部分是被動的（通知的「基金規模」行會標示）。
     """
     hs, meta = wrapper.get("holdings", []), wrapper.get("meta", {})
     if is_first_day(hs):
-        return "💰 買賣超：首日建倉（整份持股皆為新進），不列計"
+        return "💹 買賣超：首日建倉（整份持股皆為新進），不列計"
     buy, sell = trade_totals(hs, meta)
     if not buy and not sell:
-        return "💰 買賣超：今日無持股異動"
+        return "💹 買賣超：今日無持股異動"
     net = buy + sell
     net_s = fmt_money(net)
     sign = "" if net_s == "0" else ("+" if net > 0 else "-")
-    return f"💰 買超 {fmt_money(buy)}　賣超 {fmt_money(sell)}　淨 {sign}{net_s}"
+    return f"💹 買超 {fmt_money(buy)}　賣超 {fmt_money(sell)}　淨 {sign}{net_s}"
 
 
 # ============================================================================
