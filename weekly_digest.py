@@ -249,8 +249,10 @@ def build_etf_weekly_block(etf, syn, d1, d0):
 
     name = ALL_ETF_NAMES.get(etf, "")
     m = syn["meta"]
+    mcap = m.get("totalMarketCap") or 0
     lines = [
-        f"📊 {etf} {name}　（{d1[5:].replace('-', '/')} vs {d0[5:].replace('-', '/')}）",
+        f"📊 {etf} {name}　（{d1[5:].replace('-', '/')} vs {d0[5:].replace('-', '/')}）"
+        + (f"　規模 {mcap:,.1f}億" if mcap else ""),
         f"📦 持股 {len([h for h in hs if h['shares'] > 0])} 檔　"
         f"🔴 加碼 {len(increased)}　🟢 減碼 {len(decreased)}　"
         f"🟣 新增 {len(added)}　🟠 出清 {len(removed)}",
@@ -307,9 +309,12 @@ def build_group_per_etf_msg(group, cur_dates, prev_dates, today=None, wd=None, e
             continue
         block = build_etf_weekly_block(etf, syn, d1, d0)
         if block:
-            blocks.append(block)
+            blocks.append((syn["meta"].get("totalMarketCap") or 0, etf, block))
     if not blocks:
         return None, included, skipped
+
+    # 依本週最後揭露日的基金規模（億）由大到小；同規模以代號排序，確保每次輸出一致
+    blocks.sort(key=lambda x: (-x[0], x[1]))
 
     rng = f"{cur_dates[0][5:].replace('-', '/')}~{cur_dates[-1][5:].replace('-', '/')}"
     head = [
@@ -318,11 +323,11 @@ def build_group_per_etf_msg(group, cur_dates, prev_dates, today=None, wd=None, e
         f"📆 各檔 ETF 本週持股變化（{g['label']}）　{rng}"
         + ("　※補送（前一輪尚未更新的部分）" if exclude else ""),
         "🗓 比較基準：本週 vs 上週各檔最後揭露日",
-        f"📈 本則含 {len(blocks)} 檔有異動",
+        f"📈 本則含 {len(blocks)} 檔有異動（依 ETF 規模由大到小）",
     ]
     if skipped:
         head.append(f"⏳ 尚未更新，待後續輪次補送：{'、'.join(skipped)}")
-    return "\n".join(head) + _SEP + _SEP.join(blocks), included, skipped
+    return "\n".join(head) + _SEP + _SEP.join(b for _, _, b in blocks), included, skipped
 
 
 def _legacy_done(marker, group, cur_week):
