@@ -26,7 +26,7 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 import pandas as pd
 from sheets_helper import append_holdings_to_sheets
-from notify import send_telegram   # 單一來源：節流＋429重試＋自動分段
+from notify import send_telegram, send_update_notification   # 單一來源：節流＋429重試＋自動分段；持股更新通知排程時依規模排序
 
 # --------------- Config ---------------
 FUND_URL = "https://www.capitalfund.com.tw/etf/product/detail/399/portfolio"
@@ -225,7 +225,7 @@ def main():
     append_holdings_to_sheets(ETF_CODE, wrapper["meta"]["dataDate"], wrapper["holdings"], meta=wrapper["meta"])
 
     msg = build_notification(wrapper, etf_code="00982A", etf_name="群益台灣強棒")
-    send_telegram(msg)
+    send_update_notification(CFG.code, msg, wrapper["meta"].get("totalMarketCap", 0))
 
     log.info("=== Done! ===")
 

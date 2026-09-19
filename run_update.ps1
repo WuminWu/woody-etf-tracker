@@ -119,6 +119,7 @@ $scripts = @(
     "check_and_update_00990A.py",   # 海外（全球AI），元大 Nuxt __NUXT__
     "check_and_update_00411A.py",   # 海外（全球科技），統一 ezmoney，T+1
     "check_and_update_00409A.py",   # 海外（全球50），復華 API ETF26，T+1
+    "send_queued_notifications.py", # 本輪暫存的單檔持股更新通知，依基金規模由大到小發送（排在日報之前）
     "check_and_update_index.py",
     "update_cost_basis.py",
     "record_common_actions.py",
@@ -128,6 +129,8 @@ $scripts = @(
     "weekly_digest.py",
     "sanitize_data.py"   # 最後一道防線：清除 data_*.json 內的 NaN/Inf（非法 JSON 會讓前端整頁掛掉）
 )
+# 單檔「📊 持股更新」通知改為先暫存、整輪跑完再依規模排序發送（見 notify.send_update_notification）
+$env:ETF_QUEUE_NOTIFY = "1"
 $results = @()
 foreach ($s in $scripts) {
     Write-Log "--- 執行 $s ---"

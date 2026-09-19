@@ -25,7 +25,7 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 import pandas as pd
 from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
-from notify import send_telegram   # 單一來源：節流＋429重試＋自動分段
+from notify import send_telegram, send_update_notification   # 單一來源：節流＋429重試＋自動分段；持股更新通知排程時依規模排序
 # --- 共用核心（等價重構，見 etf_core.py 檔頭）---
 from etf_core import (
     FundConfig, build_data_json, get_price, fmt_zhang, format_trade_line, today_tw,
@@ -321,7 +321,7 @@ def main():
 
     # 5. Send Telegram notification (git push handled by GitHub Actions workflow)
     msg = build_notification(wrapper, etf_code="00981A", etf_name="統一台股增長")
-    send_telegram(msg)
+    send_update_notification(CFG.code, msg, wrapper["meta"].get("totalMarketCap", 0))
 
     log.info("=== Done! ===")
 

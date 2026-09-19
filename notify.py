@@ -90,3 +90,50 @@ def _send_one(message):
             _time.sleep(3)
     log.warning("Telegram: all retries failed.")
     return False
+
+
+# ============================================================================
+# 單檔「📊 持股更新」通知：排程時先暫存，整輪跑完再依基金規模由大到小發送
+# ============================================================================
+# 原本每支爬蟲抓到資料就立刻發，順序＝run_update.ps1 裡爬蟲的執行順序，與規模無關。
+# 排程（run_update.ps1 設 ETF_QUEUE_NOTIFY=1）時改為寫進佇列，由
+# send_queued_notifications.py 在該輪所有爬蟲跑完後依規模排序發送（排在日報之前）。
+# 手動執行、backfill_day 補抓等沒設這個環境變數的情況，照舊立即發送，
+# 以免訊息卡在佇列裡沒人送。
+QUEUE_ENV = "ETF_QUEUE_NOTIFY"
+QUEUE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs", "notify_queue.json")
+
+
+def load_queue():
+    try:
+        with open(QUEUE_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+    except Exception as e:
+        log.warning(f"讀取通知佇列失敗（{e}），視為空佇列")
+        return []
+
+
+def save_queue(entries):
+    os.makedirs(os.path.dirname(QUEUE_FILE), exist_ok=True)
+    tmp = QUEUE_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(entries, f, ensure_ascii=False, indent=1)
+    os.replace(tmp, QUEUE_FILE)
+
+
+def send_update_notification(code, message, market_cap=0):
+    """發送（或排程時暫存）單檔持股更新通知。market_cap＝基金規模（億），用於排序。"""
+    if os.environ.get(QUEUE_ENV) != "1":
+        return send_telegram(message)
+    q = load_queue()
+    q.append({
+        "code": code,
+        "market_cap": float(market_cap or 0),
+        "queued_at": _time.strftime("%Y-%m-%d %H:%M:%S"),
+        "message": message,
+    })
+    save_queue(q)
+    log.info(f"{code} 持股更新通知已暫存（規模 {market_cap} 億），整輪結束後依規模排序發送")
+    return True

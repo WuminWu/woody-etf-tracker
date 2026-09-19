@@ -32,7 +32,7 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 import pandas as pd
 from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
-from notify import send_telegram   # 單一來源：節流＋429重試＋自動分段
+from notify import send_telegram, send_update_notification   # 單一來源：節流＋429重試＋自動分段；持股更新通知排程時依規模排序
 from market_utils import yf_symbol, ccy_of
 from asset_allocation import parse_asset_allocation, format_alloc_lines, find_prev_alloc, attach_delta, format_scale_line
 
@@ -335,7 +335,7 @@ def main():
 
     # 5. Send Telegram notification (git push handled by GitHub Actions workflow)
     msg = build_notification(wrapper, etf_code="00988A", etf_name="主動統一全球創新")
-    send_telegram(msg)
+    send_update_notification(CFG.code, msg, wrapper["meta"].get("totalMarketCap", 0))
 
     log.info("=== Done! ===")
 

@@ -117,6 +117,7 @@ sh.append_holdings_to_sheets = lambda *aa, **kk: None
 sys.modules["sheets_helper"] = sh
 nt = types.ModuleType("notify")
 nt.send_telegram = lambda *aa, **kk: True
+nt.send_update_notification = lambda *aa, **kk: True   # 爬蟲 import 時需要（2026-09-19 新增）
 nt._split_message = lambda t, limit=3900: [t]
 sys.modules["notify"] = nt
 
