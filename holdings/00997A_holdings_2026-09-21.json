@@ -1,0 +1,338 @@
+[
+  {
+    "code": "SNDK US",
+    "name": "晟碟公司（德拉瓦州）",
+    "shares": 9760,
+    "weight": 4.4
+  },
+  {
+    "code": "MU US",
+    "name": "美光科技公司",
+    "shares": 16661,
+    "weight": 4.26
+  },
+  {
+    "code": "4062 JP",
+    "name": "揖斐電有限公司",
+    "shares": 115764,
+    "weight": 3.63
+  },
+  {
+    "code": "MRVL US",
+    "name": "Marvell Technology Inc",
+    "shares": 56385,
+    "weight": 3.46
+  },
+  {
+    "code": "LITE US",
+    "name": "魯門特姆控股公司",
+    "shares": 14776,
+    "weight": 3.46
+  },
+  {
+    "code": "CRWD US",
+    "name": "Crowdstrike控股公司",
+    "shares": 55605,
+    "weight": 3.32
+  },
+  {
+    "code": "NVDA US",
+    "name": "輝達公司",
+    "shares": 58576,
+    "weight": 3.28
+  },
+  {
+    "code": "3037",
+    "name": "欣興",
+    "shares": 360000,
+    "weight": 2.8
+  },
+  {
+    "code": "STX US",
+    "name": "希捷科技控股公開有限公司",
+    "shares": 12253,
+    "weight": 2.65
+  },
+  {
+    "code": "2330",
+    "name": "台積電",
+    "shares": 132000,
+    "weight": 2.57
+  },
+  {
+    "code": "AMD US",
+    "name": "ADVANCED MICRO DEVICES",
+    "shares": 17342,
+    "weight": 2.44
+  },
+  {
+    "code": "MRK US",
+    "name": "默克藥廠",
+    "shares": 65967,
+    "weight": 2.44
+  },
+  {
+    "code": "DELL US",
+    "name": "戴爾科技公司",
+    "shares": 17000,
+    "weight": 2.43
+  },
+  {
+    "code": "DT US",
+    "name": "Dynatrace公司",
+    "shares": 174101,
+    "weight": 2.42
+  },
+  {
+    "code": "PANW US",
+    "name": "Palo Alto Networks Inc",
+    "shares": 25679,
+    "weight": 2.35
+  },
+  {
+    "code": "SNOW US",
+    "name": "Snowflake公司",
+    "shares": 27997,
+    "weight": 2.34
+  },
+  {
+    "code": "INTC US",
+    "name": "英特爾",
+    "shares": 85644,
+    "weight": 2.34
+  },
+  {
+    "code": "009150 KS",
+    "name": "三星電機",
+    "shares": 9224,
+    "weight": 2.33
+  },
+  {
+    "code": "AAPL US",
+    "name": "蘋果公司",
+    "shares": 25523,
+    "weight": 2.16
+  },
+  {
+    "code": "TER US",
+    "name": "泰瑞達公司",
+    "shares": 22245,
+    "weight": 2.08
+  },
+  {
+    "code": "FTNT US",
+    "name": "防特網公司",
+    "shares": 46055,
+    "weight": 1.97
+  },
+  {
+    "code": "LRCX US",
+    "name": "科林研發股份有限公司",
+    "shares": 26938,
+    "weight": 1.95
+  },
+  {
+    "code": "NOW US",
+    "name": "ServiceNow公司",
+    "shares": 55353,
+    "weight": 1.89
+  },
+  {
+    "code": "GOOGL US",
+    "name": "ALPHABET INC-CL A",
+    "shares": 21041,
+    "weight": 1.85
+  },
+  {
+    "code": "CIEN US",
+    "name": "喜雅納公司",
+    "shares": 20397,
+    "weight": 1.79
+  },
+  {
+    "code": "OKTA US",
+    "name": "Okta公司",
+    "shares": 36882,
+    "weight": 1.69
+  },
+  {
+    "code": "2383",
+    "name": "台光電",
+    "shares": 41000,
+    "weight": 1.59
+  },
+  {
+    "code": "BE US",
+    "name": "布魯姆能源公司",
+    "shares": 20698,
+    "weight": 1.38
+  },
+  {
+    "code": "IOT US",
+    "name": "森萬聯有限公司",
+    "shares": 133951,
+    "weight": 1.33
+  },
+  {
+    "code": "MSFT US",
+    "name": "微軟公司",
+    "shares": 10586,
+    "weight": 1.31
+  },
+  {
+    "code": "DE US",
+    "name": "迪爾",
+    "shares": 7067,
+    "weight": 1.22
+  },
+  {
+    "code": "PLTR US",
+    "name": "帕蘭提爾科技公司",
+    "shares": 23556,
+    "weight": 1.05
+  },
+  {
+    "code": "ANET US",
+    "name": "Arista網路公司",
+    "shares": 20812,
+    "weight": 1.04
+  },
+  {
+    "code": "APH US",
+    "name": "安費諾",
+    "shares": 52516,
+    "weight": 1.02
+  },
+  {
+    "code": "WDC US",
+    "name": "WESTERN DIGITAL CORP",
+    "shares": 9006,
+    "weight": 1.0
+  },
+  {
+    "code": "AVGO US",
+    "name": "博通公司",
+    "shares": 11017,
+    "weight": 0.99
+  },
+  {
+    "code": "AMAT US",
+    "name": "應用材料",
+    "shares": 8808,
+    "weight": 0.99
+  },
+  {
+    "code": "6640",
+    "name": "均華",
+    "shares": 105000,
+    "weight": 0.98
+  },
+  {
+    "code": "ARM US",
+    "name": "安謀控股公開有限公司",
+    "shares": 13562,
+    "weight": 0.94
+  },
+  {
+    "code": "2454",
+    "name": "聯發科",
+    "shares": 25000,
+    "weight": 0.93
+  },
+  {
+    "code": "CSCO US",
+    "name": "CISCO SYSTEMS INC",
+    "shares": 31992,
+    "weight": 0.88
+  },
+  {
+    "code": "META US",
+    "name": "Meta平台公司",
+    "shares": 5236,
+    "weight": 0.88
+  },
+  {
+    "code": "HWM US",
+    "name": "Howmet航太公司",
+    "shares": 15147,
+    "weight": 0.88
+  },
+  {
+    "code": "GE US",
+    "name": "奇異公司",
+    "shares": 10935,
+    "weight": 0.86
+  },
+  {
+    "code": "ADI US",
+    "name": "亞德諾公司",
+    "shares": 8777,
+    "weight": 0.83
+  },
+  {
+    "code": "HOOD US",
+    "name": "羅賓漢市場公司",
+    "shares": 27483,
+    "weight": 0.83
+  },
+  {
+    "code": "SPCX US",
+    "name": "太空探索科技公司",
+    "shares": 21093,
+    "weight": 0.81
+  },
+  {
+    "code": "285A JP",
+    "name": "鎧俠控股公司",
+    "shares": 9182,
+    "weight": 0.8
+  },
+  {
+    "code": "COHR US",
+    "name": "連貫公司",
+    "shares": 9022,
+    "weight": 0.72
+  },
+  {
+    "code": "DDOG US",
+    "name": "數據狗公司",
+    "shares": 11884,
+    "weight": 0.69
+  },
+  {
+    "code": "TXN US",
+    "name": "德州儀器公司",
+    "shares": 9954,
+    "weight": 0.67
+  },
+  {
+    "code": "LMT US",
+    "name": "洛克希德馬丁",
+    "shares": 4854,
+    "weight": 0.65
+  },
+  {
+    "code": "ADBE US",
+    "name": "奧多比系統公司",
+    "shares": 8282,
+    "weight": 0.52
+  },
+  {
+    "code": "KLAC US",
+    "name": "KLA CORP",
+    "shares": 11245,
+    "weight": 0.5
+  },
+  {
+    "code": "ALAB US",
+    "name": "Astera實驗室公司",
+    "shares": 6551,
+    "weight": 0.5
+  },
+  {
+    "code": "CDNS US",
+    "name": "Cadence設計系統公司",
+    "shares": 4405,
+    "weight": 0.31
+  }
+]
