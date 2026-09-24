@@ -1,0 +1,194 @@
+[
+  {
+    "code": "BE US",
+    "name": "BLOOM ENERGY CORP- A",
+    "shares": 47392,
+    "weight": 8.98
+  },
+  {
+    "code": "SPCX US",
+    "name": "SPACE EXPLORATION TECHN-CL A",
+    "shares": 76874,
+    "weight": 7.85
+  },
+  {
+    "code": "NVDA US",
+    "name": "NVIDIA CORP(輝達公司)",
+    "shares": 50262,
+    "weight": 7.8
+  },
+  {
+    "code": "LITE US",
+    "name": "LUMENTUM HOLDINGS INC",
+    "shares": 11924,
+    "weight": 7.69
+  },
+  {
+    "code": "PLTR US",
+    "name": "PALANTIR TECHNOLOGIES INC-A",
+    "shares": 51297,
+    "weight": 6.77
+  },
+  {
+    "code": "3443",
+    "name": "創意",
+    "shares": 33000,
+    "weight": 6.01
+  },
+  {
+    "code": "8996",
+    "name": "高力",
+    "shares": 162000,
+    "weight": 5.42
+  },
+  {
+    "code": "CRWD US",
+    "name": "CROWDSTRIKE HOLDINGS INC - A",
+    "shares": 27377,
+    "weight": 4.95
+  },
+  {
+    "code": "AMD US",
+    "name": "ADVANCED MICRO DEVICES.amd us(超微半導體公司)",
+    "shares": 11664,
+    "weight": 4.93
+  },
+  {
+    "code": "NBIS US",
+    "name": "NEBIUS GROUP NV",
+    "shares": 29091,
+    "weight": 4.54
+  },
+  {
+    "code": "NET US",
+    "name": "CLOUDFLARE INC - CLASS A",
+    "shares": 14742,
+    "weight": 3.58
+  },
+  {
+    "code": "ANET US",
+    "name": "ARISTA NETWORKS INC.anet us",
+    "shares": 23297,
+    "weight": 3.26
+  },
+  {
+    "code": "SNOW US",
+    "name": "SNOWFLAKE INC-CLASS A(Snowflake公司)",
+    "shares": 14081,
+    "weight": 3.25
+  },
+  {
+    "code": "MU US",
+    "name": "MICRON TECHNOLOGY INC",
+    "shares": 4104,
+    "weight": 3.03
+  },
+  {
+    "code": "NTSK US",
+    "name": "NETSKOPE INC-CL A",
+    "shares": 210458,
+    "weight": 2.69
+  },
+  {
+    "code": "6669",
+    "name": "緯穎",
+    "shares": 57518,
+    "weight": 2.63
+  },
+  {
+    "code": "581A JP",
+    "name": "GO INC",
+    "shares": 179700,
+    "weight": 2.49
+  },
+  {
+    "code": "4062 JP",
+    "name": "IBIDEN CO LTD",
+    "shares": 24700,
+    "weight": 2.11
+  },
+  {
+    "code": "285A JP",
+    "name": "KIOXIA HOLDINGS CORP",
+    "shares": 6400,
+    "weight": 1.52
+  },
+  {
+    "code": "TSLA US",
+    "name": "TESLA INC(特斯拉公司)",
+    "shares": 5690,
+    "weight": 1.49
+  },
+  {
+    "code": "GOOGL US",
+    "name": "ALPHABET INC-CL A(Alphabet公司)",
+    "shares": 5309,
+    "weight": 1.23
+  },
+  {
+    "code": "4979",
+    "name": "華星光",
+    "shares": 59000,
+    "weight": 0.76
+  },
+  {
+    "code": "3017",
+    "name": "奇鋐",
+    "shares": 8000,
+    "weight": 0.6
+  },
+  {
+    "code": "SMTC US",
+    "name": "SEMTECH CORP",
+    "shares": 5123,
+    "weight": 0.6
+  },
+  {
+    "code": "DELL US",
+    "name": "DELL INC",
+    "shares": 1116,
+    "weight": 0.42
+  },
+  {
+    "code": "MSFT US",
+    "name": "MICROSOFT CORP(微軟公司)",
+    "shares": 1183,
+    "weight": 0.41
+  },
+  {
+    "code": "SITM US",
+    "name": "SITIME CORP",
+    "shares": 951,
+    "weight": 0.4
+  },
+  {
+    "code": "IONQ US",
+    "name": "IONQ INC",
+    "shares": 12501,
+    "weight": 0.37
+  },
+  {
+    "code": "AMZN US",
+    "name": "AMAZON.COM INC(亞馬遜公司)",
+    "shares": 2107,
+    "weight": 0.36
+  },
+  {
+    "code": "3037",
+    "name": "欣興",
+    "shares": 14000,
+    "weight": 0.35
+  },
+  {
+    "code": "RKLB US",
+    "name": "ROCKET LAB USA INC",
+    "shares": 7119,
+    "weight": 0.34
+  },
+  {
+    "code": "STX US",
+    "name": "SEAGATE TECHNOLOGY",
+    "shares": 411,
+    "weight": 0.26
+  }
+]
