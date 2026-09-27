@@ -377,7 +377,9 @@ def run_per_etf(cur_dates, prev_dates, marker, cur_week, today, week_end):
                 log.info(f"[per-etf {group}] 尚有 {len(skipped)} 檔當日未更新，等下一輪。")
             continue
 
-        parts = _split_message(msg)
+        # 預留分段標籤「（i/n）」的長度：若切到剛好 3,900 字再加標籤，send_telegram 會把它
+        # 再切一次，多出只有一行的碎片（2026-09-27 W39 補發時實際發生，10 則裡有 2 則是單行碎片）
+        parts = _split_message(msg, limit=3900 - 20)
         total = len(parts)
         # 只有「同一批訊息」才能續傳；段數對不上就整則重送，避免接到錯的位置
         start = st["sent"] if (st.get("total") == total and st.get("sent", 0) < total) else 0
