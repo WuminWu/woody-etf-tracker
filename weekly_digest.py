@@ -4,11 +4,14 @@ weekly_digest.py
 每週持股變化週報：「本週最後交易日 vs 上週最後交易日」的持股比較，
 格式與日報相同（重用 daily_digest.render_digest），台股/海外各發一份 Telegram。
 
-發送時機：
-  - 週五：日常 pipeline 末段執行，待當日 snapshot 產生且該組足量 ETF 入列後發送
-  - 週六：補發（週五若為颱風假等休市日，run_update.ps1 的週六分支會呼叫本腳本）
-  - 其餘日：直接跳過
+發送時機（2026-09-27 改版）：
+  - 「本週最後一個交易日」（通常是週五；週五休市就是週四）：日常 pipeline 末段執行，
+    待當日 snapshot 產生且該組足量 ETF 入列後，報「本週」
+  - 其他交易日：若最近一個已結束的週漏發（例如那天電腦沒開），補發那一週；已發過則跳過
+  - 非交易日：pipeline 不執行（run_update.ps1 休市/週末守門）
   marker `last_weekly.txt`（JSON：{"tw": "2026-W28", ...}）防同週重發。
+  改版原因：原本寫死「週五」。2026-09-25（五）中秋、09-28（一）教師節連休時，
+  W39 的資料 9/24（四）晚上就齊了，週報卻要拖到 9/29（二）才補發。
 
 資料來源：snapshots/{date}.json（每檔 ETF 取「該 ISO 週內自己最新的揭露日」，
 天然處理海外 T+1 與颱風假）。共識升溫/退潮以「上週 vs 上上週」為基準。
@@ -17,6 +20,8 @@ weekly_digest.py
   python weekly_digest.py                # 排程模式（依上述時機自行判斷）
   python weekly_digest.py --preview      # 產生本週報告並印出，不發送不寫 marker
   python weekly_digest.py --backfill     # 回填歷史每一週到 digests_weekly*.json（不發送）
+  python weekly_digest.py --catchup      # 手動補發「最近一個已結束的週」（週末/休市日也可跑；
+                                         #   已發過的部分依 marker 跳過，不會重複）
 """
 
 import glob
@@ -27,6 +32,7 @@ import logging
 from datetime import date, datetime, timedelta, timezone
 
 from etf_core import fmt_zhang   # 單一來源：股數 -> 張（原本這裡自己有一份）
+from tw_calendar import is_trading_day, next_trading_day, last_trading_day
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -281,12 +287,12 @@ PER_ETF_GROUPS = {
 _SEP = "\n" + "─" * 22 + "\n"
 
 
-def build_group_per_etf_msg(group, cur_dates, prev_dates, today=None, wd=None, exclude=()):
+def build_group_per_etf_msg(group, cur_dates, prev_dates, today=None, week_end=False, exclude=()):
     """把同組別各檔 ETF 的週異動合併成一則訊息。
 
     回傳 (text, included, skipped)：
       included 本次納入的 ETF 代號（不論有無異動，之後不再重複考慮）
-      skipped  週五當日尚未更新、要等後續輪次補送的代號
+      skipped  week_end（今天是本週最後交易日）時，今天尚未更新、要等後續輪次補送的代號
     全部都無異動時 text 為 None。exclude 內的 ETF 略過（前幾輪已送過）。
     """
     g = PER_ETF_GROUPS[group]
@@ -297,8 +303,8 @@ def build_group_per_etf_msg(group, cur_dates, prev_dates, today=None, wd=None, e
         d1 = etf_latest_in(cur_dates, etf)
         if not d1:
             continue
-        if wd == 4 and today is not None and d1 != today.isoformat():
-            skipped.append(etf)          # 週五當日尚未更新
+        if week_end and today is not None and d1 != today.isoformat():
+            skipped.append(etf)          # 本週最後交易日，但這檔今天尚未更新
             continue
         d0 = etf_latest_in(prev_dates, etf)
         included.append(etf)
@@ -342,7 +348,7 @@ def _legacy_done(marker, group, cur_week):
     return [e for e, w in legacy.items() if w == cur_week and e in codes]
 
 
-def run_per_etf(cur_dates, prev_dates, marker, cur_week, today, wd):
+def run_per_etf(cur_dates, prev_dates, marker, cur_week, today, week_end):
     """各組別各發一則合併後的單檔週報（過長自動分段）。
 
     marker[f"per_etf_{group}"] = {"week": ISO週, "sent": 已送出的段數, "total": 總段數}
@@ -359,7 +365,7 @@ def run_per_etf(cur_dates, prev_dates, marker, cur_week, today, wd):
         done = list(st.get("done", []))
 
         msg, included, skipped = build_group_per_etf_msg(
-            group, cur_dates, prev_dates, today, wd, exclude=set(done))
+            group, cur_dates, prev_dates, today, week_end, exclude=set(done))
         if msg is None:
             if included:                          # 這批都沒異動，記下來不再考慮
                 st["done"] = done + included
@@ -451,29 +457,45 @@ def _week_buckets(ref_day):
     return cur, cur_dates, prev_of(cur, 1), prev_of(cur, 2)
 
 
-def run_scheduled():
-    now = datetime.now(timezone(timedelta(hours=8)))
-    today = now.date()
-    wd = today.weekday()   # 0=Mon .. 6=Sun
-    if wd >= 5:
-        log.info("週末，週報不執行。")
+def is_week_last_trading_day(d):
+    """d 是交易日，且下一個交易日已落在下一個 ISO 週 → d 是本週最後一個交易日。
+    通常是週五；週五休市時是週四（例：W39 最後交易日是 2026-09-24，因 9/25 中秋）。"""
+    return is_trading_day(d) and week_id(next_trading_day(d)) != week_id(d)
+
+
+def target_week(today):
+    """決定這次要報哪一週，回傳 (ref_day, week_end)。
+
+    week_end=True ：今天就是本週最後一個交易日 → 報本週；需今日 snapshot 已就緒，
+                    單檔週報只納入今天已更新的 ETF（其餘由後續輪次補送）。
+    week_end=False：報「最近一個已結束的週」，僅在該週漏發時補發（marker 已發則跳過）。
+    """
+    if is_week_last_trading_day(today):
+        return today, True
+    ltd = last_trading_day(today)             # 今天是交易日時就是今天
+    if ltd < today and is_week_last_trading_day(ltd):
+        return ltd, False                      # 週末／休市日：剛結束的那一週
+    return ltd - timedelta(days=ltd.weekday() + 1), False   # 上週日 → 上一週
+
+
+def run_scheduled(today=None, catchup=False):
+    if today is None:
+        today = datetime.now(timezone(timedelta(hours=8))).date()
+    if not catchup and not is_trading_day(today):
+        log.info(f"{today} 非交易日，週報不執行（手動補發請用 --catchup）。")
         return
-    # 週五：報「本週」（需今日 snapshot 已就緒）；週一~四：對象為「上週」，
-    # 且僅在上週週報漏發時補發（週五休市情境）——marker 已發則靜默跳過。
-    if wd == 4:
-        ref_day = today
-        need_today_snapshot = True
-    else:
-        ref_day = today - timedelta(days=wd + 3)   # 對齊上週五
-        need_today_snapshot = False
+    ref_day, week_end = target_week(today)
+    need_today_snapshot = week_end
 
     cur, cur_dates, prev_dates, prev2_dates = _week_buckets(ref_day)
     if not cur_dates or not prev_dates:
         log.info(f"目標週 {cur} 或前一週無 snapshot，週報跳過。")
         return
     if need_today_snapshot and cur_dates[-1] != today.isoformat():
-        log.info("週五但今日 snapshot 尚未產生，待下一輪。")
+        log.info("今天是本週最後交易日，但今日 snapshot 尚未產生，待下一輪。")
         return
+    log.info(f"週報目標：{cur}（{cur_dates[0]} ~ {cur_dates[-1]}），"
+             f"{'本週收尾' if week_end else '補發已結束的週（已發過則跳過）'}")
 
     marker = load_marker()
     for group, g in WEEKLY_GROUPS.items():
@@ -494,7 +516,7 @@ def run_scheduled():
 
     # 單檔 ETF 週報（每檔一則；台股組彙總報告達門檻後才開始發，避免資料未齊）
     if marker.get("tw") == cur:
-        run_per_etf(cur_dates, prev_dates, marker, cur, today, wd)
+        run_per_etf(cur_dates, prev_dates, marker, cur, today, week_end)
 
 
 def run_preview():
@@ -538,5 +560,7 @@ if __name__ == "__main__":
         run_backfill()
     elif "--preview" in sys.argv:
         run_preview()
+    elif "--catchup" in sys.argv:
+        run_scheduled(catchup=True)
     else:
         run_scheduled()

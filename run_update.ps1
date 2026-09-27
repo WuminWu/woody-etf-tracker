@@ -98,7 +98,8 @@ if (Test-Path $saFile) {
 git pull --rebase 2>&1 | ForEach-Object { Write-Log "git: $_" }
 
 # --- 依序執行所有更新腳本（單支失敗不中斷整體）---
-# weekly_digest.py 自我守門：週五發本週週報；週一~四若上週週報漏發（週五休市）則補發
+# weekly_digest.py 自我守門：「本週最後一個交易日」（通常週五，週五休市則週四）發本週週報；
+# 其他交易日若最近一週漏發（例如那天電腦沒開）則補發。手動補發：python weekly_digest.py --catchup
 $scripts = @(
     "check_and_update_00981A.py",
     "check_and_update_00400A.py",
