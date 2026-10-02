@@ -1,0 +1,248 @@
+[
+  {
+    "code": "LITE US",
+    "name": "LUMENTUM HOLDINGS INC",
+    "shares": 117000,
+    "weight": 7.28
+  },
+  {
+    "code": "BE US",
+    "name": "BLOOM ENERGY CORP- A",
+    "shares": 390000,
+    "weight": 6.44
+  },
+  {
+    "code": "3037",
+    "name": "欣興",
+    "shares": 2600000,
+    "weight": 5.9
+  },
+  {
+    "code": "SPCX US",
+    "name": "SPACE EXPLORATION TECHN-CL A",
+    "shares": 550000,
+    "weight": 4.85
+  },
+  {
+    "code": "009150 KS",
+    "name": "Samsung Electro-Mechanics co(009150 ks)",
+    "shares": 70000,
+    "weight": 4.79
+  },
+  {
+    "code": "6981 JP",
+    "name": "MURATA MANUFACTURING CO LTD",
+    "shares": 1350000,
+    "weight": 4.33
+  },
+  {
+    "code": "INTC US",
+    "name": "INTEL CORP",
+    "shares": 550399,
+    "weight": 3.93
+  },
+  {
+    "code": "PANW US",
+    "name": "PALO ALTO NETWORKS INC",
+    "shares": 150000,
+    "weight": 3.54
+  },
+  {
+    "code": "2454",
+    "name": "聯發科",
+    "shares": 380000,
+    "weight": 3.53
+  },
+  {
+    "code": "MU US",
+    "name": "MICRON TECHNOLOGY INC",
+    "shares": 52000,
+    "weight": 3.4
+  },
+  {
+    "code": "3017",
+    "name": "奇鋐",
+    "shares": 510000,
+    "weight": 3.34
+  },
+  {
+    "code": "PLTR US",
+    "name": "PALANTIR TECHNOLOGIES INC-A",
+    "shares": 275000,
+    "weight": 3.11
+  },
+  {
+    "code": "2303",
+    "name": "聯電",
+    "shares": 9700000,
+    "weight": 2.92
+  },
+  {
+    "code": "HOOD US",
+    "name": "ROBINHOOD MARKETS INC - A",
+    "shares": 400120,
+    "weight": 2.65
+  },
+  {
+    "code": "SNOW US",
+    "name": "SNOWFLAKE INC-CLASS A(Snowflake公司)",
+    "shares": 130000,
+    "weight": 2.65
+  },
+  {
+    "code": "NVDA US",
+    "name": "NVIDIA CORP(輝達公司)",
+    "shares": 175000,
+    "weight": 2.41
+  },
+  {
+    "code": "2383",
+    "name": "台光電",
+    "shares": 250000,
+    "weight": 2.32
+  },
+  {
+    "code": "TWLO US",
+    "name": "TWILIO INC - A",
+    "shares": 120000,
+    "weight": 2.15
+  },
+  {
+    "code": "CRWD US",
+    "name": "CROWDSTRIKE HOLDINGS INC - A",
+    "shares": 130754,
+    "weight": 2.07
+  },
+  {
+    "code": "OKTA US",
+    "name": "OKTA INC",
+    "shares": 160000,
+    "weight": 2.03
+  },
+  {
+    "code": "000660 KS",
+    "name": "SK HYNIX INC",
+    "shares": 25000,
+    "weight": 2.01
+  },
+  {
+    "code": "NOW US",
+    "name": "SERVICENOW INC",
+    "shares": 230000,
+    "weight": 1.89
+  },
+  {
+    "code": "AMD US",
+    "name": "ADVANCED MICRO DEVICES.amd us(超微半導體公司)",
+    "shares": 50000,
+    "weight": 1.83
+  },
+  {
+    "code": "TER US",
+    "name": "TERADYNE INC",
+    "shares": 70000,
+    "weight": 1.73
+  },
+  {
+    "code": "NET US",
+    "name": "CLOUDFLARE INC - CLASS A",
+    "shares": 82000,
+    "weight": 1.71
+  },
+  {
+    "code": "300757 CH",
+    "name": "ROBOTECHNIK INTELLIGENT TE-A",
+    "shares": 334997,
+    "weight": 1.58
+  },
+  {
+    "code": "992 HK",
+    "name": "LENOVO GROUP LTD",
+    "shares": 6000000,
+    "weight": 1.57
+  },
+  {
+    "code": "MSFT US",
+    "name": "MICROSOFT CORP(微軟公司)",
+    "shares": 40000,
+    "weight": 1.22
+  },
+  {
+    "code": "IFX GY",
+    "name": "INFINEON TECHNOLOGIES AG",
+    "shares": 300000,
+    "weight": 1.2
+  },
+  {
+    "code": "STX US",
+    "name": "SEAGATE TECHNOLOGY",
+    "shares": 20000,
+    "weight": 1.13
+  },
+  {
+    "code": "MRVL US",
+    "name": "MARVELL TECHNOLOGY INC",
+    "shares": 60000,
+    "weight": 0.96
+  },
+  {
+    "code": "2330",
+    "name": "台積電",
+    "shares": 200000,
+    "weight": 0.94
+  },
+  {
+    "code": "285A JP",
+    "name": "KIOXIA HOLDINGS CORP",
+    "shares": 111000,
+    "weight": 0.8
+  },
+  {
+    "code": "COIN US",
+    "name": "COINBASE GLOBAL INC -CLASS A",
+    "shares": 70000,
+    "weight": 0.79
+  },
+  {
+    "code": "IREN US",
+    "name": "IREN LTD",
+    "shares": 325000,
+    "weight": 0.79
+  },
+  {
+    "code": "5801 JP",
+    "name": "FURUKAWA ELECTRIC CO LTD",
+    "shares": 500000,
+    "weight": 0.77
+  },
+  {
+    "code": "3081",
+    "name": "聯亞",
+    "shares": 150000,
+    "weight": 0.74
+  },
+  {
+    "code": "SNDK US",
+    "name": "SANDISK CORP",
+    "shares": 7000,
+    "weight": 0.74
+  },
+  {
+    "code": "4180 JP",
+    "name": "APPIER GROUP INC",
+    "shares": 950000,
+    "weight": 0.51
+  },
+  {
+    "code": "6997 JP",
+    "name": "NIPPON CHEMI-CON CORP",
+    "shares": 425000,
+    "weight": 0.39
+  },
+  {
+    "code": "1303",
+    "name": "南亞",
+    "shares": 500000,
+    "weight": 0.24
+  }
+]
