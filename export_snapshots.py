@@ -78,7 +78,7 @@ def fetch_sheet_rows(service):
     """Read all rows from holdings sheet. Returns list of dict per row."""
     result = service.spreadsheets().values().get(
         spreadsheetId=SHEET_ID,
-        range=f"{SHEET_TAB}!A:L",
+        range=f"{SHEET_TAB}!A:M",   # M 欄「備註」：被標為估計值的列（見 build_snapshots）
     ).execute()
     rows = result.get("values", [])
     if not rows or len(rows) < 2:
@@ -86,7 +86,7 @@ def fetch_sheet_rows(service):
 
     parsed = []
     for r in rows[1:]:
-        padded = r + [""] * (12 - len(r))
+        padded = r + [""] * (13 - len(r))
         if len(padded) < 4 or not padded[0] or not padded[1] or not padded[2]:
             continue
         parsed.append({
@@ -102,6 +102,7 @@ def fetch_sheet_rows(service):
             "diffAmount": _to_float(padded[9]),
             "totalMarketCap": _to_float(padded[10]) if padded[10] else None,
             "totalShares": _to_int(padded[11]) if padded[11] else None,
+            "note": padded[12],
         })
     return parsed
 
@@ -142,14 +143,16 @@ def build_snapshots(rows):
                     "rank": rank,
                 })
 
-            snapshots[date][etf] = {
-                "meta": {
-                    "dataDate": date,
-                    "totalMarketCap": round(meta_market_cap, 2),
-                    "totalShares": meta_total_shares,
-                },
-                "holdings": holdings,
+            meta = {
+                "dataDate": date,
+                "totalMarketCap": round(meta_market_cap, 2),
+                "totalShares": meta_total_shares,
             }
+            # 官方原始數字沒保存、由推算補回的基金規模，試算表 M 欄會寫「估計」：
+            # 標進 meta，讓圖表與報表知道這天的單位數/市值不是官方公布值
+            if any("估計" in (it.get("note") or "") for it in items):
+                meta["estimated"] = True
+            snapshots[date][etf] = {"meta": meta, "holdings": holdings}
 
     return snapshots
 
