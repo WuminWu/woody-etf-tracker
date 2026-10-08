@@ -1,0 +1,296 @@
+[
+  {
+    "code": "LITE US",
+    "name": "魯門特姆控股公司",
+    "shares": 25500,
+    "weight": 6.292
+  },
+  {
+    "code": "BE US",
+    "name": "布魯姆能源公司",
+    "shares": 85000,
+    "weight": 5.498
+  },
+  {
+    "code": "PLTR US",
+    "name": "帕蘭提爾科技公司",
+    "shares": 115500,
+    "weight": 4.979
+  },
+  {
+    "code": "8046",
+    "name": "南亞電路",
+    "shares": 475000,
+    "weight": 4.896
+  },
+  {
+    "code": "3017",
+    "name": "奇鋐科技",
+    "shares": 173000,
+    "weight": 4.271
+  },
+  {
+    "code": "NVDA US",
+    "name": "輝達公司",
+    "shares": 80000,
+    "weight": 4.219
+  },
+  {
+    "code": "3026",
+    "name": "禾伸堂企",
+    "shares": 659000,
+    "weight": 3.851
+  },
+  {
+    "code": "MU US",
+    "name": "美光科技公司",
+    "shares": 15300,
+    "weight": 3.697
+  },
+  {
+    "code": "5274",
+    "name": "信驊科技",
+    "shares": 29000,
+    "weight": 3.585
+  },
+  {
+    "code": "3189",
+    "name": "景碩科技",
+    "shares": 454000,
+    "weight": 3.478
+  },
+  {
+    "code": "CRWD US",
+    "name": "Crowdstrike控股公司",
+    "shares": 55000,
+    "weight": 3.242
+  },
+  {
+    "code": "3653",
+    "name": "健策精密",
+    "shares": 58000,
+    "weight": 2.749
+  },
+  {
+    "code": "2383",
+    "name": "台光電子",
+    "shares": 66000,
+    "weight": 2.735
+  },
+  {
+    "code": "HOOD US",
+    "name": "羅賓漢市場公司",
+    "shares": 110000,
+    "weight": 2.675
+  },
+  {
+    "code": "TSM US",
+    "name": "台灣積體電路製造股份有限公司",
+    "shares": 25000,
+    "weight": 2.622
+  },
+  {
+    "code": "SPCX US",
+    "name": "太空探索科技公司",
+    "shares": 70000,
+    "weight": 2.605
+  },
+  {
+    "code": "MRVL US",
+    "name": "Marvell Technology Inc",
+    "shares": 39800,
+    "weight": 2.516
+  },
+  {
+    "code": "ALAB US",
+    "name": "Astera實驗室公司",
+    "shares": 28000,
+    "weight": 2.377
+  },
+  {
+    "code": "AMD US",
+    "name": "超微半導體公司",
+    "shares": 16000,
+    "weight": 2.295
+  },
+  {
+    "code": "AXTI US",
+    "name": "AXT公司",
+    "shares": 125000,
+    "weight": 2.215
+  },
+  {
+    "code": "INTC US",
+    "name": "英特爾",
+    "shares": 80000,
+    "weight": 2.01
+  },
+  {
+    "code": "DELL US",
+    "name": "戴爾科技公司",
+    "shares": 15000,
+    "weight": 1.929
+  },
+  {
+    "code": "MSFT US",
+    "name": "微軟公司",
+    "shares": 15000,
+    "weight": 1.765
+  },
+  {
+    "code": "6976 JP",
+    "name": "太陽誘電",
+    "shares": 103000,
+    "weight": 1.658
+  },
+  {
+    "code": "2454",
+    "name": "聯發科技",
+    "shares": 49000,
+    "weight": 1.65
+  },
+  {
+    "code": "PANW US",
+    "name": "Palo Alto Networks Inc",
+    "shares": 18300,
+    "weight": 1.648
+  },
+  {
+    "code": "6787 JP",
+    "name": "名幸電子股份有限公司",
+    "shares": 43500,
+    "weight": 1.644
+  },
+  {
+    "code": "6981 JP",
+    "name": "村田製作所有限公司",
+    "shares": 130000,
+    "weight": 1.585
+  },
+  {
+    "code": "6805",
+    "name": "富世達股",
+    "shares": 89000,
+    "weight": 1.522
+  },
+  {
+    "code": "SNDK US",
+    "name": "晟碟公司（德拉瓦州）",
+    "shares": 4000,
+    "weight": 1.503
+  },
+  {
+    "code": "SNOW US",
+    "name": "Snowflake公司",
+    "shares": 19500,
+    "weight": 1.441
+  },
+  {
+    "code": "NET US",
+    "name": "Cloudflare公司",
+    "shares": 18100,
+    "weight": 1.379
+  },
+  {
+    "code": "BMNR US",
+    "name": "BitMine Immersion技術公司",
+    "shares": 200640,
+    "weight": 1.099
+  },
+  {
+    "code": "TSEM US",
+    "name": "塔爾半導體有限公司",
+    "shares": 17000,
+    "weight": 0.937
+  },
+  {
+    "code": "LRCX US",
+    "name": "科林研發股份有限公司",
+    "shares": 12500,
+    "weight": 0.915
+  },
+  {
+    "code": "AEHR US",
+    "name": "愛赫測試系統",
+    "shares": 45000,
+    "weight": 0.893
+  },
+  {
+    "code": "STM US",
+    "name": "意法半導體公司",
+    "shares": 63000,
+    "weight": 0.786
+  },
+  {
+    "code": "FORM US",
+    "name": "福達電子公司",
+    "shares": 18000,
+    "weight": 0.559
+  },
+  {
+    "code": "COHR US",
+    "name": "連貫公司",
+    "shares": 6300,
+    "weight": 0.468
+  },
+  {
+    "code": "NTRA US",
+    "name": "那提拉公司",
+    "shares": 4000,
+    "weight": 0.351
+  },
+  {
+    "code": "6857 JP",
+    "name": "愛德萬測試",
+    "shares": 6000,
+    "weight": 0.348
+  },
+  {
+    "code": "5801 JP",
+    "name": "古河電氣工業有限公司",
+    "shares": 50000,
+    "weight": 0.312
+  },
+  {
+    "code": "NBIS US",
+    "name": "尼比厄斯集團公眾有限公司",
+    "shares": 4500,
+    "weight": 0.237
+  },
+  {
+    "code": "TWLO US",
+    "name": "Twilio公司",
+    "shares": 3500,
+    "weight": 0.212
+  },
+  {
+    "code": "IREN US",
+    "name": "IREN有限公司",
+    "shares": 20000,
+    "weight": 0.172
+  },
+  {
+    "code": "GOOGL US",
+    "name": "Alphabet公司",
+    "shares": 1000,
+    "weight": 0.078
+  },
+  {
+    "code": "AMZN US",
+    "name": "亞馬遜公司",
+    "shares": 1000,
+    "weight": 0.058
+  },
+  {
+    "code": "CRCL US",
+    "name": "Circle網路集團公司",
+    "shares": 2000,
+    "weight": 0.036
+  },
+  {
+    "code": "NOW US",
+    "name": "ServiceNow公司",
+    "shares": 1000,
+    "weight": 0.031
+  }
+]
