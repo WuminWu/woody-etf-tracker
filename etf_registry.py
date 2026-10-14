@@ -19,8 +19,24 @@ etfs.json 每筆欄位：
 
 import json
 import os
+from urllib.parse import urlencode
 
 REGISTRY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "etfs.json")
+
+# 網站網址（全專案單一來源）。原本 21 支爬蟲、日報、週報、看門狗都寫死
+# https://wuminwu.github.io/woody-etf-tracker/ ，但 GitHub Pages 早已停用（回 404），網站已搬到 Cloudflare Pages。
+SITE_URL = "https://woody-etf-tracker.pages.dev/"
+
+
+def site_link(etf=None, prefix="🔗 ", **params):
+    """網站連結。帶 etf 或其他參數時加上 #etf=…&tab=…（網頁目前尚未讀取 hash，先一律開到首頁）。
+
+    site_link("00981A")                                   → 🔗 …/#etf=00981A
+    site_link(tab="digest", dtype="tw_daily", ddate="2026-10-13", prefix="")
+    """
+    q = {"etf": etf} if etf else {}
+    q.update({k: v for k, v in params.items() if v})
+    return prefix + SITE_URL + ("#" + urlencode(q) if q else "")
 
 
 def load():

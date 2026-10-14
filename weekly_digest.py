@@ -38,7 +38,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 from daily_digest import (
     render_digest, send_telegram, save_digest,
-    TW_ETFS, OVERSEAS_ETFS, GROUPS, SITE_URL,
+    TW_ETFS, OVERSEAS_ETFS, GROUPS, site_link,
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s",
@@ -507,7 +507,9 @@ def run_scheduled(today=None, catchup=False):
             log.info(f"[{group}] 資料不足（{cnt} 檔 < {g['min_etfs']}），跳過。")
             continue
         save_digest(report_date, msg, path=g["digests_file"])
-        if send_telegram(msg + "\n\n" + SITE_URL):
+        link = site_link(tab="digest", dtype=("tw_weekly" if group == "tw" else "ov_weekly"),
+                         ddate=report_date, prefix="")
+        if send_telegram(msg + "\n\n" + link):
             marker[group] = cur
             save_marker(marker)
             log.info(f"[{group}] 週報已發送（{cur}，{cnt} 檔）。")

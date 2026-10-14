@@ -58,7 +58,7 @@ EVAL_DATES = 3          # 檢查最近幾個 snapshot 日（海外 ETF T+1，資
 SUPPRESS_DAYS = 7       # 同一事件幾天內不重發
 ESCALATE_PP = 2.0       # 建倉後權重再升幾個百分點就再通知一次
 STATE_FILE = "alert_state.json"
-SITE_URL = "https://wuminwu.github.io/woody-etf-tracker/"
+from etf_registry import SITE_URL   # 網站網址單一來源（舊 GitHub Pages 網址已 404）
 PROVENANCE = "報告來源: 854-Woody (狼群專用未經同意請勿轉傳，若數據有誤請通知我)"
 
 

@@ -42,7 +42,8 @@ TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 DIGESTS_FILE = "digests.json"   # 供網站「每日分析」分頁讀取（{date: text}）
-SITE_URL = "https://wuminwu.github.io/woody-etf-tracker/"
+# 網站網址只在 etf_registry 定義一次（原本寫死已停用的 GitHub Pages 網址，點了是 404）
+from etf_registry import SITE_URL, site_link   # noqa: E402,F401  （SITE_URL 供看門狗等沿用）
 import etf_registry
 from market_utils import is_stock_code   # 排除期貨等非股票部位
 
@@ -62,6 +63,7 @@ GROUPS = {
         "subhead": "（{u}/{t} 檔已更新持股；海外/混合 ETF 另發一份）",
         "marker": "last_digest.txt",
         "digests_file": "digests.json",
+        "web_type": "tw_daily",       # 網頁「每日分析」的報告類型：Telegram 連結直接開到這份
         "use_today": True,
         # 門檻：21:00 前需 ≥10 檔；之後放寬為 ≥6 檔
         "threshold_std": 10, "fallback_hour": 21, "threshold_fallback": 6,
@@ -72,6 +74,7 @@ GROUPS = {
         "subhead": "（{u}/{t} 檔海外/混合 ETF；持股 T+1，各檔取最新揭露日）",
         "marker": "last_digest_overseas.txt",
         "digests_file": "digests_overseas.json",
+        "web_type": "ov_daily",
         "use_today": False,   # 用該組最新資料日（T+1）
         "threshold_std": 1, "fallback_hour": 0, "threshold_fallback": 1,
     },
@@ -707,7 +710,8 @@ def run_group(group, now):
         return
 
     label = "更新版" if (m_date == report_date and m_count > 0) else "第一份"
-    if send_telegram(message + "\n\n" + SITE_URL):
+    link = site_link(tab="digest", dtype=g["web_type"], ddate=report_date, prefix="")
+    if send_telegram(message + "\n\n" + link):
         with open(marker, "w", encoding="utf-8") as f:
             f.write(f"{report_date} {count}")
         log.info(f"[{group}] {label} sent ({report_date}, {count} 檔), marker updated.")

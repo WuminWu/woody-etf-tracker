@@ -26,6 +26,7 @@ import pandas as pd
 from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
 from notify import send_telegram, send_update_notification   # 單一來源：節流＋429重試＋自動分段；持股更新通知排程時依規模排序
+from etf_registry import site_link   # 網站網址（GitHub Pages 已停用，舊網址 404）
 # --- 共用核心（等價重構，見 etf_core.py 檔頭）---
 from etf_core import (
     FundConfig, build_data_json, get_price, fmt_zhang, trade_amount, change_text, format_trade_line, today_tw,
@@ -257,7 +258,7 @@ def build_notification(wrapper, etf_code="00981A", etf_name="統一台股增長"
             lines.append(f"  • {h['code']} {h['name']}　{change_text(h, meta, 'down')}")
 
     lines.append(f"\n🕐 更新時間：{meta['lastUpdate']} (台灣時間)")
-    lines.append("🔗 https://wuminwu.github.io/woody-etf-tracker/")
+    lines.append(site_link(CFG.code))   # 網址單一來源（etf_registry），直接開到這一檔
     return "\n".join(lines)
 
 

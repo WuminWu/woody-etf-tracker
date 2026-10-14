@@ -33,6 +33,7 @@ import pandas as pd
 from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
 from notify import send_telegram, send_update_notification   # 單一來源：節流＋429重試＋自動分段；持股更新通知排程時依規模排序
+from etf_registry import site_link   # 網站網址（GitHub Pages 已停用，舊網址 404）
 from market_utils import yf_symbol, ccy_of
 from asset_allocation import parse_asset_allocation, format_alloc_lines, find_prev_alloc, attach_delta, format_scale_line
 
@@ -260,7 +261,7 @@ def build_notification(wrapper, etf_code="00988A", etf_name="主動統一全球�
             lines.append(f"  • {h['code']} {h['name']}　{change_text(h, meta, 'down')}")
 
     lines.append(f"\n🕐 更新時間：{meta['lastUpdate']} (台灣時間)")
-    lines.append("🔗 https://wuminwu.github.io/woody-etf-tracker/")
+    lines.append(site_link(CFG.code))   # 網址單一來源（etf_registry），直接開到這一檔
     return "\n".join(lines)
 
 
