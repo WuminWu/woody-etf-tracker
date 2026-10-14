@@ -120,6 +120,7 @@ $scripts = @(
     "check_and_update_00990A.py",   # 海外（全球AI），元大 Nuxt __NUXT__
     "check_and_update_00411A.py",   # 海外（全球科技），統一 ezmoney，T+1
     "check_and_update_00409A.py",   # 海外（全球50），復華 API ETF26，T+1
+    "check_and_update_00412A.py",   # 海外（亞洲半導體），安聯 E0004 攔截 XHR，T+1
     "send_queued_notifications.py", # 本輪暫存的單檔持股更新通知，依基金規模由大到小發送（排在日報之前）
     "check_and_update_index.py",
     "update_cost_basis.py",
