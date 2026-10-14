@@ -339,6 +339,8 @@ document.addEventListener('DOMContentLoaded', () => {
         '00411A': { distFreq: '年配息', distMonths: [4],  distDay: 17 },
         // 不配息（元大官網基本資料「收益分配：否」；上市2025/12/22）
         '00990A': { distFreq: '不配息', distMonths: [], distDay: 0 },
+        // 年配息（安聯官網「收益分配頻率：年配」，尚未配息；評價/除息月份待官方公告，暫不顯示下次配息日；上市2026/06/09）
+        '00402A': { distFreq: '年配息', distMonths: [], distDay: 0 },
     };
 
     // 計算下一次配息日（distMonths 需已排序）
@@ -505,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         : '';
                     const lastUpdateStr = meta.lastUpdate ? `最後更新：${meta.lastUpdate}` : '';
                     // Special note for ETFs with inherent 1-day delay (海外 ETF 因美股盤後資料隔日才公布)
-                    const GLOBAL_ETFS = ['00988A', '00997A', '00990A', '00411A', '00409A'];
+                    const GLOBAL_ETFS = ['00988A', '00997A', '00990A', '00411A', '00409A', '00402A'];
                     let delayNote = '';
                     if (GLOBAL_ETFS.includes(etfId)) {
                         delayNote = '　<span style="color:#6b7280;font-size:0.78em;">（海外ETF，資料比台灣ETF晚1個交易日）</span>';
@@ -683,6 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00407A', name: '主動凱基台灣' },
         { id: '00409A', name: '主動復華全球50' },
         { id: '00412A', name: '主動安聯亞洲半導體' },
+        { id: '00402A', name: '主動安聯美國科技' },
     ];
 
     // ── TWII Amplitude Panel ───────────────────────────────────
@@ -782,6 +785,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00407A', name: '主動凱基台灣' },
         { id: '00409A', name: '主動復華全球50' },
         { id: '00412A', name: '主動安聯亞洲半導體' },
+        { id: '00402A', name: '主動安聯美國科技' },
     ];
 
     let crossSortAsc = false;

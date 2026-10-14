@@ -3,49 +3,38 @@
 
 資料來源：安聯投信 ETF 專區（與 00993A 同一平台，基金代號 E0004）
   https://etf.allianzgi.com.tw/etf-info/E0004?tab=4
-  - API 有 CSRF 保護，直接 HTTP 會 400 → Playwright 開頁面、攔截 GetFundAssets / GetFundDetail。
-  - API 只回「最新一天」，不接受日期參數（實測 SearchDate / Date / NavDate 皆被忽略）。
-    所以只要出現新的 NavDate 就存下來 —— 錯過的那天之後補不回來。
-  - 表格依標題辨識，不可沿用 00993A 的位置假設：00993A 的 Table[2] 是台指期貨，
-    00412A 的 Table[2] 是「附買回債券」（RP，只有金額沒有股數），不是持股。
-  - 持股為亞洲／全球股：台股無後綴，海外為「TICKER 市場」（JP / US / KS…）。
-    陸股用 Bloomberg 交易所碼 C1（上海）/ C2（深圳），一律轉成 CH：
-    下游的 market_utils.yf_symbol、is_stock_code 與日報只認得 CH，
-    不轉的話陸股會查不到股價、也不會被算進個股統計。
+  抓取與解析在 allianz.py（00412A / 00402A 共用）：Playwright 攔截 XHR、表格依標題辨識
+  （本基金 Table[2] 是附買回債券，不是持股）、陸股 C1/C2 轉成 CH、API 只回最新一天。
 
-資料日（重要）：持股日 ＝ PCFDate 的前一交易日 ＝ 公布當天，不是 NavDate。
-  安聯在 T 日收盤後公布「T+1 的申購買回清單」，股數是 T 日收盤後的部位；但日股、美股
-  T 日還沒收盤，淨值只算得到 T-1，所以頁面「資料日期」（NavDate）會比持股日早一天。
+持股為台股＋日美韓陸股：台股無後綴，海外為「TICKER 市場」，股價經 etf_core 換算台幣。
+
+資料日（重要）：rule="pcf" —— 持股日 ＝ PCFDate 的前一交易日 ＝ 公布當天，不是 NavDate。
   例：2026-10-14 開盤時頁面為 NavDate 10/12、PCFDate 10/14 → 這是 10/13 的持股；
-  10/14 收盤後才會出現 10/14 的持股。
+  10/14 收盤後才會出現 10/14 的持股（使用者確認）。
   基金規模（Aum / Units）是 NavDate 那天的數字，所以申購贖回反映在規模上會晚一天。
 
-歸入海外/混合組（持股含日美韓陸股）。2026/9/23 成立、2026/10/13 掛牌（IPO 價 10），不配息（累積型）。
+歸入海外/混合組。2026/9/23 成立、2026/10/13 掛牌（IPO 價 10），不配息（累積型）。
 """
 
-import json
 import logging
 import os
-import re
 import sys
 from datetime import datetime
 
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
-from playwright.sync_api import sync_playwright
 from sheets_helper import append_holdings_to_sheets
 from notify import send_telegram, send_update_notification   # 單一來源：節流＋429重試＋自動分段；持股更新通知排程時依規模排序
 from asset_allocation import format_scale_line
+from allianz import fetch_fund_assets, parse_fund_assets, expected_date   # 安聯兩支共用
 
 # --------------- Config ---------------
 ETF_CODE = "00412A"
 ETF_NAME = "主動安聯亞洲半導體"
-PAGE_URL = "https://etf.allianzgi.com.tw/etf-info/E0004?tab=4"
+FUND_NO = "E0004"
+DATE_RULE = "pcf"   # 持股日＝PCFDate 前一交易日（見 allianz.py）
 HOLDINGS_DIR = "holdings"
-
-# Bloomberg 的中國交易所碼 → 本專案統一的市場碼
-MARKET_ALIAS = {"C1": "CH", "C2": "CH"}
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -65,133 +54,12 @@ if not os.path.exists(HOLDINGS_DIR):
 # --- 共用核心（等價重構，見 etf_core.py 檔頭）---
 from etf_core import (
     FundConfig, build_data_json, fmt_zhang, format_trade_line, today_tw,
-    holdings_exist_for, load_prev_holdings, save_holdings,
-    is_trading_day, prev_trading_day, next_trading_day,
+    holdings_exist_for, load_prev_holdings, save_holdings, is_trading_day,
 )
-from tw_calendar import last_trading_day
 
 # --- 本基金設定：所有與其他基金不同之處都集中在這裡 ---
 CFG = FundConfig(code="00412A", name="主動安聯亞洲半導體", manager="蕭惠中",
                  ipo_date="2026-10-13", ipo_price=10.0)
-
-
-# --------------- Allianz API Fetcher ---------------
-
-def fetch_fund_assets():
-    """開安聯 ETF 頁面，攔截 GetFundAssets（持股＋規模）與 GetFundDetail（經理人）。"""
-    captured = {}
-
-    def handle_response(response):
-        url = response.url
-        if "GetFundAssets" in url:
-            try:
-                captured["data"] = response.json()
-                log.info(f"Captured holdings API: {url}")
-            except Exception as e:
-                log.warning(f"Failed to parse holdings response: {e}")
-        elif "GetFundDetail" in url:
-            try:
-                manager = response.json().get("Entries", {}).get("CManager", "")
-                if manager:
-                    captured["manager"] = manager
-                    log.info(f"Captured manager: {manager}")
-            except Exception as e:
-                log.warning(f"Failed to parse GetFundDetail response: {e}")
-
-    log.info(f"Launching Playwright to fetch {PAGE_URL} ...")
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        context = browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
-            locale="zh-TW",
-        )
-        page = context.new_page()
-        page.on("response", handle_response)
-        try:
-            # tab=1 觸發 GetFundDetail（經理人），tab=4 觸發 GetFundAssets（持股）
-            page.goto(PAGE_URL.replace("tab=4", "tab=1"), wait_until="domcontentloaded", timeout=40000)
-            page.wait_for_timeout(4000)
-            page.goto(PAGE_URL, wait_until="domcontentloaded", timeout=40000)
-            page.wait_for_timeout(8000)
-        except Exception as e:
-            log.warning(f"Page load issue (non-fatal): {e}")
-        browser.close()
-
-    return captured.get("data"), captured.get("manager")
-
-
-def normalize_code(code_raw):
-    """'600183 C1' → '600183 CH'；'6857 JP'、'2330' 原樣。"""
-    parts = code_raw.split()
-    if len(parts) == 2:
-        market = parts[1].upper()
-        return f"{parts[0]} {MARKET_ALIAS.get(market, market)}"
-    return code_raw.strip()
-
-
-def _parse_date(s):
-    try:
-        return datetime.strptime(str(s).replace("/", "-"), "%Y-%m-%d").date()
-    except ValueError:
-        return None
-
-
-def holdings_date(fa):
-    """持股日 ＝ PCFDate 的前一交易日（見檔頭）。缺 PCFDate 時退回 NavDate 的下一交易日。"""
-    pcf, nav = _parse_date(fa.get("PCFDate", "")), _parse_date(fa.get("NavDate", ""))
-    d = prev_trading_day(pcf) if pcf else (next_trading_day(nav) if nav else None)
-    if d and nav and next_trading_day(nav) != d:
-        log.warning(f"NavDate {nav} / PCFDate {pcf} 間隔異常，持股日以 PCFDate 推算為 {d}")
-    return d.strftime("%Y-%m-%d") if d else ""
-
-
-def parse_fund_assets(raw_data):
-    """回傳 (持股日 YYYY-MM-DD, 淨資產 NTD, 在外流通單位數, holdings[])。"""
-    try:
-        entries = raw_data["Entries"]["Data"]
-        fa = entries["FundAsset"]
-        tables = entries["Table"]
-    except (KeyError, TypeError) as e:
-        log.error(f"Unexpected API structure: {e}")
-        return "", 0, 0, []
-
-    try:
-        aum_ntd = int(float(str(fa.get("Aum", "0")).replace(",", "")))
-        units = int(float(str(fa.get("Units", "0")).replace(",", "")))
-    except ValueError as e:
-        log.warning(f"FundAsset parse error: {e}")
-        aum_ntd, units = 0, 0
-    data_date = holdings_date(fa)
-    log.info(f"NavDate {fa.get('NavDate')}、PCFDate {fa.get('PCFDate')} → 持股日 {data_date}")
-
-    holdings, stock_tables = [], 0
-    for t in tables:
-        title = str(t.get("TableTitle") or "").strip()
-        if not title.startswith("股票"):
-            if title:
-                log.info(f"略過非股票表格：{title}（{len(t.get('Rows', []))} 列）")
-            continue
-        stock_tables += 1
-        # 每列：[序號, 股票代號, 股票名稱, 股數, 權重%]
-        for row in t.get("Rows", []):
-            if len(row) < 5:
-                continue
-            code = normalize_code(str(row[1]))
-            if not re.match(r"^[0-9A-Za-z]", code):
-                continue
-            try:
-                shares = int(float(str(row[3]).replace(",", "")))
-                weight = float(str(row[4]).replace("%", "").replace(",", ""))
-            except ValueError:
-                continue
-            if shares <= 0:
-                continue
-            holdings.append({"code": code, "name": str(row[2]).strip(), "shares": shares, "weight": weight})
-
-    if stock_tables == 0:
-        log.error(f"找不到「股票」表格，版面可能變動。表格標題：{[t.get('TableTitle') for t in tables]}")
-    log.info(f"資料日 {data_date}；AUM {aum_ntd:,} NTD ({aum_ntd/1e8:.2f}億)；Units {units:,}；持股 {len(holdings)} 檔")
-    return data_date, aum_ntd, units, holdings
 
 
 # --------------- Helpers ---------------
@@ -243,17 +111,17 @@ def build_notification(wrapper):
 
 def main():
     run_date = today_tw()
-    target_str = last_trading_day(run_date).strftime("%Y-%m-%d")   # 收盤後公布當天持股
+    target_str = expected_date(run_date, DATE_RULE).strftime("%Y-%m-%d")
     log.info(f"=== {ETF_CODE} Check & Update started. Run {run_date}, expected data date {target_str} ===")
     pending_msg = f"⏳ {ETF_CODE} {ETF_NAME} 持股尚未更新\n📅 資料日期：{target_str}\n🔄 將於 30 分鐘後再次檢查..."
 
-    raw_data, manager = fetch_fund_assets()
+    raw_data, manager = fetch_fund_assets(FUND_NO)
     if not raw_data:
         log.error("No data captured from Allianz API.")
         send_telegram(f"⏳ {ETF_CODE} {ETF_NAME} 無法取得持股資料\n🔄 請檢查 Playwright 抓取是否正常")
         return
 
-    data_date_str, aum_ntd, units, today_holdings = parse_fund_assets(raw_data)
+    data_date_str, aum_ntd, units, today_holdings = parse_fund_assets(raw_data, DATE_RULE)
     try:
         data_date = datetime.strptime(data_date_str, "%Y-%m-%d").date()
     except ValueError:
