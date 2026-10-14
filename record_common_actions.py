@@ -56,7 +56,7 @@ def _get_service():
 
 
 def _get_sheet_id(service):
-    meta = service.spreadsheets().get(spreadsheetId=SHEET_ID).execute()
+    meta = service.spreadsheets().get(spreadsheetId=SHEET_ID).execute(num_retries=5)
     for s in meta.get("sheets", []):
         if s["properties"]["title"] == SHEET_TAB:
             return s["properties"]["sheetId"]
@@ -64,25 +64,25 @@ def _get_sheet_id(service):
 
 
 def _ensure_tab_and_header(service):
-    meta = service.spreadsheets().get(spreadsheetId=SHEET_ID).execute()
+    meta = service.spreadsheets().get(spreadsheetId=SHEET_ID).execute(num_retries=5)
     existing = [s["properties"]["title"] for s in meta.get("sheets", [])]
     if SHEET_TAB not in existing:
         service.spreadsheets().batchUpdate(
             spreadsheetId=SHEET_ID,
             body={"requests": [{"addSheet": {"properties": {"title": SHEET_TAB}}}]},
-        ).execute()
+        ).execute(num_retries=5)
         log.info(f"Created sheet tab: {SHEET_TAB}")
         service.spreadsheets().values().update(
             spreadsheetId=SHEET_ID,
             range=f"{SHEET_TAB}!A1",
             valueInputOption="RAW",
             body={"values": [HEADER_ROW]},
-        ).execute()
+        ).execute(num_retries=5)
         return
 
     result = service.spreadsheets().values().get(
         spreadsheetId=SHEET_ID, range=f"{SHEET_TAB}!A1:F1"
-    ).execute()
+    ).execute(num_retries=5)
     current = result.get("values", [[]])[0] if result.get("values") else []
     if not current:
         service.spreadsheets().values().update(
@@ -90,7 +90,7 @@ def _ensure_tab_and_header(service):
             range=f"{SHEET_TAB}!A1",
             valueInputOption="RAW",
             body={"values": [HEADER_ROW]},
-        ).execute()
+        ).execute(num_retries=5)
 
 
 def _delete_existing_rows_for_date(service, target_date):
@@ -98,7 +98,7 @@ def _delete_existing_rows_for_date(service, target_date):
     try:
         result = service.spreadsheets().values().get(
             spreadsheetId=SHEET_ID, range=f"{SHEET_TAB}!A:A"
-        ).execute()
+        ).execute(num_retries=5)
         rows = result.get("values", [])
     except Exception as e:
         log.warning(f"Failed to read sheet for delete: {e}")
@@ -121,7 +121,7 @@ def _delete_existing_rows_for_date(service, target_date):
     ]
     service.spreadsheets().batchUpdate(
         spreadsheetId=SHEET_ID, body={"requests": requests}
-    ).execute()
+    ).execute(num_retries=5)
     log.info(f"Deleted {len(delete_indices)} existing rows for {target_date}.")
     return len(delete_indices)
 
@@ -215,7 +215,7 @@ def main():
             valueInputOption="RAW",
             insertDataOption="INSERT_ROWS",
             body={"values": sheet_rows},
-        ).execute()
+        ).execute(num_retries=5)
         log.info(f"Sheets: appended {len(sheet_rows)} common-action rows for {data_date}.")
     except Exception as e:
         log.warning(f"Sheets append failed: {e}")

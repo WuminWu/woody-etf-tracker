@@ -219,6 +219,7 @@ $scripts = $etfScripts + @(
     "send_queued_notifications.py", # 本輪暫存的單檔持股更新通知，依基金規模由大到小發送（排在日報之前）
     "check_and_update_index.py",
     "update_cost_basis.py",
+    "sheets_reconcile.py",          # 試算表對帳：寫入失敗的日子自動補寫（須在 export_snapshots 之前）
     "record_common_actions.py",
     "export_history.py",
     "export_snapshots.py",

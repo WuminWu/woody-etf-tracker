@@ -60,7 +60,7 @@ def main():
         result = service.spreadsheets().values().get(
             spreadsheetId=SHEET_ID,
             range=f"{SHEET_TAB}!A:J",
-        ).execute()
+        ).execute(num_retries=5)
         rows = result.get("values", [])
     except Exception as e:
         log.error(f"Failed to read sheet: {e}")

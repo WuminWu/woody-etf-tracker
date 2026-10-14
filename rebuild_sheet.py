@@ -113,7 +113,7 @@ def collect_rows():
 
 def ensure_tabs(service, sheet_id):
     """確保 holdings / common_actions 兩個分頁都存在。"""
-    meta = service.spreadsheets().get(spreadsheetId=sheet_id).execute()
+    meta = service.spreadsheets().get(spreadsheetId=sheet_id).execute(num_retries=5)
     existing = {s["properties"]["title"] for s in meta.get("sheets", [])}
     requests = []
     for tab in (SHEET_TAB, "common_actions"):
@@ -122,7 +122,7 @@ def ensure_tabs(service, sheet_id):
     if requests:
         service.spreadsheets().batchUpdate(
             spreadsheetId=sheet_id, body={"requests": requests}
-        ).execute()
+        ).execute(num_retries=5)
         print(f"已建立分頁: {[r['addSheet']['properties']['title'] for r in requests]}")
 
 
@@ -155,7 +155,7 @@ def main():
     # 清空 holdings 後寫入表頭 + 全部資料
     service.spreadsheets().values().clear(
         spreadsheetId=new_id, range=f"{SHEET_TAB}!A:L"
-    ).execute()
+    ).execute(num_retries=5)
 
     body = {"values": [HEADER_ROW] + rows}
     result = service.spreadsheets().values().update(
@@ -163,7 +163,7 @@ def main():
         range=f"{SHEET_TAB}!A1",
         valueInputOption="RAW",
         body=body,
-    ).execute()
+    ).execute(num_retries=5)
     print(f"已寫入 {result.get('updatedRows', len(rows)+1)} 列到 '{SHEET_TAB}' 分頁。")
     print("完成。接著請更新各程式的 SHEET_ID，再跑 export_snapshots / export_history / record_common_actions。")
 

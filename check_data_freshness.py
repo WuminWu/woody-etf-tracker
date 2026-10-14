@@ -73,14 +73,26 @@ def main():
         if dd is None or dd < ov_ok_s:
             ov_stale.append((code, name, dd or "無資料"))
 
+    # 試算表對帳（不需憑證）：最近 30 天 holdings 有、試算表沒有，或標在休市日的資料。
+    # 試算表是快照／歷史／週報的來源，缺一天就整條下游都少一天（00980A 7/30 曾因此永久缺漏）。
+    gaps_text = ""
+    try:
+        from sheets_reconcile import find_gaps, format_gaps
+        g = find_gaps(days=30)
+        if g["missing"] or g["holiday"]:
+            gaps_text = format_gaps({"missing": g["missing"], "extra": [], "holiday": g["holiday"]})
+    except BaseException as e:      # find_gaps 讀不到 manifest 時會 SystemExit
+        print(f"[freshness] 試算表對帳略過：{e}")
+
     stuck = stuck_run_note()
 
-    if not tw_stale and not ov_stale and not stuck and not force:
-        print(f"[freshness] OK — 台股皆已更新至最後交易日 {ltd_s}")
+    if not tw_stale and not ov_stale and not gaps_text and not stuck and not force:
+        print(f"[freshness] OK — 台股皆已更新至最後交易日 {ltd_s}；最近 30 天試算表無缺漏")
         return 0
 
     lines = [
-        "⚠️ ETF 追蹤資料過期警報" if (tw_stale or ov_stale or not stuck) else "⏱️ ETF 排程有一輪沒有跑完",
+        "⚠️ ETF 追蹤資料過期警報" if (tw_stale or ov_stale)
+        else "⏱️ ETF 排程有一輪沒有跑完" if stuck else "🧾 ETF 試算表對帳發現缺漏",
         f"📅 最後交易日應為：{ltd_s}",
         "",
     ]
@@ -94,6 +106,8 @@ def main():
         lines.append(f"\n🟠 海外 {len(ov_stale)}/{len(OVERSEAS_ETFS)} 檔落後逾 T+1：")
         for code, name, dd in ov_stale:
             lines.append(f"  • {code} {name}　目前：{dd}")
+    if gaps_text:
+        lines += ["", gaps_text]
     lines += [
         "",
         "可能原因：排程未執行（電腦關機／未登入／Windows Update 重開機）、",

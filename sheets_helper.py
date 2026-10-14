@@ -22,10 +22,76 @@ Columns:
 import json
 import os
 import logging
+import time
 
 from sanity import holdings_count_check
 
 log = logging.getLogger(__name__)
+
+# 寫入失敗的 (ETF, 日期) 記在這裡，由 sheets_reconcile.py 在下一輪自動補寫。
+# 原本失敗只記一行 warning：holdings 檔已存在，爬蟲之後每輪都直接跳過，
+# 那一天就永遠不在試算表裡（00980A 2026-07-30 即因 HTTP 400 永久缺漏，
+# 快照、歷史、週報全部少了那天）。
+_STATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+PENDING_FILE = os.path.join(_STATE_DIR, "sheets_pending.json")
+# 因「持股檔數驟降」被擋下的 (ETF, 日期)：只警告一次，對帳時也不再重試
+BLOCKED_FILE = os.path.join(_STATE_DIR, "sheets_blocked.json")
+
+
+def _load_state(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+    except Exception as e:
+        log.warning(f"讀取 {os.path.basename(path)} 失敗（{e}），視為空白")
+        return {}
+
+
+def _save_state(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=1, sort_keys=True)
+    os.replace(tmp, path)
+
+
+def _key(etf_code, data_date):
+    return f"{etf_code}|{data_date}"
+
+
+def pending_writes():
+    """尚待補寫的 {"ETF|日期": {"error", "since"}}。"""
+    return _load_state(PENDING_FILE)
+
+
+def _set_pending(etf_code, data_date, error=None):
+    """error=None 表示已寫入成功，從待補清單移除。回傳這筆是否原本就在清單上。"""
+    state = pending_writes()
+    k = _key(etf_code, data_date)
+    existed = k in state
+    if error is None:
+        if existed:
+            del state[k]
+            _save_state(PENDING_FILE, state)
+    else:
+        state.setdefault(k, {"since": time.strftime("%Y-%m-%d %H:%M")})
+        state[k]["error"] = str(error)[:300]
+        _save_state(PENDING_FILE, state)
+    return existed
+
+
+def is_blocked(etf_code, data_date):
+    return _key(etf_code, data_date) in _load_state(BLOCKED_FILE)
+
+
+def _notify(message):
+    try:
+        from notify import send_telegram
+        send_telegram(message)
+    except Exception as e:
+        log.warning(f"Telegram 通知失敗：{e}")
 
 SHEET_ID   = "1Wrz6y-DJSTM0oWMa0JRztryEiPwLB8QRU8HJYxHra00"
 SHEET_TAB  = "holdings"
@@ -56,7 +122,7 @@ def _get_service():
 
 def _get_sheet_id(service):
     """Return the numeric sheetId of the holdings tab."""
-    meta = service.spreadsheets().get(spreadsheetId=SHEET_ID).execute()
+    meta = service.spreadsheets().get(spreadsheetId=SHEET_ID).execute(num_retries=5)
     for s in meta.get("sheets", []):
         if s["properties"]["title"] == SHEET_TAB:
             return s["properties"]["sheetId"]
@@ -66,14 +132,14 @@ def _get_sheet_id(service):
 def _ensure_tab_and_header(service):
     """Create the 'holdings' tab if missing; add/update header row."""
     try:
-        meta = service.spreadsheets().get(spreadsheetId=SHEET_ID).execute()
+        meta = service.spreadsheets().get(spreadsheetId=SHEET_ID).execute(num_retries=5)
         existing = [s["properties"]["title"] for s in meta.get("sheets", [])]
 
         if SHEET_TAB not in existing:
             service.spreadsheets().batchUpdate(
                 spreadsheetId=SHEET_ID,
                 body={"requests": [{"addSheet": {"properties": {"title": SHEET_TAB}}}]}
-            ).execute()
+            ).execute(num_retries=5)
             log.info(f"Created sheet tab: {SHEET_TAB}")
             _write_header(service)
             return
@@ -82,7 +148,7 @@ def _ensure_tab_and_header(service):
         result = service.spreadsheets().values().get(
             spreadsheetId=SHEET_ID,
             range=f"{SHEET_TAB}!A1:Z1"
-        ).execute()
+        ).execute(num_retries=5)
         current_header = result.get("values", [[]])[0] if result.get("values") else []
 
         if not current_header:
@@ -101,7 +167,7 @@ def _write_header(service):
         range=f"{SHEET_TAB}!A1",
         valueInputOption="RAW",
         body={"values": [HEADER_ROW]}
-    ).execute()
+    ).execute(num_retries=5)
     log.info("Header row written.")
 
 
@@ -111,7 +177,7 @@ def _already_exists(service, etf_code, data_date):
         result = service.spreadsheets().values().get(
             spreadsheetId=SHEET_ID,
             range=f"{SHEET_TAB}!A:B"
-        ).execute()
+        ).execute(num_retries=5)
         rows = result.get("values", [])
         for row in rows[1:]:  # skip header
             if len(row) >= 2 and row[0] == data_date and row[1] == etf_code:
@@ -138,7 +204,7 @@ def delete_duplicate_rows():
         result = service.spreadsheets().values().get(
             spreadsheetId=SHEET_ID,
             range=f"{SHEET_TAB}!A:C"
-        ).execute()
+        ).execute(num_retries=5)
         rows = result.get("values", [])
     except Exception as e:
         log.warning(f"Failed to read sheet for dedup: {e}")
@@ -190,7 +256,7 @@ def delete_duplicate_rows():
         service.spreadsheets().batchUpdate(
             spreadsheetId=SHEET_ID,
             body={"requests": requests}
-        ).execute()
+        ).execute(num_retries=5)
         log.info(f"Dedup: deleted {len(duplicate_indices)} duplicate rows.")
     except Exception as e:
         log.warning(f"Dedup deletion failed: {e}")
@@ -210,16 +276,21 @@ def append_holdings_to_sheets(etf_code, data_date, holdings, meta=None):
     holdings  : list       wrapper["holdings"] from generate_data_json
     meta      : dict|None  wrapper["meta"] — used for 基金市值 and 基金股數 columns.
                            Pass None to leave those columns blank (backward-compatible).
+
+    回傳狀態字串（爬蟲可忽略；sheets_reconcile 用來判斷要不要重試）：
+      "ok" 已寫入 / "exists" 已存在 / "failed" 寫入失敗（已記入待補清單並通知）/
+      "blocked" 解析異常擋下 / "empty" 沒有可寫的列 / "no_service" 沒有憑證
     """
     service = _get_service()
     if service is None:
-        return
+        return "no_service"
 
     _ensure_tab_and_header(service)
 
     if _already_exists(service, etf_code, data_date):
         log.info(f"Sheets: {etf_code} {data_date} already exists — skipped.")
-        return
+        _set_pending(etf_code, data_date, None)
+        return "exists"
 
     total_market_cap = round(meta.get("totalMarketCap", 0.0), 2) if meta else ""
     total_shares     = meta.get("totalShares", 0) if meta else ""
@@ -245,24 +316,30 @@ def append_holdings_to_sheets(etf_code, data_date, holdings, meta=None):
 
     if not rows:
         log.warning(f"Sheets: no rows to append for {etf_code} {data_date}.")
-        return
+        return "empty"
 
     # 解析異常守門：持股檔數相對前一交易日驟降（來源版面變動的典型徵兆）就不寫入，
     # 避免壞資料污染試算表（快照、歷史、日報全由它衍生）。
     ok, why = holdings_count_check(etf_code, len(rows), data_date)
     if not ok:
         log.error(f"Sheets: {etf_code} {data_date} 已擋下寫入 — {why}")
-        try:
-            from notify import send_telegram
-            send_telegram(chr(10).join([
+        blocked = _load_state(BLOCKED_FILE)
+        if _key(etf_code, data_date) not in blocked:     # 同一天只警告一次（對帳每輪都會再檢查）
+            blocked[_key(etf_code, data_date)] = why
+            _save_state(BLOCKED_FILE, blocked)
+            _notify(chr(10).join([
                 f"⚠️ {etf_code} 疑似解析異常，已擋下寫入試算表",
                 f"📅 資料日期：{data_date}",
                 why,
                 "請檢查該來源版面是否變動（持股檔數突然大幅減少）。",
             ]))
-        except Exception:
-            pass
-        return
+        return "blocked"
+
+    # 送出前把 NaN/Inf 換成空白：NaN 不是合法 JSON，整批會被 API 以 HTTP 400 拒收
+    # （00980A 2026-07-30 即因此整天沒寫進去）
+    def _clean(v):
+        return "" if isinstance(v, float) and (v != v or v in (float("inf"), float("-inf"))) else v
+    rows = [[_clean(v) for v in r] for r in rows]
 
     try:
         service.spreadsheets().values().append(
@@ -271,8 +348,20 @@ def append_holdings_to_sheets(etf_code, data_date, holdings, meta=None):
             valueInputOption="RAW",
             insertDataOption="INSERT_ROWS",
             body={"values": rows}
-        ).execute()
-        log.info(f"Sheets: appended {len(rows)} rows for {etf_code} {data_date} "
-                 f"(市值={total_market_cap}億, 股數={total_shares}張).")
+        ).execute(num_retries=5)
     except Exception as e:
-        log.warning(f"Sheets append failed for {etf_code}: {e}")
+        log.error(f"Sheets append failed for {etf_code} {data_date}: {e}")
+        if not _set_pending(etf_code, data_date, e):     # 第一次失敗才通知，之後由對帳自動重試
+            _notify(chr(10).join([
+                f"⚠️ {etf_code} 寫入試算表失敗",
+                f"📅 資料日期：{data_date}",
+                f"原因：{str(e)[:200]}",
+                "已記入待補清單，下一輪排程會自動重試（sheets_reconcile.py）。",
+            ]))
+        return "failed"
+
+    log.info(f"Sheets: appended {len(rows)} rows for {etf_code} {data_date} "
+             f"(市值={total_market_cap}億, 股數={total_shares}張).")
+    if _set_pending(etf_code, data_date, None):
+        log.info(f"Sheets: {etf_code} {data_date} 先前寫入失敗，已補寫完成。")
+    return "ok"

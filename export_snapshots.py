@@ -79,7 +79,7 @@ def fetch_sheet_rows(service):
     result = service.spreadsheets().values().get(
         spreadsheetId=SHEET_ID,
         range=f"{SHEET_TAB}!A:M",   # M 欄「備註」：被標為估計值的列（見 build_snapshots）
-    ).execute()
+    ).execute(num_retries=5)
     rows = result.get("values", [])
     if not rows or len(rows) < 2:
         return []
