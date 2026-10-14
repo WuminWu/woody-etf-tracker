@@ -215,7 +215,8 @@ if ($etfScripts.Count -eq 0) {
     Write-Log "  !! etf_registry.py 沒有輸出任何爬蟲（etfs.json 壞掉？）"
     $results += [pscustomobject]@{ script = "etfs.json"; exit = 1; sec = 0; note = "讀不到爬蟲清單" }
 }
-$scripts = $etfScripts + @(
+# sync_tw_holidays.py：證交所一公布次年休市日就自動匯入（每天只連線一次）
+$scripts = @("sync_tw_holidays.py") + $etfScripts + @(
     "send_queued_notifications.py", # 本輪暫存的單檔持股更新通知，依基金規模由大到小發送（排在日報之前）
     "check_and_update_index.py",
     "update_cost_basis.py",
@@ -270,6 +271,8 @@ if (Test-Path "cost_basis.json") { git add cost_basis.json 2>&1 | Out-Null }
 if (Test-Path "last_weekly.txt") { git add last_weekly.txt 2>&1 | Out-Null }
 if (Test-Path "digests_weekly.json") { git add digests_weekly.json 2>&1 | Out-Null }
 if (Test-Path "digests_weekly_overseas.json") { git add digests_weekly_overseas.json 2>&1 | Out-Null }
+# 休市日：sync_tw_holidays.py 匯入後兩個檔同一輪提交（留在工作目錄會讓下一輪 git pull 失敗）
+git add tw_holidays_twse.json holidays.json 2>&1 | Out-Null
 
 # 只看暫存區：原本連「未暫存的修改」也算，本機正在改程式時會去 commit 卻沒東西可交（commit 失敗）
 git diff --staged --quiet; $staged = $LASTEXITCODE

@@ -84,6 +84,17 @@ def main():
     except BaseException as e:      # find_gaps 讀不到 manifest 時會 SystemExit
         print(f"[freshness] 試算表對帳略過：{e}")
 
+    # 跨年前 30 天：次年休市日還沒涵蓋就提醒（證交所公布後 sync_tw_holidays.py 會自動匯入）
+    from tw_calendar import uncovered_year_ahead
+    year_gap = uncovered_year_ahead(horizon_days=30)
+    cal_only = False
+    if year_gap:
+        cal_note = (f"📅 {year_gap} 年台股休市日尚未匯入：證交所公布後排程會自動匯入"
+                    f"（sync_tw_holidays.py）；若已公布仍未匯入，請手動執行 "
+                    f"python sync_tw_holidays.py --force 或補進 tw_calendar.py。")
+        cal_only = not gaps_text
+        gaps_text = (gaps_text + "\n\n" if gaps_text else "") + cal_note
+
     stuck = stuck_run_note()
 
     if not tw_stale and not ov_stale and not gaps_text and not stuck and not force:
@@ -92,7 +103,8 @@ def main():
 
     lines = [
         "⚠️ ETF 追蹤資料過期警報" if (tw_stale or ov_stale)
-        else "⏱️ ETF 排程有一輪沒有跑完" if stuck else "🧾 ETF 試算表對帳發現缺漏",
+        else "⏱️ ETF 排程有一輪沒有跑完" if stuck
+        else "📅 ETF 休市日表提醒" if cal_only else "🧾 ETF 試算表對帳發現缺漏",
         f"📅 最後交易日應為：{ltd_s}",
         "",
     ]
