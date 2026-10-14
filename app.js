@@ -313,8 +313,8 @@ document.addEventListener('DOMContentLoaded', () => {
         '00987A': { distFreq: '年配息', distMonths: [12], distDay: 20 },
         // 年配息：每年9月（上市2025/10，首次配息2026/09）
         '00988A': { distFreq: '年配息', distMonths: [9],  distDay: 30 },
-        // 半年配：每年6月底及12月底
-        '00991A': { distFreq: '半年配', distMonths: [6,12], distDay: 30 },
+        // 半年配：6/12月底評價、次月除息（復華官網配息行事曆）；除息日約21日（2026/07/21除息，依歷史紀錄）
+        '00991A': { distFreq: '半年配', distMonths: [1,7], distDay: 21 },
         // 季配息：1/4/7/10月（上市2025/12/30，首次配息約2026/04）
         '00992A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
         // 年配息：每年12月底評價（上市2026/02/03，首次配息2026/12）
