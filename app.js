@@ -329,6 +329,16 @@ document.addEventListener('DOMContentLoaded', () => {
         '00997A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
         // 不配息（累積型，安聯官網「配息頻率：不配」；上市2026/10/13）
         '00412A': { distFreq: '不配息', distMonths: [], distDay: 0 },
+        // 不配息（凱基官網基本資料「收益分配：不分配」；上市2026/06/24）
+        '00407A': { distFreq: '不配息', distMonths: [], distDay: 0 },
+        // 年配息：10月底評價（復華官網「年配 / 基金成立日起屆滿60日後，預計以10月底為評價日」；上市2026/09/02）
+        // 除息日待官方公告，暫參考同公司00991A（6月底評價→7/21除息），預估11月約20日
+        '00409A': { distFreq: '年配息', distMonths: [11], distDay: 20 },
+        // 年配息：3月底評價、4月除息（統一ezmoney官網「首次除息預計時間為2027年4月」；上市2026/08/26）
+        // 除息日待官方公告，暫參考同系列00981A約17日
+        '00411A': { distFreq: '年配息', distMonths: [4],  distDay: 17 },
+        // 不配息（元大官網基本資料「收益分配：否」；上市2025/12/22）
+        '00990A': { distFreq: '不配息', distMonths: [], distDay: 0 },
     };
 
     // 計算下一次配息日（distMonths 需已排序）
@@ -443,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const elDistFreq = document.getElementById('stat-dist-freq');
         const elDistNext = document.getElementById('stat-dist-next');
         const distCfg = ETF_DIST[etfId];
-        if (elDistFreq && distCfg) elDistFreq.textContent = distCfg.distFreq;
+        if (elDistFreq) elDistFreq.textContent = distCfg ? distCfg.distFreq : '待確認';
         if (elDistNext) elDistNext.textContent = '';
 
         // 隱藏經理人卡（歷史模式）
@@ -613,6 +623,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             elDistNext.textContent = '';
                         }
                     }
+                } else {
+                    // 無配息設定：重設卡片，避免沿用前一檔 ETF 的值
+                    if (elDistFreq) elDistFreq.textContent = '待確認';
+                    if (elDistNext) elDistNext.textContent = '';
                 }
 
                 applySortAndRender();
