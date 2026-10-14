@@ -505,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         : '';
                     const lastUpdateStr = meta.lastUpdate ? `最後更新：${meta.lastUpdate}` : '';
                     // Special note for ETFs with inherent 1-day delay (海外 ETF 因美股盤後資料隔日才公布)
-                    const GLOBAL_ETFS = ['00988A', '00997A', '00990A', '00411A', '00409A', '00412A'];
+                    const GLOBAL_ETFS = ['00988A', '00997A', '00990A', '00411A', '00409A'];
                     let delayNote = '';
                     if (GLOBAL_ETFS.includes(etfId)) {
                         delayNote = '　<span style="color:#6b7280;font-size:0.78em;">（海外ETF，資料比台灣ETF晚1個交易日）</span>';
@@ -984,6 +984,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     };
 
+    // 剛納入追蹤 / 剛掛牌的第一天：>80% 現有持股前一日為 0，整份持股都會被當成「新增」，
+    // 不是真的加碼（與 daily_digest、成本價、record_common_actions 同一判定）
+    const isFirstDay = (holdings) => {
+        const active = (holdings || []).filter(h => (h.shares || 0) > 0);
+        return active.length > 0 && active.filter(h => !h.prevShares).length / active.length > 0.8;
+    };
+
     const renderCommonRows = (rows, tbodyId, color) => {
         const body = document.getElementById(tbodyId);
         body.innerHTML = '';
@@ -1123,7 +1130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .catch(() => []);
 
         Promise.resolve(fetchPromise).then(results => {
-            const valid = results.filter(Boolean);
+            const valid = results.filter(r => r && !isFirstDay(r.holdings));
             const addMap = new Map();    // code -> {code, name, etfs[]}
             const reduceMap = new Map();
             const amountMap = new Map(); // code -> {code, name, totalAmount, totalShares, etfCount}

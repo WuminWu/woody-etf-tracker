@@ -1,12 +1,12 @@
 {
     "meta": {
         "manager": "蕭惠中",
-        "ytd": "-1.70",
-        "etfPrice": 9.83,
+        "ytd": "-2.50",
+        "etfPrice": 9.75,
         "priceChange": 0.0,
         "prevPrice": 0.0,
-        "dataDate": "2026-10-12",
-        "lastUpdate": "2026-10-14 09:38",
+        "dataDate": "2026-10-13",
+        "lastUpdate": "2026-10-14 09:52",
         "totalShares": 612988,
         "prevTotalShares": 0,
         "totalMarketCap": 60.45,
@@ -18,12 +18,12 @@
             "name": "台積電",
             "shares": 203000,
             "prevShares": 0,
-            "price": 2520.0,
+            "price": 2490.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 8.54,
             "diffShares": 203000,
-            "diffAmount": 511560000.0,
+            "diffAmount": 505470000.0,
             "rank": 1
         },
         {
@@ -31,12 +31,12 @@
             "name": "Advantest Corp",
             "shares": 22100,
             "prevShares": 0,
-            "price": 8250.96,
+            "price": 8136.36,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 3.06,
             "diffShares": 22100,
-            "diffAmount": 182346216.0,
+            "diffAmount": 179813556.0,
             "rank": 2
         },
         {
@@ -44,12 +44,12 @@
             "name": "大立光電",
             "shares": 25000,
             "prevShares": 0,
-            "price": 7115.0,
+            "price": 7275.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 3.03,
             "diffShares": 25000,
-            "diffAmount": 177875000.0,
+            "diffAmount": 181875000.0,
             "rank": 3
         },
         {
@@ -57,12 +57,12 @@
             "name": "台達電子",
             "shares": 95000,
             "prevShares": 0,
-            "price": 1795.0,
+            "price": 1775.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 2.99,
             "diffShares": 95000,
-            "diffAmount": 170525000.0,
+            "diffAmount": 168625000.0,
             "rank": 4
         },
         {
@@ -70,12 +70,12 @@
             "name": "玉晶光",
             "shares": 144000,
             "prevShares": 0,
-            "price": 1110.0,
+            "price": 1175.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 2.55,
             "diffShares": 144000,
-            "diffAmount": 159840000.0,
+            "diffAmount": 169200000.0,
             "rank": 5
         },
         {
@@ -83,12 +83,12 @@
             "name": "奇鋐",
             "shares": 45000,
             "prevShares": 0,
-            "price": 3315.0,
+            "price": 3280.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 2.52,
             "diffShares": 45000,
-            "diffAmount": 149175000.0,
+            "diffAmount": 147600000.0,
             "rank": 6
         },
         {
@@ -96,12 +96,12 @@
             "name": "Broadcom Inc",
             "shares": 13000,
             "prevShares": 0,
-            "price": 11498.24,
+            "price": 11408.12,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 2.43,
             "diffShares": 13000,
-            "diffAmount": 149477120.0,
+            "diffAmount": 148305560.0,
             "rank": 7
         },
         {
@@ -109,12 +109,12 @@
             "name": "創意電子",
             "shares": 18000,
             "prevShares": 0,
-            "price": 8015.0,
+            "price": 8095.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 2.41,
             "diffShares": 18000,
-            "diffAmount": 144270000.0,
+            "diffAmount": 145710000.0,
             "rank": 8
         },
         {
@@ -122,12 +122,12 @@
             "name": "Ibiden Co Ltd",
             "shares": 61800,
             "prevShares": 0,
-            "price": 2180.77,
+            "price": 2138.81,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 2.37,
             "diffShares": 61800,
-            "diffAmount": 134771586.0,
+            "diffAmount": 132178458.0,
             "rank": 9
         },
         {
@@ -135,12 +135,12 @@
             "name": "信驊科技",
             "shares": 8000,
             "prevShares": 0,
-            "price": 18115.0,
+            "price": 17350.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 2.34,
             "diffShares": 8000,
-            "diffAmount": 144920000.0,
+            "diffAmount": 138800000.0,
             "rank": 10
         },
         {
@@ -148,12 +148,12 @@
             "name": "Taiyo Yuden Co Ltd",
             "shares": 53800,
             "prevShares": 0,
-            "price": 2258.12,
+            "price": 2132.77,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 1.99,
             "diffShares": 53800,
-            "diffAmount": 121486856.0,
+            "diffAmount": 114743026.0,
             "rank": 11
         },
         {
@@ -161,12 +161,12 @@
             "name": "NVIDIA Corp",
             "shares": 16300,
             "prevShares": 0,
-            "price": 7353.77,
+            "price": 7296.14,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 1.95,
             "diffShares": 16300,
-            "diffAmount": 119866451.0,
+            "diffAmount": 118927082.0,
             "rank": 12
         },
         {
@@ -174,12 +174,12 @@
             "name": "日月光投控",
             "shares": 150000,
             "prevShares": 0,
-            "price": 746.0,
+            "price": 740.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 1.89,
             "diffShares": 150000,
-            "diffAmount": 111900000.0,
+            "diffAmount": 111000000.0,
             "rank": 13
         },
         {
@@ -187,12 +187,12 @@
             "name": "SK Hynix Inc",
             "shares": 2954,
             "prevShares": 0,
-            "price": 34958.52,
+            "price": 34509.35,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 1.87,
             "diffShares": 2954,
-            "diffAmount": 103267468.08,
+            "diffAmount": 101940619.9,
             "rank": 14
         },
         {
@@ -200,12 +200,12 @@
             "name": "Murata Manufacturing Co Ltd",
             "shares": 69600,
             "prevShares": 0,
-            "price": 1529.45,
+            "price": 1526.98,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 1.85,
             "diffShares": 69600,
-            "diffAmount": 106449720.0,
+            "diffAmount": 106277808.0,
             "rank": 15
         },
         {
@@ -226,12 +226,12 @@
             "name": "Lumentum Holdings Inc",
             "shares": 3400,
             "prevShares": 0,
-            "price": 31793.52,
+            "price": 31544.35,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 1.79,
             "diffShares": 3400,
-            "diffAmount": 108097968.0,
+            "diffAmount": 107250790.0,
             "rank": 17
         },
         {
@@ -239,12 +239,12 @@
             "name": "Sumitomo Electric Industries Ltd",
             "shares": 184200,
             "prevShares": 0,
-            "price": 465.59,
+            "price": 461.7,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 1.45,
             "diffShares": 184200,
-            "diffAmount": 85761678.0,
+            "diffAmount": 85045140.0,
             "rank": 18
         },
         {
@@ -252,12 +252,12 @@
             "name": "Samsung Electronics Co Ltd",
             "shares": 14362,
             "prevShares": 0,
-            "price": 5656.12,
+            "price": 5548.28,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 1.42,
             "diffShares": 14362,
-            "diffAmount": 81233195.44,
+            "diffAmount": 79684397.36,
             "rank": 19
         },
         {
@@ -265,12 +265,12 @@
             "name": "Corning Inc",
             "shares": 18200,
             "prevShares": 0,
-            "price": 4780.02,
+            "price": 4742.56,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 1.41,
             "diffShares": 18200,
-            "diffAmount": 86996364.0,
+            "diffAmount": 86314592.0,
             "rank": 20
         },
         {
@@ -278,12 +278,12 @@
             "name": "Semtech Corp",
             "shares": 14700,
             "prevShares": 0,
-            "price": 5560.06,
+            "price": 5516.49,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 1.31,
             "diffShares": 14700,
-            "diffAmount": 81732882.0,
+            "diffAmount": 81092403.0,
             "rank": 21
         },
         {
@@ -291,12 +291,12 @@
             "name": "SUMCO Corp",
             "shares": 99200,
             "prevShares": 0,
-            "price": 621.58,
+            "price": 630.37,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 1.13,
             "diffShares": 99200,
-            "diffAmount": 61660736.0,
+            "diffAmount": 62532704.0,
             "rank": 22
         },
         {
@@ -317,12 +317,12 @@
             "name": "台燿",
             "shares": 36000,
             "prevShares": 0,
-            "price": 1680.0,
+            "price": 1655.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 1.03,
             "diffShares": 36000,
-            "diffAmount": 60480000.0,
+            "diffAmount": 59580000.0,
             "rank": 24
         },
         {
@@ -330,12 +330,12 @@
             "name": "旺矽",
             "shares": 10000,
             "prevShares": 0,
-            "price": 6040.0,
+            "price": 5940.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 1.01,
             "diffShares": 10000,
-            "diffAmount": 60400000.0,
+            "diffAmount": 59400000.0,
             "rank": 25
         },
         {
@@ -343,12 +343,12 @@
             "name": "Disco Corp",
             "shares": 4900,
             "prevShares": 0,
-            "price": 11945.51,
+            "price": 11797.72,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 1.0,
             "diffShares": 4900,
-            "diffAmount": 58532999.0,
+            "diffAmount": 57808828.0,
             "rank": 26
         },
         {
@@ -356,12 +356,12 @@
             "name": "WUS Printed Circuit Kunshan Co Ltd",
             "shares": 113700,
             "prevShares": 0,
-            "price": 557.95,
+            "price": 552.96,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.98,
             "diffShares": 113700,
-            "diffAmount": 63438915.0,
+            "diffAmount": 62871552.0,
             "rank": 27
         },
         {
@@ -369,12 +369,12 @@
             "name": "Lattice Semiconductor Corp",
             "shares": 15100,
             "prevShares": 0,
-            "price": 3898.61,
+            "price": 3868.05,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.98,
             "diffShares": 15100,
-            "diffAmount": 58869011.0,
+            "diffAmount": 58407555.0,
             "rank": 28
         },
         {
@@ -382,12 +382,12 @@
             "name": "Shengyi Technology Co Ltd",
             "shares": 102800,
             "prevShares": 0,
-            "price": 589.92,
+            "price": 584.64,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.97,
             "diffShares": 102800,
-            "diffAmount": 60643776.0,
+            "diffAmount": 60100992.0,
             "rank": 29
         },
         {
@@ -395,12 +395,12 @@
             "name": "智邦",
             "shares": 27000,
             "prevShares": 0,
-            "price": 2085.0,
+            "price": 2040.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.95,
             "diffShares": 27000,
-            "diffAmount": 56295000.0,
+            "diffAmount": 55080000.0,
             "rank": 30
         },
         {
@@ -408,12 +408,12 @@
             "name": "Texas Instruments Inc",
             "shares": 6400,
             "prevShares": 0,
-            "price": 9263.01,
+            "price": 9190.42,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.95,
             "diffShares": 6400,
-            "diffAmount": 59283264.0,
+            "diffAmount": 58818688.0,
             "rank": 31
         },
         {
@@ -421,12 +421,12 @@
             "name": "Resonac Holdings Corp",
             "shares": 16000,
             "prevShares": 0,
-            "price": 3354.03,
+            "price": 3271.66,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.94,
             "diffShares": 16000,
-            "diffAmount": 53664480.0,
+            "diffAmount": 52346560.0,
             "rank": 32
         },
         {
@@ -434,12 +434,12 @@
             "name": "MaxLinear Inc",
             "shares": 19800,
             "prevShares": 0,
-            "price": 2852.44,
+            "price": 2830.08,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.93,
             "diffShares": 19800,
-            "diffAmount": 56478312.0,
+            "diffAmount": 56035584.0,
             "rank": 33
         },
         {
@@ -447,12 +447,12 @@
             "name": "雙鴻科技",
             "shares": 36000,
             "prevShares": 0,
-            "price": 1485.0,
+            "price": 1475.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.92,
             "diffShares": 36000,
-            "diffAmount": 53460000.0,
+            "diffAmount": 53100000.0,
             "rank": 34
         },
         {
@@ -460,12 +460,12 @@
             "name": "Credo Technology Group Holding Ltd",
             "shares": 8700,
             "prevShares": 0,
-            "price": 6381.62,
+            "price": 6331.6,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.92,
             "diffShares": 8700,
-            "diffAmount": 55520094.0,
+            "diffAmount": 55084920.0,
             "rank": 35
         },
         {
@@ -473,12 +473,12 @@
             "name": "Furukawa Electric Co Ltd",
             "shares": 67000,
             "prevShares": 0,
-            "price": 786.12,
+            "price": 784.43,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.91,
             "diffShares": 67000,
-            "diffAmount": 52670040.0,
+            "diffAmount": 52556810.0,
             "rank": 36
         },
         {
@@ -486,12 +486,12 @@
             "name": "Advanced Micro Devices Inc",
             "shares": 2900,
             "prevShares": 0,
-            "price": 19485.96,
+            "price": 19333.24,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.91,
             "diffShares": 2900,
-            "diffAmount": 56509284.0,
+            "diffAmount": 56066396.0,
             "rank": 37
         },
         {
@@ -499,12 +499,12 @@
             "name": "致茂",
             "shares": 23000,
             "prevShares": 0,
-            "price": 2275.0,
+            "price": 2200.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.9,
             "diffShares": 23000,
-            "diffAmount": 52325000.0,
+            "diffAmount": 50600000.0,
             "rank": 38
         },
         {
@@ -525,12 +525,12 @@
             "name": "力旺",
             "shares": 18000,
             "prevShares": 0,
-            "price": 2785.0,
+            "price": 2810.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.85,
             "diffShares": 18000,
-            "diffAmount": 50130000.0,
+            "diffAmount": 50580000.0,
             "rank": 40
         },
         {
@@ -538,12 +538,12 @@
             "name": "富世達",
             "shares": 22000,
             "prevShares": 0,
-            "price": 2220.0,
+            "price": 2210.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.83,
             "diffShares": 22000,
-            "diffAmount": 48840000.0,
+            "diffAmount": 48620000.0,
             "rank": 41
         },
         {
@@ -551,12 +551,12 @@
             "name": "台光電子",
             "shares": 8000,
             "prevShares": 0,
-            "price": 5590.0,
+            "price": 5545.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.81,
             "diffShares": 8000,
-            "diffAmount": 44720000.0,
+            "diffAmount": 44360000.0,
             "rank": 42
         },
         {
@@ -564,12 +564,12 @@
             "name": "川湖",
             "shares": 4275,
             "prevShares": 0,
-            "price": 10040.0,
+            "price": 10060.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.75,
             "diffShares": 4275,
-            "diffAmount": 42921000.0,
+            "diffAmount": 43006500.0,
             "rank": 43
         },
         {
@@ -577,12 +577,12 @@
             "name": "欣銓",
             "shares": 107000,
             "prevShares": 0,
-            "price": 277.0,
+            "price": 268.5,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.48,
             "diffShares": 107000,
-            "diffAmount": 29639000.0,
+            "diffAmount": 28729500.0,
             "rank": 44
         },
         {
@@ -590,12 +590,12 @@
             "name": "印能科技",
             "shares": 10000,
             "prevShares": 0,
-            "price": 2685.0,
+            "price": 2700.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.48,
             "diffShares": 10000,
-            "diffAmount": 26850000.0,
+            "diffAmount": 27000000.0,
             "rank": 45
         },
         {
@@ -603,12 +603,12 @@
             "name": "聯發科",
             "shares": 5000,
             "prevShares": 0,
-            "price": 4515.0,
+            "price": 4525.0,
             "prevPrice": 0,
             "yestWeight": 0.0,
             "todayWeight": 0.38,
             "diffShares": 5000,
-            "diffAmount": 22575000.0,
+            "diffAmount": 22625000.0,
             "rank": 46
         }
     ]

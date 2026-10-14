@@ -13,9 +13,14 @@
     下游的 market_utils.yf_symbol、is_stock_code 與日報只認得 CH，
     不轉的話陸股會查不到股價、也不會被算進個股統計。
 
-T+1：持有日股／美股，安聯的申購買回清單比台股 ETF 晚一個交易日
-（實測 2026-10-14 上午仍為 10/12 的持股；00993A 是當天 18:30 前後就更新）。
-歸入海外/混合組。2026/9/23 成立、2026/10/13 掛牌（IPO 價 10），不配息（累積型）。
+資料日（重要）：持股日 ＝ PCFDate 的前一交易日 ＝ 公布當天，不是 NavDate。
+  安聯在 T 日收盤後公布「T+1 的申購買回清單」，股數是 T 日收盤後的部位；但日股、美股
+  T 日還沒收盤，淨值只算得到 T-1，所以頁面「資料日期」（NavDate）會比持股日早一天。
+  例：2026-10-14 開盤時頁面為 NavDate 10/12、PCFDate 10/14 → 這是 10/13 的持股；
+  10/14 收盤後才會出現 10/14 的持股。
+  基金規模（Aum / Units）是 NavDate 那天的數字，所以申購贖回反映在規模上會晚一天。
+
+歸入海外/混合組（持股含日美韓陸股）。2026/9/23 成立、2026/10/13 掛牌（IPO 價 10），不配息（累積型）。
 """
 
 import json
@@ -61,8 +66,9 @@ if not os.path.exists(HOLDINGS_DIR):
 from etf_core import (
     FundConfig, build_data_json, fmt_zhang, format_trade_line, today_tw,
     holdings_exist_for, load_prev_holdings, save_holdings,
-    is_trading_day, prev_trading_day,
+    is_trading_day, prev_trading_day, next_trading_day,
 )
+from tw_calendar import last_trading_day
 
 # --- 本基金設定：所有與其他基金不同之處都集中在這裡 ---
 CFG = FundConfig(code="00412A", name="主動安聯亞洲半導體", manager="蕭惠中",
@@ -123,8 +129,24 @@ def normalize_code(code_raw):
     return code_raw.strip()
 
 
+def _parse_date(s):
+    try:
+        return datetime.strptime(str(s).replace("/", "-"), "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def holdings_date(fa):
+    """持股日 ＝ PCFDate 的前一交易日（見檔頭）。缺 PCFDate 時退回 NavDate 的下一交易日。"""
+    pcf, nav = _parse_date(fa.get("PCFDate", "")), _parse_date(fa.get("NavDate", ""))
+    d = prev_trading_day(pcf) if pcf else (next_trading_day(nav) if nav else None)
+    if d and nav and next_trading_day(nav) != d:
+        log.warning(f"NavDate {nav} / PCFDate {pcf} 間隔異常，持股日以 PCFDate 推算為 {d}")
+    return d.strftime("%Y-%m-%d") if d else ""
+
+
 def parse_fund_assets(raw_data):
-    """回傳 (資料日 YYYY-MM-DD, 淨資產 NTD, 在外流通單位數, holdings[])。"""
+    """回傳 (持股日 YYYY-MM-DD, 淨資產 NTD, 在外流通單位數, holdings[])。"""
     try:
         entries = raw_data["Entries"]["Data"]
         fa = entries["FundAsset"]
@@ -139,8 +161,8 @@ def parse_fund_assets(raw_data):
     except ValueError as e:
         log.warning(f"FundAsset parse error: {e}")
         aum_ntd, units = 0, 0
-    # NavDate 才是持股的資料日；PCFDate 是「下一次申購買回籃子」的日期，會比今天還晚
-    data_date = str(fa.get("NavDate", "")).replace("/", "-")
+    data_date = holdings_date(fa)
+    log.info(f"NavDate {fa.get('NavDate')}、PCFDate {fa.get('PCFDate')} → 持股日 {data_date}")
 
     holdings, stock_tables = [], 0
     for t in tables:
@@ -221,7 +243,7 @@ def build_notification(wrapper):
 
 def main():
     run_date = today_tw()
-    target_str = prev_trading_day(run_date).strftime("%Y-%m-%d")   # T+1：今晚應拿到前一交易日的持股
+    target_str = last_trading_day(run_date).strftime("%Y-%m-%d")   # 收盤後公布當天持股
     log.info(f"=== {ETF_CODE} Check & Update started. Run {run_date}, expected data date {target_str} ===")
     pending_msg = f"⏳ {ETF_CODE} {ETF_NAME} 持股尚未更新\n📅 資料日期：{target_str}\n🔄 將於 30 分鐘後再次檢查..."
 
@@ -235,12 +257,12 @@ def main():
     try:
         data_date = datetime.strptime(data_date_str, "%Y-%m-%d").date()
     except ValueError:
-        log.error(f"NavDate 無法解析：{data_date_str!r}")
+        log.error(f"持股日無法判定（NavDate / PCFDate 皆無法解析）：{data_date_str!r}")
         send_telegram(pending_msg)
         return
     # 不像 00993A 把異常日期硬改成前一交易日：那會把別天的持股存成錯的日期
     if data_date > run_date or not is_trading_day(data_date):
-        log.error(f"NavDate {data_date_str} 為未來日或非交易日，不寫入。")
+        log.error(f"持股日 {data_date_str} 為未來日或非交易日，不寫入。")
         return
 
     if holdings_exist_for(CFG, data_date_str):

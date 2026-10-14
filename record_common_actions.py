@@ -26,6 +26,8 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from etf_core import is_first_day   # 首日判定與日報、成本價共用同一份
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
@@ -50,6 +52,7 @@ ETFS = [
     ("00996A", "主動兆豐台灣豐收"),
     ("00405A", "主動富邦台灣龍耀"),
     ("00997A", "主動群益美國增長"),
+    ("00412A", "主動安聯亞洲半導體"),
 ]
 
 
@@ -160,6 +163,10 @@ def compute_common_actions():
             continue
 
         d = data.get("meta", {}).get("dataDate")
+        if is_first_day(data.get("holdings", [])):
+            # 剛納入追蹤／剛掛牌：整份持股都是「新增」，不是真的加碼
+            log.info(f"  Skip {etf_id} ({d} 為首日資料，整份持股皆為新進)")
+            continue
         if d and (latest_data_date is None or d > latest_data_date):
             latest_data_date = d
 
