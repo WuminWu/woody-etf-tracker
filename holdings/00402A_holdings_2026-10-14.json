@@ -1,0 +1,302 @@
+[
+    {
+        "code": "NVDA US",
+        "name": "NVIDIA Corp",
+        "shares": 67700,
+        "weight": 8.7
+    },
+    {
+        "code": "AAPL US",
+        "name": "Apple Inc",
+        "shares": 39400,
+        "weight": 7.85
+    },
+    {
+        "code": "AMD US",
+        "name": "Advanced Micro Devices Inc",
+        "shares": 18000,
+        "weight": 5.97
+    },
+    {
+        "code": "MU US",
+        "name": "Micron Technology Inc",
+        "shares": 10500,
+        "weight": 5.57
+    },
+    {
+        "code": "MSFT US",
+        "name": "Microsoft Corp",
+        "shares": 17400,
+        "weight": 5.39
+    },
+    {
+        "code": "AMZN US",
+        "name": "Amazon.com Inc",
+        "shares": 29400,
+        "weight": 4.34
+    },
+    {
+        "code": "META US",
+        "name": "Meta Platforms Inc",
+        "shares": 9100,
+        "weight": 3.9
+    },
+    {
+        "code": "GOOGL US",
+        "name": "Alphabet Inc",
+        "shares": 17000,
+        "weight": 3.43
+    },
+    {
+        "code": "GOOG US",
+        "name": "Alphabet Inc",
+        "shares": 17100,
+        "weight": 3.41
+    },
+    {
+        "code": "PANW US",
+        "name": "Palo Alto Networks Inc",
+        "shares": 13200,
+        "weight": 2.87
+    },
+    {
+        "code": "LRCX US",
+        "name": "Lam Research Corp",
+        "shares": 15300,
+        "weight": 2.55
+    },
+    {
+        "code": "TXN US",
+        "name": "Texas Instruments Inc",
+        "shares": 14600,
+        "weight": 2.38
+    },
+    {
+        "code": "PLTR US",
+        "name": "Palantir Technologies Inc",
+        "shares": 19000,
+        "weight": 2.22
+    },
+    {
+        "code": "AVGO US",
+        "name": "Broadcom Inc",
+        "shares": 10900,
+        "weight": 2.19
+    },
+    {
+        "code": "ADI US",
+        "name": "Analog Devices Inc",
+        "shares": 8300,
+        "weight": 1.95
+    },
+    {
+        "code": "WDC US",
+        "name": "Western Digital Corp",
+        "shares": 8400,
+        "weight": 1.78
+    },
+    {
+        "code": "LITE US",
+        "name": "Lumentum Holdings Inc",
+        "shares": 3400,
+        "weight": 1.77
+    },
+    {
+        "code": "MRVL US",
+        "name": "Marvell Technology Inc",
+        "shares": 11600,
+        "weight": 1.65
+    },
+    {
+        "code": "CRWD US",
+        "name": "Crowdstrike Holdings Inc",
+        "shares": 11200,
+        "weight": 1.62
+    },
+    {
+        "code": "KLAC US",
+        "name": "KLA Corp",
+        "shares": 15300,
+        "weight": 1.59
+    },
+    {
+        "code": "TSM US",
+        "name": "Taiwan Semiconductor Manufacturing Co Ltd",
+        "shares": 6000,
+        "weight": 1.5
+    },
+    {
+        "code": "CDNS US",
+        "name": "Cadence Design Systems Inc",
+        "shares": 7800,
+        "weight": 1.49
+    },
+    {
+        "code": "INTC US",
+        "name": "Intel Corp",
+        "shares": 26200,
+        "weight": 1.49
+    },
+    {
+        "code": "SNOW US",
+        "name": "Snowflake Inc",
+        "shares": 6900,
+        "weight": 1.34
+    },
+    {
+        "code": "CLS US",
+        "name": "Celestica Inc",
+        "shares": 6800,
+        "weight": 1.28
+    },
+    {
+        "code": "MCHP US",
+        "name": "Microchip Technology Inc",
+        "shares": 30500,
+        "weight": 1.26
+    },
+    {
+        "code": "COHR US",
+        "name": "Coherent Corp",
+        "shares": 8200,
+        "weight": 1.25
+    },
+    {
+        "code": "SHOP US",
+        "name": "Shopify Inc",
+        "shares": 12100,
+        "weight": 1.21
+    },
+    {
+        "code": "V US",
+        "name": "Visa Inc",
+        "shares": 5200,
+        "weight": 1.18
+    },
+    {
+        "code": "ASML US",
+        "name": "ASML Holding NV",
+        "shares": 1200,
+        "weight": 1.15
+    },
+    {
+        "code": "CIEN US",
+        "name": "Ciena Corp",
+        "shares": 5500,
+        "weight": 1.15
+    },
+    {
+        "code": "SKHY US",
+        "name": "SK hynix Inc",
+        "shares": 12800,
+        "weight": 1.1
+    },
+    {
+        "code": "NOW US",
+        "name": "ServiceNow Inc",
+        "shares": 13300,
+        "weight": 1.08
+    },
+    {
+        "code": "STX US",
+        "name": "Seagate Technology Holdings PLC",
+        "shares": 2600,
+        "weight": 1.08
+    },
+    {
+        "code": "NFLX US",
+        "name": "Netflix Inc",
+        "shares": 24100,
+        "weight": 0.99
+    },
+    {
+        "code": "ANET US",
+        "name": "Arista Networks Inc",
+        "shares": 7300,
+        "weight": 0.83
+    },
+    {
+        "code": "ARM US",
+        "name": "ARM Holdings PLC",
+        "shares": 6000,
+        "weight": 0.83
+    },
+    {
+        "code": "TER US",
+        "name": "Teradyne Inc",
+        "shares": 3800,
+        "weight": 0.79
+    },
+    {
+        "code": "SPCX US",
+        "name": "Space Exploration Technologies Corp",
+        "shares": 8500,
+        "weight": 0.75
+    },
+    {
+        "code": "AXON US",
+        "name": "Axon Enterprise Inc",
+        "shares": 2400,
+        "weight": 0.57
+    },
+    {
+        "code": "TTWO US",
+        "name": "Take-Two Interactive Software Inc",
+        "shares": 4900,
+        "weight": 0.57
+    },
+    {
+        "code": "IOT US",
+        "name": "Samsara Inc",
+        "shares": 22600,
+        "weight": 0.54
+    },
+    {
+        "code": "BKNG US",
+        "name": "Booking Holdings Inc",
+        "shares": 5600,
+        "weight": 0.52
+    },
+    {
+        "code": "BABA US",
+        "name": "Alibaba Group Holding Ltd",
+        "shares": 7700,
+        "weight": 0.5
+    },
+    {
+        "code": "SIMO US",
+        "name": "Silicon Motion Technology Corp",
+        "shares": 3800,
+        "weight": 0.49
+    },
+    {
+        "code": "DASH US",
+        "name": "DoorDash Inc",
+        "shares": 4300,
+        "weight": 0.46
+    },
+    {
+        "code": "MDB US",
+        "name": "MongoDB Inc",
+        "shares": 1800,
+        "weight": 0.37
+    },
+    {
+        "code": "SPOT US",
+        "name": "Spotify Technology SA",
+        "shares": 1200,
+        "weight": 0.37
+    },
+    {
+        "code": "FSLY US",
+        "name": "Fastly Inc",
+        "shares": 25100,
+        "weight": 0.36
+    },
+    {
+        "code": "UBER US",
+        "name": "Uber Technologies Inc",
+        "shares": 7700,
+        "weight": 0.31
+    }
+]
