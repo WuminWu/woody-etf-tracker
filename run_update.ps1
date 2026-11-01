@@ -112,6 +112,7 @@ $scripts = @(
     "check_and_update_00987A.py",
     "check_and_update_00993A.py",
     "check_and_update_00995A.py",
+    "check_and_update_00406A.py",   # 台股，中信 E0038（同 00995A API）
     "check_and_update_00996A.py",
     "check_and_update_00405A.py",
     "check_and_update_00407A.py",   # 台股，凱基 J024 申購買回清單 xlsx（純 HTTP）

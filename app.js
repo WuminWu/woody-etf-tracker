@@ -321,6 +321,8 @@ document.addEventListener('DOMContentLoaded', () => {
         '00993A': { distFreq: '年配息', distMonths: [12], distDay: 31 },
         // 季配息：1/4/7/10月（上市2026/01/22，首次評價2026/09）
         '00995A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 31 },
+        // 月配息（中信官網「月配息」；上市2026/06/11；除息日 2026/07/31、09/02、10/05，約月初，取 3 日）
+        '00406A': { distFreq: '月配息', distMonths: [1,2,3,4,5,6,7,8,9,10,11,12], distDay: 3 },
         // 季配息（兆豐官網標示季配息；除息月份與日期待官方公告確認）
         '00996A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
         // 季配息（富邦官網標示季配息，含收益平準金；除息月份與日期待官方公告確認）
@@ -677,6 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00987A', name: '台新台灣優勢成長' },
         { id: '00993A', name: '主動安聯台灣' },
         { id: '00995A', name: '主動中信台灣卓越' },
+        { id: '00406A', name: '主動中信台灣收益成長' },
         { id: '00996A', name: '主動兆豐台灣豐收' },
         { id: '00405A', name: '主動富邦台灣龍耀' },
         { id: '00997A', name: '主動群益美國增長' },
@@ -777,6 +780,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00987A', name: '台新台灣優勢成長' },
         { id: '00993A', name: '主動安聯台灣' },
         { id: '00995A', name: '主動中信台灣卓越' },
+        { id: '00406A', name: '主動中信台灣收益成長' },
         { id: '00996A', name: '主動兆豐台灣豐收' },
         { id: '00405A', name: '主動富邦台灣龍耀' },
         { id: '00997A', name: '主動群益美國增長' },
