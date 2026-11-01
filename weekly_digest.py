@@ -31,7 +31,7 @@ import sys
 import logging
 from datetime import date, datetime, timedelta, timezone
 
-from etf_core import fmt_zhang   # 單一來源：股數 -> 張（原本這裡自己有一份）
+from etf_core import sort_by_amount, change_text   # 單一來源：金額排序與明細格式（與每日單檔通知共用）
 from tw_calendar import is_trading_day, next_trading_day, last_trading_day
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -246,15 +246,14 @@ def build_etf_weekly_block(etf, syn, d1, d0):
     hs = syn["holdings"]
     added     = [h for h in hs if h["prevShares"] == 0 and h["shares"] > 0]
     removed   = [h for h in hs if h["shares"] == 0 and h["prevShares"] > 0]
-    increased = sorted([h for h in hs if h["shares"] > 0 and h["diffShares"] > 0 and h["prevShares"] > 0],
-                       key=lambda x: -x["diffShares"])
-    decreased = sorted([h for h in hs if h["shares"] > 0 and h["diffShares"] < 0],
-                       key=lambda x: x["diffShares"])
+    m = syn["meta"]
+    # 張數會被股價誤導（低價股張數大但金額小），明細一律依異動金額絕對值由大到小排序
+    increased = sort_by_amount([h for h in hs if h["shares"] > 0 and h["diffShares"] > 0 and h["prevShares"] > 0], m)
+    decreased = sort_by_amount([h for h in hs if h["shares"] > 0 and h["diffShares"] < 0], m)
     if not (added or removed or increased or decreased):
         return None
 
     name = ALL_ETF_NAMES.get(etf, "")
-    m = syn["meta"]
     mcap = m.get("totalMarketCap") or 0
     lines = [
         f"📊 {etf} {name}　（{d1[5:].replace('-', '/')} vs {d0[5:].replace('-', '/')}）"
@@ -269,14 +268,13 @@ def build_etf_weekly_block(etf, syn, d1, d0):
         if abs(chg) >= 1:
             lines.append(f"⚙️ 基金規模：{'申購' if chg > 0 else '贖回'}約 {abs(chg):.0f}%（持股增減部分為被動）")
 
-    _section(lines, "✨ 本週新增持股：", sorted(added, key=lambda x: -x["diffShares"]),
-             lambda h: f"  • {h['code']} {h['name']}　{fmt_zhang(h['shares'])}（0% → {h['todayWeight']}%）")
-    _section(lines, "🚫 本週出清持股：", sorted(removed, key=lambda x: -x["prevShares"]),
-             lambda h: f"  • {h['code']} {h['name']}　{fmt_zhang(-h['prevShares'])}")
-    _section(lines, "🔴 加碼明細：", increased,
-             lambda h: f"  • {h['code']} {h['name']}　{fmt_zhang(h['diffShares'])}（{h['yestWeight']}% → {h['todayWeight']}%）")
-    _section(lines, "🟢 減碼明細：", decreased,
-             lambda h: f"  • {h['code']} {h['name']}　{fmt_zhang(h['diffShares'])}（{h['yestWeight']}% → {h['todayWeight']}%）")
+    def _line(kind):
+        return lambda h: f"  • {h['code']} {h['name']}　{change_text(h, m, kind)}"
+
+    _section(lines, "✨ 本週新增持股：", sort_by_amount(added, m), _line("added"))
+    _section(lines, "🚫 本週出清持股：", sort_by_amount(removed, m), _line("removed"))
+    _section(lines, "🔴 加碼明細：", increased, _line("up"))
+    _section(lines, "🟢 減碼明細：", decreased, _line("down"))
     return "\n".join(lines)
 
 

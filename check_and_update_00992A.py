@@ -56,7 +56,7 @@ if not os.path.exists(HOLDINGS_DIR):
 
 # --- 共用核心（等價重構，見 etf_core.py 檔頭）---
 from etf_core import (
-    FundConfig, build_data_json, get_price, fmt_zhang, format_trade_line, today_tw,
+    FundConfig, build_data_json, get_price, fmt_zhang, trade_amount, change_text, format_trade_line, today_tw,
     holdings_exist_for, load_prev_holdings, save_holdings,
     is_trading_day, prev_trading_day, next_trading_day,
 )
@@ -124,11 +124,11 @@ def build_notification(wrapper, etf_code="00992A", etf_name="群益科技創新"
     removed  = [h for h in holdings if h["shares"] == 0 and h.get("prevShares", 0) > 0]
     increased = sorted(
         [h for h in holdings if h["shares"] > 0 and h.get("diffShares", 0) > 0 and h.get("prevShares", 0) > 0],
-        key=lambda x: x["diffShares"], reverse=True
+        key=lambda x: -abs(trade_amount(x, meta))
     )
     decreased = sorted(
         [h for h in holdings if h["shares"] > 0 and h.get("diffShares", 0) < 0],
-        key=lambda x: x["diffShares"]
+        key=lambda x: -abs(trade_amount(x, meta))
     )
 
     ytd_sign = "+" if float(meta["ytd"]) >= 0 else ""
@@ -146,24 +146,22 @@ def build_notification(wrapper, etf_code="00992A", etf_name="群益科技創新"
     if added:
         lines.append("\n✨ 新增持股：")
         for h in added:
-            zhang = fmt_zhang(h["shares"])
-            lines.append(f"  • {h['code']} {h['name']}　{zhang}（0% → {h['todayWeight']}%）")
+            lines.append(f"  • {h['code']} {h['name']}　{change_text(h, meta, 'added')}")
 
     if removed:
         lines.append("\n🚫 出清持股：")
         for h in removed:
-            zhang = fmt_zhang(-h.get("prevShares", 0))
-            lines.append(f"  • {h['code']} {h['name']}　{zhang}")
+            lines.append(f"  • {h['code']} {h['name']}　{change_text(h, meta, 'removed')}")
 
     if increased:
         lines.append("\n🔴 加碼明細：")
         for h in increased:
-            lines.append(f"  • {h['code']} {h['name']}　{fmt_zhang(h['diffShares'])}（{h['yestWeight']}% → {h['todayWeight']}%）")
+            lines.append(f"  • {h['code']} {h['name']}　{change_text(h, meta, 'up')}")
 
     if decreased:
         lines.append("\n🟢 減碼明細：")
         for h in decreased:
-            lines.append(f"  • {h['code']} {h['name']}　{fmt_zhang(h['diffShares'])}（{h['yestWeight']}% → {h['todayWeight']}%）")
+            lines.append(f"  • {h['code']} {h['name']}　{change_text(h, meta, 'down')}")
 
     lines.append(f"\n🕐 更新時間：{meta['lastUpdate']} (台灣時間)")
     lines.append("🔗 https://wuminwu.github.io/woody-etf-tracker/")

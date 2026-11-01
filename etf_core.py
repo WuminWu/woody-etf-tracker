@@ -216,6 +216,14 @@ def fmt_zhang(shares):
     return f"{sign}{zhang:,.1f}張"
 
 
+def fmt_qty(h, shares):
+    """數量顯示：台股用「張」，海外持股（代號含市場後綴，如 "AMD US"）直接用股數。"""
+    if " " not in str(h.get("code", "")).strip():
+        return fmt_zhang(shares)
+    n = round(shares)
+    return f"{'+' if n > 0 else ''}{n:,}股"
+
+
 def fmt_money(amount):
     """元 → 「1.23億」或「8,400萬」（取絕對值，正負號由呼叫端決定）。"""
     a = abs(amount)
@@ -273,6 +281,27 @@ def trade_totals(holdings, meta):
         elif a < 0:
             sell += a
     return buy, sell
+
+
+def sort_by_amount(items, meta):
+    """持股異動依變動金額絕對值由大到小排序（張數會被股價誤導，金額才看得出誰買最多）。"""
+    return sorted(items, key=lambda h: -abs(trade_amount(h, meta)))
+
+
+def change_text(h, meta, kind):
+    """單檔通知／週報的明細尾段：金額為主，張數與權重變化放括號。
+
+    kind: "added" 新增、"removed" 出清、"up" 加碼、"down" 減碼。
+    例：+11.52億（+483張，10.84% → 11.34%）
+    """
+    amt = trade_amount(h, meta)
+    s = fmt_money(amt)
+    amt_s = s if s == "0" else f"{'+' if amt > 0 else '-'}{s}"
+    if kind == "added":
+        return f"{amt_s}（{fmt_qty(h, h['shares'])}，0% → {h['todayWeight']}%）"
+    if kind == "removed":
+        return f"{amt_s}（{fmt_qty(h, -h.get('prevShares', 0))}）"
+    return f"{amt_s}（{fmt_qty(h, h['diffShares'])}，{h['yestWeight']}% → {h['todayWeight']}%）"
 
 
 def format_trade_line(wrapper):
