@@ -37,7 +37,7 @@ ROOT = os.path.abspath(a.root)
 # ---- 每檔設定（--mode new 用；之後原封不動搬進各爬蟲）----
 CFGS = {
     "00400A": dict(manager="梁恩溢", ipo_date="2026-04-09", ipo_price=10.0),
-    "00403A": dict(manager="統一投信", ipo_date="2026-05-12", ipo_price=10.0, has_asset_alloc=True),
+    "00403A": dict(manager="張哲瑋", ipo_date="2026-05-12", ipo_price=10.0, has_asset_alloc=True),
     "00405A": dict(manager="高晧欣", ipo_date="2026-06-09", ipo_price=10.0),
     "00407A": dict(manager="趙偉志", ipo_date="2026-06-24", ipo_price=10.0),
     "00409A": dict(manager="胡家菱", ipo_date="2026-09-02", ipo_price=10.0),
@@ -49,7 +49,7 @@ CFGS = {
     "00985A": dict(manager="林浩詳"),
     "00987A": dict(manager="魏永祥", aum_derive_check=True),
     "00988A": dict(manager="陳意婷", has_asset_alloc=True),
-    "00990A": dict(manager="元大投信", ipo_date="2025-12-22", ipo_price=10.0),
+    "00990A": dict(manager="吳昭豪", ipo_date="2025-12-22", ipo_price=10.0),
     "00991A": dict(manager="呂宏宇"),
     "00992A": dict(manager="陳朝政"),
     "00993A": dict(manager="安聯投信", units_are_zhang=True, aum_yf_fallback=True,

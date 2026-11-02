@@ -32,7 +32,7 @@ from asset_allocation import parse_asset_allocation, format_alloc_lines, find_pr
 # --------------- Config ---------------
 ETF_CODE    = "00403A"
 ETF_NAME    = "主動統一升級50"
-MANAGER     = "統一投信"      # TODO: 確認正式經理人姓名後更新
+MANAGER     = "張哲瑋"
 FUND_URL    = "https://www.ezmoney.com.tw/ETF/Fund/Info?fundCode=63YTW"
 HOLDINGS_DIR = "holdings"
 DATA_FILE   = f"data_{ETF_CODE}.json"
@@ -64,7 +64,7 @@ from etf_core import (
 )
 
 # --- 本基金設定：所有與其他基金不同之處都集中在這裡 ---
-CFG = FundConfig(code="00403A", name="統一升級50", manager="統一投信",
+CFG = FundConfig(code="00403A", name="統一升級50", manager="張哲瑋",
                  ipo_date="2026-05-12", ipo_price=10.0, has_asset_alloc=True)
 
 

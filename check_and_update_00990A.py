@@ -41,7 +41,7 @@ HOLDINGS_DIR = "holdings"
 DATA_FILE = "data_00990A.json"
 ETF_CODE = "00990A"
 ETF_NAME = "元大全球AI新經濟"
-MANAGER = "元大投信"
+MANAGER = "吳昭豪"
 IPO_DATE = "2025-12-22"
 IPO_PRICE = 10.0
 
@@ -71,7 +71,7 @@ from etf_core import (
 )
 
 # --- 本基金設定：所有與其他基金不同之處都集中在這裡 ---
-CFG = FundConfig(code="00990A", name="主動元大全球AI新經濟", manager="元大投信",
+CFG = FundConfig(code="00990A", name="主動元大全球AI新經濟", manager="吳昭豪",
                  ipo_date="2025-12-22", ipo_price=10.0)
 
 
