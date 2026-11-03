@@ -77,7 +77,7 @@
       "note": "季配息：1/4/7/10月底評價、2/5/8/11月除息（ezmoney 官網收益分配；成立2026/04/28，滿180日後起配）；除息日待官方公告，暫參考同系列00981A約17日"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00980A",
@@ -99,7 +99,7 @@
       "note": "季配息：2/5/8/11月，除息日約18日（依歷史紀錄）"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00985A",
@@ -118,7 +118,7 @@
       "note": "年配息：每年12月底評價（上市2025/07/01，首次配息2026/12）"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00991A",
@@ -138,7 +138,7 @@
       "note": "半年配：6/12月底評價、次月除息（復華官網配息行事曆）；除息日約21日（2026/07/21除息，依歷史紀錄）"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00992A",
@@ -240,7 +240,7 @@
       "note": "年配息：每年12月底評價（上市2026/02/03，首次配息2026/12）"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00995A",
@@ -262,7 +262,7 @@
       "note": "季配息：1/4/7/10月（上市2026/01/22，首次評價2026/09）"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00406A",
@@ -295,7 +295,7 @@
       "note": "月配息（中信官網「月配息」；上市2026/06/11；除息日 2026/07/31、09/02、10/05，約月初，取 3 日）"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00996A",
@@ -362,7 +362,7 @@
       "note": "不配息（凱基官網基本資料「收益分配：不分配」；上市2026/06/24）"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00988A",
@@ -381,7 +381,7 @@
       "note": "年配息：9月底評價、10月除息（ezmoney 官網收益分配；首次預計2026/10，但官網查無2026年配息紀錄）；除息日待官方公告，暫參考同系列00981A約17日"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00997A",
@@ -423,7 +423,7 @@
       "note": "不配息（元大官網基本資料「收益分配：否」；上市2025/12/22）"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00411A",
@@ -445,7 +445,7 @@
       "note": "年配息：3月底評價、4月除息（統一ezmoney官網「首次除息預計時間為2027年4月」；上市2026/08/26）；除息日待官方公告，暫參考同系列00981A約17日"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00409A",
@@ -467,7 +467,7 @@
       "note": "年配息：10月底評價（復華官網「年配 / 基金成立日起屆滿60日後，預計以10月底為評價日」；上市2026/09/02）；除息日待官方公告，暫參考同公司00991A（6月底評價→7/21除息），預估11月約20日"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00412A",
@@ -487,7 +487,7 @@
       "note": "不配息（累積型，安聯官網「配息頻率：不配」；上市2026/10/13）"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00402A",
@@ -507,6 +507,6 @@
       "note": "年配息（安聯官網「收益分配頻率：年配」，尚未配息；評價/除息月份待官方公告，暫不顯示下次配息日；上市2026/06/09）"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   }
 ]
