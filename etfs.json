@@ -52,7 +52,7 @@
       "note": "月配息（上市2026/04/09，除息日約17日，待官方公告確認）"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00403A",
@@ -159,8 +159,8 @@
       "day": 25,
       "note": "季配息：1/4/7/10月（上市2025/12/30，首次配息約2026/04）"
     },
-    "risk": "RR4",
-    "riskVerified": false
+    "risk": "RR5",
+    "riskVerified": true
   },
   {
     "code": "00982A",
@@ -182,7 +182,7 @@
       "note": "季配息：2/5/8/11月，除息日約18日（依歷史紀錄）"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00987A",
@@ -406,7 +406,7 @@
       "note": "季配息：1/4/7/10 月（群益美國增長，成立滿45日後起算；除息日待官方公告）"
     },
     "risk": "RR4",
-    "riskVerified": false
+    "riskVerified": true
   },
   {
     "code": "00990A",
