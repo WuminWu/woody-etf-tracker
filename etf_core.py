@@ -330,12 +330,14 @@ def _etf_hist(code, pinned=None):
     """ETF 自己的 YTD 歷史。有 pinned（cfg.yf_suffix）就只用它；否則先試 .TW 再試 .TWO。
     上櫃掛牌的基金在 .TW 查無資料，若不處理，股價與 YTD 會整欄變 0（00411A 曾因此顯示 0 元）。"""
     for suffix in ((pinned,) if pinned else (".TW", ".TWO")):
-        try:
-            hist = _drop_nan(yf.Ticker(f"{code}{suffix}").history(period="ytd", timeout=10))
-            if not hist.empty:
-                return hist
-        except Exception:
-            pass
+        # 掛牌頭幾天 Yahoo 只接受 1d/5d（period='ytd' 回錯誤、空表），股價會變 0 → 退回 5d（00416A）
+        for period in ("ytd", "5d"):
+            try:
+                hist = _drop_nan(yf.Ticker(f"{code}{suffix}").history(period=period, timeout=10))
+                if not hist.empty:
+                    return hist
+            except Exception:
+                pass
     return None
 
 

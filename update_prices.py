@@ -66,11 +66,21 @@ ETFS = [
 ]
 
 
+def ytd_history(ticker_symbol):
+    """今年以來日線（去掉未收盤的 NaN 列）。掛牌頭幾天 Yahoo 只接受 1d/5d，ytd 會是空表 → 退回 5d。"""
+    for period in ("ytd", "5d"):
+        hist = yf.Ticker(ticker_symbol).history(period=period, timeout=10)
+        hist = hist[hist["Close"].notna()] if not hist.empty else hist
+        if not hist.empty:
+            return hist
+    return hist
+
+
 def fetch_ytd_price(ticker_symbol, code=None):
     try:
-        hist = yf.Ticker(ticker_symbol).history(period="ytd", timeout=10)
-        hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
-        if len(hist) >= 2:
+        hist = ytd_history(ticker_symbol)
+        # 掛牌首日只有一筆：IPO 當年有發行價可當 YTD 基準，一筆就夠
+        if len(hist) >= 2 or (len(hist) == 1 and code and get_ipo_baseline(code)):
             last = hist["Close"].iloc[-1]
             # yfinance 偶爾（尤其 GitHub runner 被限流）回傳 NaN close；
             # 絕不可寫入 NaN（非法 JSON 會讓整個網頁掛掉）→ 直接放棄本檔更新。
@@ -121,8 +131,7 @@ def update_etf_prices():
         data["meta"]["priceDate"] = now_str[:10]  # YYYY-MM-DD only
         # Update priceChange & prevPrice based on ytd history
         try:
-            hist = yf.Ticker(ticker).history(period="ytd", timeout=10)
-            hist = hist[hist["Close"].notna()] if not hist.empty else hist   # 去掉未收盤的 NaN 列
+            hist = ytd_history(ticker)
             if len(hist) >= 2:
                 prev_p = round(float(hist["Close"].iloc[-2]), 2)
                 data["meta"]["prevPrice"] = prev_p
