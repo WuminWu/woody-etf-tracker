@@ -312,6 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '00985A': { distFreq: '年配息', distMonths: [12], distDay: 31 },
         // 年配息：每年10/31後35個營業日內（約12月中旬）（上市2025/12/03）
         '00987A': { distFreq: '年配息', distMonths: [12], distDay: 20 },
+        '00416A': { distFreq: '季配息', distMonths: [], distDay: 0 },
         // 年配息：9月底評價、10月除息（ezmoney 官網收益分配；首次預計2026/10，但官網查無2026年配息紀錄）
         // 除息日待官方公告，暫參考同系列00981A約17日
         '00988A': { distFreq: '年配息', distMonths: [10], distDay: 17 },
@@ -679,6 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00992A', name: '群益科技創新' },
         { id: '00982A', name: '群益台灣強棒' },
         { id: '00987A', name: '台新台灣優勢成長' },
+        { id: '00416A', name: '主動台新臺灣中小' },
         { id: '00993A', name: '主動安聯台灣' },
         { id: '00995A', name: '主動中信台灣卓越' },
         { id: '00406A', name: '主動中信台灣收益成長' },
@@ -780,6 +782,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '00992A', name: '群益科技創新' },
         { id: '00982A', name: '群益台灣強棒' },
         { id: '00987A', name: '台新台灣優勢成長' },
+        { id: '00416A', name: '主動台新臺灣中小' },
         { id: '00993A', name: '主動安聯台灣' },
         { id: '00995A', name: '主動中信台灣卓越' },
         { id: '00406A', name: '主動中信台灣收益成長' },

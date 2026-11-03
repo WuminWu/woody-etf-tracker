@@ -110,6 +110,7 @@ $scripts = @(
     "check_and_update_00992A.py",
     "check_and_update_00982A.py",
     "check_and_update_00987A.py",
+    "check_and_update_00416A.py",   # 台股，台新（同 00987A 網站）
     "check_and_update_00993A.py",
     "check_and_update_00995A.py",
     "check_and_update_00406A.py",   # 台股，中信 E0038（同 00995A API）
