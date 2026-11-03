@@ -64,6 +64,7 @@ jobs:
           python record_common_actions.py || true
           python export_history.py || true
           python export_snapshots.py || true
+          python big_move_alert.py || true
           python daily_digest.py || true
           python weekly_digest.py || true
 
@@ -79,6 +80,7 @@ jobs:
           [ -f last_digest_overseas.txt ] && git add last_digest_overseas.txt || echo "no overseas marker yet"
           [ -f digests.json ] && git add digests.json || echo "no digests.json yet"
           [ -f digests_overseas.json ] && git add digests_overseas.json || echo "no overseas digests yet"
+          [ -f alert_state.json ] && git add alert_state.json || echo "no alert state yet"
           [ -f cost_basis.json ] && git add cost_basis.json || echo "no cost_basis yet"
           [ -f last_weekly.txt ] && git add last_weekly.txt || echo "no weekly marker yet"
           [ -f digests_weekly.json ] && git add digests_weekly.json || echo "no weekly digests yet"

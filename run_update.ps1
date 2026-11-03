@@ -110,6 +110,7 @@ $scripts = $etfScripts + @(
     "record_common_actions.py",
     "export_history.py",
     "export_snapshots.py",
+    "big_move_alert.py",   # 3 日內快速建倉／砍倉另發 🚨 警示（讀剛匯出的 snapshots，排在日報之前）
     "daily_digest.py",
     "weekly_digest.py",
     "sanitize_data.py"   # 最後一道防線：清除 data_*.json 內的 NaN/Inf（非法 JSON 會讓前端整頁掛掉）
@@ -144,6 +145,7 @@ if (Test-Path "last_digest.txt"){ git add last_digest.txt 2>&1 | Out-Null }
 if (Test-Path "last_digest_overseas.txt"){ git add last_digest_overseas.txt 2>&1 | Out-Null }
 if (Test-Path "digests.json")   { git add digests.json   2>&1 | Out-Null }
 if (Test-Path "digests_overseas.json") { git add digests_overseas.json 2>&1 | Out-Null }
+if (Test-Path "alert_state.json") { git add alert_state.json 2>&1 | Out-Null }   # 快速建倉／砍倉警示已發過哪些（防重發）
 if (Test-Path "contrib_dates.json") { git add contrib_dates.json 2>&1 | Out-Null }   # 海外台股部位已計入哪天日報（防重複計算）
 if (Test-Path "cost_basis.json") { git add cost_basis.json 2>&1 | Out-Null }
 if (Test-Path "last_weekly.txt") { git add last_weekly.txt 2>&1 | Out-Null }
