@@ -14,7 +14,8 @@ sys.path.insert(0, ROOT)
 import tw_calendar as cal          # noqa: E402
 from sync_tw_holidays import parse  # noqa: E402
 
-TYPHOON_2026 = {date(2026, 7, 10)}   # 臨時休市，證交所行事曆不會列
+# 颱風假等臨時休市證交所行事曆不會列；從手寫清單的原因判斷，之後新增颱風假不用改測試
+TYPHOON_2026 = {d for d, r in cal.TW_HOLIDAY_REASONS.items() if d.year == 2026 and "臨時休市" in r}
 
 
 def test_twse_parser_matches_manual_2026():
