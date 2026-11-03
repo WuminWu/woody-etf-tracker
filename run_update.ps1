@@ -100,30 +100,10 @@ git pull --rebase 2>&1 | ForEach-Object { Write-Log "git: $_" }
 # --- 依序執行所有更新腳本（單支失敗不中斷整體）---
 # weekly_digest.py 自我守門：「本週最後一個交易日」（通常週五，週五休市則週四）發本週週報；
 # 其他交易日若最近一週漏發（例如那天電腦沒開）則補發。手動補發：python weekly_digest.py --catchup
-$scripts = @(
-    "check_and_update_00981A.py",
-    "check_and_update_00400A.py",
-    "check_and_update_00403A.py",
-    "check_and_update_00980A.py",
-    "check_and_update_00985A.py",
-    "check_and_update_00991A.py",
-    "check_and_update_00992A.py",
-    "check_and_update_00982A.py",
-    "check_and_update_00987A.py",
-    "check_and_update_00416A.py",   # 台股，台新（同 00987A 網站）
-    "check_and_update_00993A.py",
-    "check_and_update_00995A.py",
-    "check_and_update_00406A.py",   # 台股，中信 E0038（同 00995A API）
-    "check_and_update_00996A.py",
-    "check_and_update_00405A.py",
-    "check_and_update_00407A.py",   # 台股，凱基 J024 申購買回清單 xlsx（純 HTTP）
-    "check_and_update_00988A.py",   # 海外 T+1，一併在本機跑
-    "check_and_update_00997A.py",   # 海外（美股為主），capitalfund
-    "check_and_update_00990A.py",   # 海外（全球AI），元大 Nuxt __NUXT__
-    "check_and_update_00411A.py",   # 海外（全球科技），統一 ezmoney，T+1
-    "check_and_update_00409A.py",   # 海外（全球50），復華 API ETF26，T+1
-    "check_and_update_00412A.py",   # 海外（亞洲半導體），安聯 E0004 攔截 XHR，持股日＝公布當天
-    "check_and_update_00402A.py",   # 海外（美國科技），安聯 E0003 攔截 XHR，T+1
+# 爬蟲清單來自 etfs.json（etf_registry.py 依序印出 check_and_update_{代號}.py）；新增 ETF 不用改這裡
+$etfScripts = @(& python (Join-Path $root "etf_registry.py"))
+if ($etfScripts.Count -eq 0) { Write-Log "  ERROR: etf_registry.py 沒有輸出任何爬蟲（etfs.json 壞掉？）" }
+$scripts = $etfScripts + @(
     "send_queued_notifications.py", # 本輪暫存的單檔持股更新通知，依基金規模由大到小發送（排在日報之前）
     "check_and_update_index.py",
     "update_cost_basis.py",

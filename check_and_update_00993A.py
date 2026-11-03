@@ -253,19 +253,22 @@ def main():
 
     run_date = datetime.now(timezone(timedelta(hours=8))).date()
 
+    # 日期缺漏／無法解析／未來日／非交易日 → 不寫入。舊版會硬改成前一交易日，
+    # 等於把「不知道哪天」的持股存到別天，加減碼整份算錯（00412A 早已改成不寫入）
+    bad = None
     if not data_date_str:
-        data_date_str = prev_trading_day(run_date).strftime("%Y-%m-%d")
-        log.warning(f"NavDate missing, using prev trading day: {data_date_str}")
+        bad = "API 沒有 NavDate"
     else:
-        # Validate: reject future dates and weekend dates (e.g. PCFDate is often next week's basket)
         try:
             parsed_date = datetime.strptime(data_date_str, "%Y-%m-%d").date()
             if parsed_date > run_date or parsed_date.weekday() >= 5 or parsed_date in TW_MARKET_HOLIDAYS:
-                log.warning(f"API date {data_date_str} is future/weekend/holiday, clamping to prev trading day")
-                data_date_str = prev_trading_day(run_date).strftime("%Y-%m-%d")
+                bad = f"API 日期 {data_date_str} 為未來日或非交易日"
         except ValueError:
-            data_date_str = prev_trading_day(run_date).strftime("%Y-%m-%d")
-            log.warning(f"Could not parse API date, using prev trading day: {data_date_str}")
+            bad = f"API 日期無法解析：{data_date_str!r}"
+    if bad:
+        log.warning(f"{bad}，本次不寫入")
+        send_telegram(f"⏳ {ETF_CODE} {ETF_NAME} 持股尚未更新（{bad}）\n🔄 將於 30 分鐘後再次檢查...")
+        return
 
     log.info(f"Data date: {data_date_str}")
 

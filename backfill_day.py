@@ -16,15 +16,13 @@ backfill_day.py — 補抓「某一個交易日」的持股資料（用於排程
     python backfill_day.py 2026-09-11 00981A 00403A   # 只補指定檔
 """
 import importlib
+import etf_registry
 import sys
 import traceback
 from datetime import datetime as _dt, date
 
 # 台股（當日揭露）ETF；海外檔為 T+1，日期語意不同，不納入預設批次
-TW_FUNDS = [
-    "00981A", "00400A", "00403A", "00980A", "00985A", "00991A", "00992A",
-    "00982A", "00987A", "00993A", "00995A", "00996A", "00405A", "00407A",
-]
+TW_FUNDS = etf_registry.codes(group="tw")
 
 
 def _make_fake_datetime(target, hour=18, minute=1):

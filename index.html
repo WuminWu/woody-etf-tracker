@@ -29,29 +29,7 @@
                     <div class="etf-select-wrapper" id="etf-select-wrapper">
                         <i class="fa-solid fa-caret-down etf-select-arrow"></i>
                         <select id="etf-selector" class="etf-select">
-                            <option value="00981A">00981A 主動統一台股增長</option>
-                            <option value="00400A">00400A 國泰台股動能高息</option>
-                            <option value="00403A">00403A 主動統一升級50</option>
-                            <option value="00988A">00988A 主動統一全球創新</option>
-                            <option value="00980A">00980A 野村臺灣智慧優選</option>
-                            <option value="00985A">00985A 主動野村台灣50</option>
-                            <option value="00991A">00991A 主動復華未來50</option>
-                            <option value="00992A">00992A 主動群益科技創新ETF</option>
-                            <option value="00982A">00982A 主動群益台灣強棒</option>
-                            <option value="00987A">00987A 台新台灣優勢成長</option>
-                            <option value="00416A">00416A 主動台新臺灣中小</option>
-                            <option value="00993A">00993A 主動安聯台灣</option>
-                            <option value="00995A">00995A 主動中信台灣卓越</option>
-                            <option value="00406A">00406A 主動中信台灣收益成長</option>
-                            <option value="00996A">00996A 主動兆豐台灣豐收</option>
-                            <option value="00405A">00405A 主動富邦台灣龍耀</option>
-                            <option value="00997A">00997A 主動群益美國增長</option>
-                            <option value="00990A">00990A 主動元大全球AI新經濟</option>
-                            <option value="00411A">00411A 主動統一前沿科技</option>
-                            <option value="00407A">00407A 主動凱基台灣</option>
-                            <option value="00409A">00409A 主動復華全球50</option>
-                            <option value="00412A">00412A 主動安聯亞洲半導體</option>
-                            <option value="00402A">00402A 主動安聯美國科技</option>
+                            <!-- 選項由 app.js 依 etfs.json 產生 -->
                         </select>
                     </div>
                     <img id="manager-card-img" src="manager_00981A.jpg" alt="00981A 經理人卡" style="display:none;">
@@ -134,7 +112,7 @@
             <div class="card glass-panel stats-card">
                 <div class="stat-item">
                     <div class="stat-icon"><i class="fa-solid fa-box"></i></div>
-                    <div class="stat-value">RR4</div>
+                    <div class="stat-value" id="stat-risk">—</div>
                     <div class="stat-label">風險等級</div>
                 </div>
                 <div class="stat-item">
@@ -367,6 +345,6 @@
         <div id="lightbox-close">✕</div>
     </div>
 
-    <script src="app.js?v=47"></script>
+    <script src="app.js?v=48"></script>
 </body>
 </html>

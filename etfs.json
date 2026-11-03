@@ -1,0 +1,512 @@
+[
+  {
+    "code": "00981A",
+    "name": "統一台股增長",
+    "fullName": "主動統一台股增長",
+    "shortName": "統一台股增長",
+    "group": "tw",
+    "t1": false,
+    "ipo": null,
+    "dist": {
+      "freq": "季配息",
+      "months": [
+        3,
+        6,
+        9,
+        12
+      ],
+      "day": 17,
+      "note": "季配息：3/6/9/12月，除息日約17日（依歷史紀錄）"
+    },
+    "risk": "RR4",
+    "riskVerified": true
+  },
+  {
+    "code": "00400A",
+    "name": "國泰動能高息",
+    "fullName": "國泰台股動能高息",
+    "shortName": "國泰動能高息",
+    "group": "tw",
+    "t1": false,
+    "ipo": [
+      "2026-04-09",
+      10.0
+    ],
+    "dist": {
+      "freq": "月配息",
+      "months": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "day": 17,
+      "note": "月配息（上市2026/04/09，除息日約17日，待官方公告確認）"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00403A",
+    "name": "統一升級50",
+    "fullName": "主動統一升級50",
+    "shortName": "統一升級50",
+    "group": "tw",
+    "t1": false,
+    "ipo": [
+      "2026-05-12",
+      10.0
+    ],
+    "dist": {
+      "freq": "季配息",
+      "months": [
+        2,
+        5,
+        8,
+        11
+      ],
+      "day": 17,
+      "note": "季配息：1/4/7/10月底評價、2/5/8/11月除息（ezmoney 官網收益分配；成立2026/04/28，滿180日後起配）；除息日待官方公告，暫參考同系列00981A約17日"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00980A",
+    "name": "野村智慧優選",
+    "fullName": "野村臺灣智慧優選",
+    "shortName": "野村智慧優選",
+    "group": "tw",
+    "t1": false,
+    "ipo": null,
+    "dist": {
+      "freq": "季配息",
+      "months": [
+        2,
+        5,
+        8,
+        11
+      ],
+      "day": 18,
+      "note": "季配息：2/5/8/11月，除息日約18日（依歷史紀錄）"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00985A",
+    "name": "野村台灣50",
+    "fullName": "主動野村台灣50",
+    "shortName": "野村台灣50",
+    "group": "tw",
+    "t1": false,
+    "ipo": null,
+    "dist": {
+      "freq": "年配息",
+      "months": [
+        12
+      ],
+      "day": 31,
+      "note": "年配息：每年12月底評價（上市2025/07/01，首次配息2026/12）"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00991A",
+    "name": "復華未來50",
+    "fullName": "主動復華未來50",
+    "shortName": "復華未來50",
+    "group": "tw",
+    "t1": false,
+    "ipo": null,
+    "dist": {
+      "freq": "半年配",
+      "months": [
+        1,
+        7
+      ],
+      "day": 21,
+      "note": "半年配：6/12月底評價、次月除息（復華官網配息行事曆）；除息日約21日（2026/07/21除息，依歷史紀錄）"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00992A",
+    "name": "群益科技創新",
+    "fullName": "主動群益科技創新ETF",
+    "shortName": "群益科技創新",
+    "group": "tw",
+    "t1": false,
+    "ipo": null,
+    "dist": {
+      "freq": "季配息",
+      "months": [
+        1,
+        4,
+        7,
+        10
+      ],
+      "day": 25,
+      "note": "季配息：1/4/7/10月（上市2025/12/30，首次配息約2026/04）"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00982A",
+    "name": "群益台灣強棒",
+    "fullName": "主動群益台灣強棒",
+    "shortName": "群益台灣強棒",
+    "group": "tw",
+    "t1": false,
+    "ipo": null,
+    "dist": {
+      "freq": "季配息",
+      "months": [
+        2,
+        5,
+        8,
+        11
+      ],
+      "day": 18,
+      "note": "季配息：2/5/8/11月，除息日約18日（依歷史紀錄）"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00987A",
+    "name": "台新台灣優勢成長",
+    "fullName": "台新台灣優勢成長",
+    "shortName": "台新優勢成長",
+    "group": "tw",
+    "t1": false,
+    "ipo": null,
+    "dist": {
+      "freq": "年配息",
+      "months": [
+        12
+      ],
+      "day": 20,
+      "note": "年配息：每年10/31後35個營業日內（約12月中旬）（上市2025/12/03）"
+    },
+    "risk": "RR4",
+    "riskVerified": true
+  },
+  {
+    "code": "00416A",
+    "name": "主動台新臺灣中小",
+    "fullName": "主動台新臺灣中小",
+    "shortName": "台新臺灣中小",
+    "group": "tw",
+    "t1": false,
+    "ipo": [
+      "2026-11-03",
+      10.0
+    ],
+    "dist": {
+      "freq": "季配息",
+      "months": [],
+      "day": 0,
+      "note": "季配（台新官網「收益分配：季配」；上市2026/11/03）；除息月份待官方公告，暫不顯示下次配息日"
+    },
+    "risk": "RR5",
+    "riskVerified": true
+  },
+  {
+    "code": "00993A",
+    "name": "主動安聯台灣",
+    "fullName": "主動安聯台灣",
+    "shortName": "安聯台灣",
+    "group": "tw",
+    "t1": false,
+    "ipo": null,
+    "dist": {
+      "freq": "年配息",
+      "months": [
+        12
+      ],
+      "day": 31,
+      "note": "年配息：每年12月底評價（上市2026/02/03，首次配息2026/12）"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00995A",
+    "name": "主動中信台灣卓越",
+    "fullName": "主動中信台灣卓越",
+    "shortName": "中信台灣卓越",
+    "group": "tw",
+    "t1": false,
+    "ipo": null,
+    "dist": {
+      "freq": "季配息",
+      "months": [
+        1,
+        4,
+        7,
+        10
+      ],
+      "day": 31,
+      "note": "季配息：1/4/7/10月（上市2026/01/22，首次評價2026/09）"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00406A",
+    "name": "主動中信台灣收益成長",
+    "fullName": "主動中信台灣收益成長",
+    "shortName": "中信台灣收益成長",
+    "group": "tw",
+    "t1": false,
+    "ipo": [
+      "2026-06-11",
+      10.0
+    ],
+    "dist": {
+      "freq": "月配息",
+      "months": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "day": 3,
+      "note": "月配息（中信官網「月配息」；上市2026/06/11；除息日 2026/07/31、09/02、10/05，約月初，取 3 日）"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00996A",
+    "name": "主動兆豐台灣豐收",
+    "fullName": "主動兆豐台灣豐收",
+    "shortName": "兆豐台灣豐收",
+    "group": "tw",
+    "t1": false,
+    "ipo": null,
+    "dist": {
+      "freq": "季配息",
+      "months": [
+        1,
+        4,
+        7,
+        10
+      ],
+      "day": 25,
+      "note": "季配息（兆豐官網標示季配息；除息月份與日期待官方公告確認）"
+    },
+    "risk": "RR3",
+    "riskVerified": true
+  },
+  {
+    "code": "00405A",
+    "name": "主動富邦台灣龍耀",
+    "fullName": "主動富邦台灣龍耀",
+    "shortName": "富邦台灣龍耀",
+    "group": "tw",
+    "t1": false,
+    "ipo": [
+      "2026-06-09",
+      10.0
+    ],
+    "dist": {
+      "freq": "季配息",
+      "months": [
+        1,
+        4,
+        7,
+        10
+      ],
+      "day": 25,
+      "note": "季配息（富邦官網標示季配息，含收益平準金；除息月份與日期待官方公告確認）"
+    },
+    "risk": "RR4",
+    "riskVerified": true
+  },
+  {
+    "code": "00407A",
+    "name": "主動凱基台灣",
+    "fullName": "主動凱基台灣",
+    "shortName": "凱基台灣",
+    "group": "tw",
+    "t1": false,
+    "ipo": [
+      "2026-06-24",
+      10.0
+    ],
+    "dist": {
+      "freq": "不配息",
+      "months": [],
+      "day": 0,
+      "note": "不配息（凱基官網基本資料「收益分配：不分配」；上市2026/06/24）"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00988A",
+    "name": "統一全球創新",
+    "fullName": "主動統一全球創新",
+    "shortName": "統一全球創新",
+    "group": "overseas",
+    "t1": true,
+    "ipo": null,
+    "dist": {
+      "freq": "年配息",
+      "months": [
+        10
+      ],
+      "day": 17,
+      "note": "年配息：9月底評價、10月除息（ezmoney 官網收益分配；首次預計2026/10，但官網查無2026年配息紀錄）；除息日待官方公告，暫參考同系列00981A約17日"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00997A",
+    "name": "主動群益美國增長",
+    "fullName": "主動群益美國增長",
+    "shortName": "群益美國增長",
+    "group": "overseas",
+    "t1": true,
+    "ipo": [
+      "2026-04-14",
+      10.0
+    ],
+    "dist": {
+      "freq": "季配息",
+      "months": [
+        1,
+        4,
+        7,
+        10
+      ],
+      "day": 25,
+      "note": "季配息：1/4/7/10 月（群益美國增長，成立滿45日後起算；除息日待官方公告）"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00990A",
+    "name": "主動元大全球AI新經濟",
+    "fullName": "主動元大全球AI新經濟",
+    "shortName": "元大全球AI新經濟",
+    "group": "overseas",
+    "t1": true,
+    "ipo": null,
+    "dist": {
+      "freq": "不配息",
+      "months": [],
+      "day": 0,
+      "note": "不配息（元大官網基本資料「收益分配：否」；上市2025/12/22）"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00411A",
+    "name": "主動統一前沿科技",
+    "fullName": "主動統一前沿科技",
+    "shortName": "統一前沿科技",
+    "group": "overseas",
+    "t1": true,
+    "ipo": [
+      "2026-08-26",
+      10.0
+    ],
+    "dist": {
+      "freq": "年配息",
+      "months": [
+        4
+      ],
+      "day": 17,
+      "note": "年配息：3月底評價、4月除息（統一ezmoney官網「首次除息預計時間為2027年4月」；上市2026/08/26）；除息日待官方公告，暫參考同系列00981A約17日"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00409A",
+    "name": "主動復華全球50",
+    "fullName": "主動復華全球50",
+    "shortName": "復華全球50",
+    "group": "overseas",
+    "t1": true,
+    "ipo": [
+      "2026-09-02",
+      10.0
+    ],
+    "dist": {
+      "freq": "年配息",
+      "months": [
+        11
+      ],
+      "day": 20,
+      "note": "年配息：10月底評價（復華官網「年配 / 基金成立日起屆滿60日後，預計以10月底為評價日」；上市2026/09/02）；除息日待官方公告，暫參考同公司00991A（6月底評價→7/21除息），預估11月約20日"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00412A",
+    "name": "主動安聯亞洲半導體",
+    "fullName": "主動安聯亞洲半導體",
+    "shortName": "安聯亞洲半導體",
+    "group": "overseas",
+    "t1": false,
+    "ipo": [
+      "2026-10-13",
+      10.0
+    ],
+    "dist": {
+      "freq": "不配息",
+      "months": [],
+      "day": 0,
+      "note": "不配息（累積型，安聯官網「配息頻率：不配」；上市2026/10/13）"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  },
+  {
+    "code": "00402A",
+    "name": "主動安聯美國科技",
+    "fullName": "主動安聯美國科技",
+    "shortName": "安聯美國科技",
+    "group": "overseas",
+    "t1": true,
+    "ipo": [
+      "2026-06-09",
+      10.0
+    ],
+    "dist": {
+      "freq": "年配息",
+      "months": [],
+      "day": 0,
+      "note": "年配息（安聯官網「收益分配頻率：年配」，尚未配息；評價/除息月份待官方公告，暫不顯示下次配息日；上市2026/06/09）"
+    },
+    "risk": "RR4",
+    "riskVerified": false
+  }
+]

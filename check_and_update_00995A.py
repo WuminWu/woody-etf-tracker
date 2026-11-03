@@ -240,7 +240,10 @@ def main():
         return
 
     if not data_date_str:
-        data_date_str = today_tw.strftime("%Y-%m-%d")
+        # 不可拿今天頂替：API 沒回日期時無法確認這是哪天的持股，存錯日期會讓加減碼整份算錯
+        log.warning("API 回應沒有 NavDate，無法確認持股日，本次不寫入")
+        send_telegram(f"⏳ {ETF_CODE} {ETF_NAME} 持股尚未更新（API 未回傳資料日期）\n🔄 將於 30 分鐘後再次檢查...")
+        return
 
     log.info(f"Data date from API: {data_date_str}")
 

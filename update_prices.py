@@ -3,6 +3,7 @@ Only updates etfPrice + ytd in data_*.json meta fields.
 Holdings data is left unchanged.
 Also refreshes data_index.json (TWII YTD).
 """
+import etf_registry
 import json
 import math
 import sys
@@ -13,20 +14,7 @@ import yfinance as yf
 
 # 新發行 ETF 的 YTD 應以 IPO 掛牌價為基準（yfinance 在上市初期回傳的「年內第一筆」
 # 不見得是 IPO 價，會造成 YTD 失真）。掛牌當年沿用此設定，跨年後自然失效。
-IPO_BASELINE = {
-    # code: (ipo_date YYYY-MM-DD, ipo_price)
-    "00403A": ("2026-05-12", 10.0),
-    "00400A": ("2026-04-09", 10.0),
-    "00405A": ("2026-06-09", 10.0),
-    "00997A": ("2026-04-14", 10.0),
-    "00411A": ("2026-08-26", 10.0),
-    "00407A": ("2026-06-24", 10.0),
-    "00409A": ("2026-09-02", 10.0),
-    "00412A": ("2026-10-13", 10.0),
-    "00402A": ("2026-06-09", 10.0),
-    "00406A": ("2026-06-11", 10.0),
-    "00416A": ("2026-11-03", 10.0),
-}
+IPO_BASELINE = etf_registry.ipo_baseline()   # code: (ipo_date YYYY-MM-DD, ipo_price)，來自 etfs.json
 
 
 def get_ipo_baseline(code):
@@ -39,31 +27,7 @@ def get_ipo_baseline(code):
     return (ipo_date, ipo_price) if now_year == ipo_year else None
 
 
-ETFS = [
-    ("00981A", "data_00981A.json"),
-    ("00400A", "data_00400A.json"),
-    ("00403A", "data_00403A.json"),
-    ("00988A", "data_00988A.json"),
-    ("00980A", "data_00980A.json"),
-    ("00985A", "data_00985A.json"),
-    ("00991A", "data_00991A.json"),
-    ("00992A", "data_00992A.json"),
-    ("00982A", "data_00982A.json"),
-    ("00987A", "data_00987A.json"),
-    ("00416A", "data_00416A.json"),
-    ("00993A", "data_00993A.json"),
-    ("00995A", "data_00995A.json"),
-    ("00406A", "data_00406A.json"),
-    ("00996A", "data_00996A.json"),
-    ("00405A", "data_00405A.json"),
-    ("00997A", "data_00997A.json"),
-    ("00990A", "data_00990A.json"),
-    ("00411A", "data_00411A.json"),
-    ("00407A", "data_00407A.json"),
-    ("00409A", "data_00409A.json"),
-    ("00412A", "data_00412A.json"),
-    ("00402A", "data_00402A.json"),
-]
+ETFS = [(c, f"data_{c}.json") for c in etf_registry.codes()]
 
 
 def ytd_history(ticker_symbol):

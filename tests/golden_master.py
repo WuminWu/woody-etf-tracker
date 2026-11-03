@@ -80,7 +80,7 @@ SB = os.path.abspath(a.sandbox)
 if os.path.isdir(SB):
     shutil.rmtree(SB)
 os.makedirs(os.path.join(SB, "holdings"))
-for p in glob.glob(os.path.join(ROOT, "*.py")) + glob.glob(os.path.join(ROOT, "holidays.json")):
+for p in glob.glob(os.path.join(ROOT, "*.py")) + glob.glob(os.path.join(ROOT, "holidays.json")) + glob.glob(os.path.join(ROOT, "etfs.json")):
     shutil.copy2(p, os.path.join(SB, os.path.basename(p)))
 for c in codes:
     for f in sorted(glob.glob(os.path.join(FIXTURES, "holdings", f"{c}_holdings_*.json"))):
@@ -110,6 +110,12 @@ class _FakeTicker:
 fake = types.ModuleType("yfinance")
 fake.Ticker = _FakeTicker
 sys.modules["yfinance"] = fake
+
+# 官方收盤價（tw_prices）會連網且隨日期變動 → 一律查無，讓 get_price 走上面的假 yfinance
+tp = types.ModuleType("tw_prices")
+tp.close = lambda code, date_str: None
+tp.closes_for = lambda date_str: {}
+sys.modules["tw_prices"] = tp
 
 # 阻斷 Sheets / Telegram 副作用
 sh = types.ModuleType("sheets_helper")

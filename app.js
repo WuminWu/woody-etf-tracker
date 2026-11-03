@@ -1,6 +1,13 @@
 // app.js
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+
+    // ── ETF 清單（etfs.json 是唯一來源；新增 ETF 只要改那個檔）─────────
+    let ETF_REGISTRY = [];
+    try {
+        const r = await fetch(`etfs.json?t=${Date.now()}`, { cache: 'no-store' });
+        ETF_REGISTRY = r.ok ? await r.json() : [];
+    } catch (e) { ETF_REGISTRY = []; }
 
     // ── Tab switching ──────────────────────────────────────────
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -293,60 +300,10 @@ document.addEventListener('DOMContentLoaded', () => {
         applySortAndRender();
     });
 
-    // ── ETF 配息設定（依各基金公開說明書）──────────────────────
+    // ── ETF 配息設定（etfs.json 的 dist；來源說明在各筆 note）──────────
     // distMonths: 除息月份陣列  distDay: 預計除息日（超過月底自動取月底）
-    const ETF_DIST = {
-        // 季配息：2/5/8/11月，除息日約18日（依歷史紀錄）
-        '00980A': { distFreq: '季配息', distMonths: [2,5,8,11], distDay: 18 },
-        // 季配息：3/6/9/12月，除息日約17日（依歷史紀錄）
-        '00981A': { distFreq: '季配息', distMonths: [3,6,9,12], distDay: 17 },
-        // 月配息（上市2026/04/09，除息日約17日，待官方公告確認）
-        '00400A': { distFreq: '月配息', distMonths: [1,2,3,4,5,6,7,8,9,10,11,12], distDay: 17 },
-        // 季配息：1/4/7/10月底評價、2/5/8/11月除息（ezmoney 官網收益分配；成立2026/04/28，滿180日後起配）
-        // 除息日待官方公告，暫參考同系列00981A約17日
-        '00403A': { distFreq: '季配息', distMonths: [2,5,8,11], distDay: 17 },
-        // 季配息：首次配息預計2026/09中旬（上市2026/06/09，除息月份待官方公告）
-        // 季配息：2/5/8/11月，除息日約18日（依歷史紀錄）
-        '00982A': { distFreq: '季配息', distMonths: [2,5,8,11], distDay: 18 },
-        // 年配息：每年12月底評價（上市2025/07/01，首次配息2026/12）
-        '00985A': { distFreq: '年配息', distMonths: [12], distDay: 31 },
-        // 年配息：每年10/31後35個營業日內（約12月中旬）（上市2025/12/03）
-        '00987A': { distFreq: '年配息', distMonths: [12], distDay: 20 },
-        '00416A': { distFreq: '季配息', distMonths: [], distDay: 0 },
-        // 年配息：9月底評價、10月除息（ezmoney 官網收益分配；首次預計2026/10，但官網查無2026年配息紀錄）
-        // 除息日待官方公告，暫參考同系列00981A約17日
-        '00988A': { distFreq: '年配息', distMonths: [10], distDay: 17 },
-        // 半年配：6/12月底評價、次月除息（復華官網配息行事曆）；除息日約21日（2026/07/21除息，依歷史紀錄）
-        '00991A': { distFreq: '半年配', distMonths: [1,7], distDay: 21 },
-        // 季配息：1/4/7/10月（上市2025/12/30，首次配息約2026/04）
-        '00992A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
-        // 年配息：每年12月底評價（上市2026/02/03，首次配息2026/12）
-        '00993A': { distFreq: '年配息', distMonths: [12], distDay: 31 },
-        // 季配息：1/4/7/10月（上市2026/01/22，首次評價2026/09）
-        '00995A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 31 },
-        // 月配息（中信官網「月配息」；上市2026/06/11；除息日 2026/07/31、09/02、10/05，約月初，取 3 日）
-        '00406A': { distFreq: '月配息', distMonths: [1,2,3,4,5,6,7,8,9,10,11,12], distDay: 3 },
-        // 季配息（兆豐官網標示季配息；除息月份與日期待官方公告確認）
-        '00996A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
-        // 季配息（富邦官網標示季配息，含收益平準金；除息月份與日期待官方公告確認）
-        '00405A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
-        // 季配息：1/4/7/10 月（群益美國增長，成立滿45日後起算；除息日待官方公告）
-        '00997A': { distFreq: '季配息', distMonths: [1,4,7,10], distDay: 25 },
-        // 不配息（累積型，安聯官網「配息頻率：不配」；上市2026/10/13）
-        '00412A': { distFreq: '不配息', distMonths: [], distDay: 0 },
-        // 不配息（凱基官網基本資料「收益分配：不分配」；上市2026/06/24）
-        '00407A': { distFreq: '不配息', distMonths: [], distDay: 0 },
-        // 年配息：10月底評價（復華官網「年配 / 基金成立日起屆滿60日後，預計以10月底為評價日」；上市2026/09/02）
-        // 除息日待官方公告，暫參考同公司00991A（6月底評價→7/21除息），預估11月約20日
-        '00409A': { distFreq: '年配息', distMonths: [11], distDay: 20 },
-        // 年配息：3月底評價、4月除息（統一ezmoney官網「首次除息預計時間為2027年4月」；上市2026/08/26）
-        // 除息日待官方公告，暫參考同系列00981A約17日
-        '00411A': { distFreq: '年配息', distMonths: [4],  distDay: 17 },
-        // 不配息（元大官網基本資料「收益分配：否」；上市2025/12/22）
-        '00990A': { distFreq: '不配息', distMonths: [], distDay: 0 },
-        // 年配息（安聯官網「收益分配頻率：年配」，尚未配息；評價/除息月份待官方公告，暫不顯示下次配息日；上市2026/06/09）
-        '00402A': { distFreq: '年配息', distMonths: [], distDay: 0 },
-    };
+    const ETF_DIST = Object.fromEntries(ETF_REGISTRY.map(e =>
+        [e.code, { distFreq: e.dist.freq, distMonths: e.dist.months, distDay: e.dist.day }]));
 
     // 計算下一次配息日（distMonths 需已排序）
     const getNextDivDate = (months, day) => {
@@ -362,6 +319,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const etfSelector = document.getElementById('etf-selector');
+    etfSelector.innerHTML = ETF_REGISTRY.map(e => `<option value="${e.code}">${e.code} ${e.fullName}</option>`).join('');
+    const ETF_RISK = Object.fromEntries(ETF_REGISTRY.map(e => [e.code, e.risk]));
+    const showRisk = (etfId) => {
+        const el = document.getElementById('stat-risk');
+        if (el) el.textContent = ETF_RISK[etfId] || '—';
+    };
 
     // ── Snapshots / Manifest ───────────────────────────────────
     const loadManifest = () => {
@@ -457,6 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 配息資訊維持顯示
+        showRisk(etfId);
         const elDistFreq = document.getElementById('stat-dist-freq');
         const elDistNext = document.getElementById('stat-dist-next');
         const distCfg = ETF_DIST[etfId];
@@ -512,7 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         : '';
                     const lastUpdateStr = meta.lastUpdate ? `最後更新：${meta.lastUpdate}` : '';
                     // Special note for ETFs with inherent 1-day delay (海外 ETF 因美股盤後資料隔日才公布)
-                    const GLOBAL_ETFS = ['00988A', '00997A', '00990A', '00411A', '00409A', '00402A'];
+                    const GLOBAL_ETFS = ETF_REGISTRY.filter(e => e.t1).map(e => e.code);
                     let delayNote = '';
                     if (GLOBAL_ETFS.includes(etfId)) {
                         delayNote = '　<span style="color:#6b7280;font-size:0.78em;">（海外ETF，資料比台灣ETF晚1個交易日）</span>';
@@ -614,6 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // 配息資訊
+                showRisk(etfId);
                 const elDistFreq = document.getElementById('stat-dist-freq');
                 const elDistNext = document.getElementById('stat-dist-next');
                 const distCfg = ETF_DIST[etfId];
@@ -669,31 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshDatePicker(etfSelector.value);
 
     // ── YTD Ranking ────────────────────────────────────────────
-    const ALL_ETFS = [
-        { id: '00981A', name: '統一台股增長' },
-        { id: '00400A', name: '國泰動能高息' },
-        { id: '00403A', name: '統一升級50' },
-        { id: '00988A', name: '統一全球創新' },
-        { id: '00980A', name: '野村智慧優選' },
-        { id: '00985A', name: '野村台灣50' },
-        { id: '00991A', name: '復華未來50' },
-        { id: '00992A', name: '群益科技創新' },
-        { id: '00982A', name: '群益台灣強棒' },
-        { id: '00987A', name: '台新台灣優勢成長' },
-        { id: '00416A', name: '主動台新臺灣中小' },
-        { id: '00993A', name: '主動安聯台灣' },
-        { id: '00995A', name: '主動中信台灣卓越' },
-        { id: '00406A', name: '主動中信台灣收益成長' },
-        { id: '00996A', name: '主動兆豐台灣豐收' },
-        { id: '00405A', name: '主動富邦台灣龍耀' },
-        { id: '00997A', name: '主動群益美國增長' },
-        { id: '00990A', name: '主動元大全球AI新經濟' },
-        { id: '00411A', name: '主動統一前沿科技' },
-        { id: '00407A', name: '主動凱基台灣' },
-        { id: '00409A', name: '主動復華全球50' },
-        { id: '00412A', name: '主動安聯亞洲半導體' },
-        { id: '00402A', name: '主動安聯美國科技' },
-    ];
+    const ALL_ETFS = ETF_REGISTRY.map(e => ({ id: e.code, name: e.name }));
 
     // ── TWII Amplitude Panel ───────────────────────────────────
     const loadYtdRanking = () => {
@@ -771,31 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadYtdRanking();
 
     // ── Cross-compare tab ──────────────────────────────────────
-    const ETF_LIST = [
-        { id: '00981A', name: '統一台股增長' },
-        { id: '00400A', name: '國泰動能高息' },
-        { id: '00403A', name: '統一升級50' },
-        { id: '00988A', name: '統一全球創新' },
-        { id: '00980A', name: '野村智慧優選' },
-        { id: '00985A', name: '野村台灣50' },
-        { id: '00991A', name: '復華未來50' },
-        { id: '00992A', name: '群益科技創新' },
-        { id: '00982A', name: '群益台灣強棒' },
-        { id: '00987A', name: '台新台灣優勢成長' },
-        { id: '00416A', name: '主動台新臺灣中小' },
-        { id: '00993A', name: '主動安聯台灣' },
-        { id: '00995A', name: '主動中信台灣卓越' },
-        { id: '00406A', name: '主動中信台灣收益成長' },
-        { id: '00996A', name: '主動兆豐台灣豐收' },
-        { id: '00405A', name: '主動富邦台灣龍耀' },
-        { id: '00997A', name: '主動群益美國增長' },
-        { id: '00990A', name: '主動元大全球AI新經濟' },
-        { id: '00411A', name: '主動統一前沿科技' },
-        { id: '00407A', name: '主動凱基台灣' },
-        { id: '00409A', name: '主動復華全球50' },
-        { id: '00412A', name: '主動安聯亞洲半導體' },
-        { id: '00402A', name: '主動安聯美國科技' },
-    ];
+    const ETF_LIST = ETF_REGISTRY.map(e => ({ id: e.code, name: e.name }));
 
     let crossSortAsc = false;
     let crossData = [];

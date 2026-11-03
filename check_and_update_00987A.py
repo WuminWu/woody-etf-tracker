@@ -16,19 +16,16 @@ import json
 import os
 import sys
 import logging
-import urllib.request
-import urllib.parse
-from html.parser import HTMLParser
 from datetime import date, datetime, timedelta, timezone
 
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 from sheets_helper import append_holdings_to_sheets
+import tsit   # 台新官網抓取／解析／持股日驗證（00987A、00416A 共用）
 from notify import send_telegram, send_update_notification   # 單一來源：節流＋429重試＋自動分段；持股更新通知排程時依規模排序
 
 # --------------- Config ---------------
-HOLDINGS_URL = "https://www.tsit.com.tw/ETF/Home/ETFSeriesDetail/00987A"
 HOLDINGS_DIR = "holdings"
 DATA_FILE = "data_00987A.json"
 ETF_CODE = "00987A"
@@ -53,61 +50,6 @@ if not os.path.exists(HOLDINGS_DIR):
     os.makedirs(HOLDINGS_DIR)
 
 
-# --------------- HTML Parser ---------------
-
-class HoldingsTableParser(HTMLParser):
-    """Parse the holdings table from tsit.com.tw ETF detail page.
-
-    Scans ALL table rows — any row whose first cell looks like a stock code
-    (4-digit number optionally followed by ' TT') is treated as a holding.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.in_tr = False
-        self.in_td = False
-        self.current_row = []
-        self.current_cell = ""
-        self.holdings = []
-
-    def handle_starttag(self, tag, attrs):
-        if tag == "tr":
-            self.in_tr = True
-            self.current_row = []
-        if self.in_tr and tag == "td":
-            self.in_td = True
-            self.current_cell = ""
-
-    def handle_endtag(self, tag):
-        if tag == "tr":
-            self.in_tr = False
-            if len(self.current_row) >= 4:
-                self._process_row(self.current_row)
-        if self.in_tr and tag == "td":
-            self.in_td = False
-            self.current_row.append(self.current_cell.strip())
-
-    def handle_data(self, data):
-        if self.in_td:
-            self.current_cell += data
-
-    def _process_row(self, row):
-        import re
-        try:
-            code = row[0].replace(" TT", "").strip()
-            # Must be a 4-digit stock code
-            if not re.fullmatch(r'\d{4}', code):
-                return
-            name = row[1].strip()
-            shares_str = row[2].replace(",", "").strip()
-            weight_str = row[3].replace("%", "").strip()
-            shares = int(float(shares_str))
-            weight = float(weight_str)
-            self.holdings.append({"code": code, "name": name, "shares": shares, "weight": weight})
-        except Exception:
-            pass
-
-
 # --- 共用核心（等價重構，見 etf_core.py 檔頭）---
 from etf_core import (
     FundConfig, build_data_json, get_price, fmt_zhang, trade_amount, change_text, format_trade_line, today_tw,
@@ -118,54 +60,6 @@ from etf_core import (
 # --- 本基金設定：所有與其他基金不同之處都集中在這裡 ---
 CFG = FundConfig(code="00987A", name="台新台灣優勢成長", manager="魏永祥",
                  aum_derive_check=True)   # 來源張數偶爾錯，與 規模/淨值 反推值互相校驗
-
-
-# --------------- Helpers ---------------
-
-def fetch_holdings():
-    """Fetch and parse holdings from static HTML page."""
-    log.info(f"Fetching {HOLDINGS_URL} ...")
-    try:
-        req = urllib.request.Request(
-            HOLDINGS_URL,
-            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-        )
-        with urllib.request.urlopen(req, timeout=30) as r:
-            html = r.read().decode("utf-8", errors="replace")
-        parser = HoldingsTableParser()
-        parser.feed(html)
-        holdings = parser.holdings
-        log.info(f"Parsed {len(holdings)} holdings from page")
-        return holdings
-    except Exception as e:
-        log.error(f"Fetch failed: {e}")
-        return None
-
-
-def fetch_aum_from_html():
-    """Fetch AUM from the same tsit.com.tw page."""
-    import re
-    try:
-        req = urllib.request.Request(
-            HOLDINGS_URL,
-            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-        )
-        with urllib.request.urlopen(req, timeout=30) as r:
-            html = r.read().decode("utf-8", errors="replace")
-        aum_ntd, units = 0, 0
-        # Find 基金淨資產價值(元) value
-        m = re.search(r'基金淨資產價值.*?TWD\s*([\d,]+)', html, re.DOTALL)
-        if m:
-            aum_ntd = int(m.group(1).replace(",", ""))
-        # Find 已發行受益權單位總數 value
-        m2 = re.search(r'已發行受益權單位總數.*?<td[^>]*>([\d,]+)', html, re.DOTALL)
-        if m2:
-            units = int(m2.group(1).replace(",", ""))
-        log.info(f"AUM from HTML: {aum_ntd:,} NTD ({aum_ntd/1e8:.2f}億), Units: {units:,}")
-        return aum_ntd, units
-    except Exception as e:
-        log.warning(f"AUM fetch from HTML failed: {e}")
-        return 0, 0
 
 
 def build_notification(wrapper):
@@ -208,8 +102,7 @@ def build_notification(wrapper):
 
 def main():
     run_date = datetime.now(timezone(timedelta(hours=8))).date()
-    # tsit.com.tw always shows the latest (current trading day) holdings after market close.
-    # Use today's date as the data date (not prev_trading_day).
+    # 收盤後官網換成「T+1 申購買回清單」＝今天收盤後的持股；預期持股日就是今天（tsit.fetch 會驗證）
     data_date_str = run_date.strftime("%Y-%m-%d")
 
     log.info(f"=== 00987A Check & Update started ===")
@@ -219,8 +112,7 @@ def main():
         log.info(f"Holdings for {data_date_str} already exist. Nothing to do.")
         return
 
-    today_holdings = fetch_holdings()
-    aum_ntd, units = fetch_aum_from_html()
+    today_holdings, aum_ntd, units = tsit.fetch(ETF_CODE, data_date_str)
     if not today_holdings:
         log.error("No holdings fetched. Will retry next hour.")
         send_telegram(f"⏳ 00987A 台新台灣優勢成長 持股尚未更新\n📅 資料日期：{data_date_str}\n🔄 將於 30 分鐘後再次檢查...")

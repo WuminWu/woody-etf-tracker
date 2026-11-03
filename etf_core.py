@@ -33,6 +33,9 @@ from datetime import datetime, timedelta, timezone
 
 import yfinance as yf
 
+import etf_registry
+import tw_prices
+
 from market_utils import yf_symbol, ccy_of, is_stock_code
 # 休市日與交易日判斷只有 tw_calendar 一個來源（假日表曾在 17/19 支各存一份而漏更新）
 from tw_calendar import is_trading_day, prev_trading_day, next_trading_day
@@ -62,7 +65,7 @@ class FundConfig:
     ipo_date/ipo_price
                   有設定時：掛牌當年度的 YTD 以發行價為基準。period="ytd" 的第一根
                   是掛牌日收盤、不是發行價，對年中掛牌的基金會低估漲幅。
-                  未設定則沿用「YTD 第一根收盤」。
+                  未設定時改用 etfs.json 的 ipo；兩邊都沒有則沿用「YTD 第一根收盤」。
     units_are_zhang
                   True 表示呼叫端給的 units 已經是「張」（中信／安聯），否則是「股」。
     aum_yf_fallback
@@ -91,6 +94,10 @@ class FundConfig:
         self.manager = manager
         self.holdings_dir = holdings_dir
         self.data_file = data_file or f"data_{code}.json"
+        if ipo_date is None:
+            reg = etf_registry.get(code)
+            if reg and reg.get("ipo"):
+                ipo_date, ipo_price = reg["ipo"]
         self.ipo_date = ipo_date
         self.ipo_price = ipo_price
         self.units_are_zhang = units_are_zhang
@@ -135,7 +142,8 @@ def fx_to_twd(ccy):
 def get_price(code_str):
     """最新收盤價，統一換算為新台幣（diffAmount 才能跨幣別加總）。
 
-    台股：無市場後綴，先試 .TW 再試 .TWO（上櫃，如 00411A）。
+    台股：無市場後綴。先查證交所／櫃買今天的官方收盤（tw_prices，收盤公布後才有），
+          沒有再用 yfinance，先試 .TW 再試 .TWO（上櫃，如 00411A）。
     海外：TICKER＋市場 格式，交給 market_utils.yf_symbol 處理
           （CH→.SS/.SZ、HK 補零），再乘以當日匯率。
     抓不到一律回 0.0。
@@ -143,6 +151,9 @@ def get_price(code_str):
     parts = str(code_str).strip().split()
     base = parts[0]
     if len(parts) == 1:
+        official = tw_prices.close(base, today_tw().strftime("%Y-%m-%d"))
+        if official:
+            return official
         for suffix in (".TW", ".TWO"):
             try:
                 hist = _drop_nan(yf.Ticker(f"{base}{suffix}").history(period="1d", timeout=10))

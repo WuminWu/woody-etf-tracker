@@ -43,40 +43,16 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 DIGESTS_FILE = "digests.json"   # 供網站「每日分析」分頁讀取（{date: text}）
 SITE_URL = "https://wuminwu.github.io/woody-etf-tracker/"
+import etf_registry
 from market_utils import is_stock_code   # 排除期貨等非股票部位
 
 PROVENANCE = "報告來源: 854-Woody (狼群專用未經同意請勿轉傳，若數據有誤請通知我)"
 
 # 台股 ETF（純台股；海外/混合另成一組）
-TW_ETFS = [
-    ("00981A", "統一台股增長"),
-    ("00400A", "國泰動能高息"),
-    ("00403A", "統一升級50"),
-    ("00980A", "野村智慧優選"),
-    ("00985A", "野村台灣50"),
-    ("00991A", "復華未來50"),
-    ("00992A", "群益科技創新"),
-    ("00982A", "群益台灣強棒"),
-    ("00987A", "台新優勢成長"),
-    ("00416A", "台新臺灣中小"),
-    ("00993A", "安聯台灣"),
-    ("00995A", "中信台灣卓越"),
-    ("00406A", "中信台灣收益成長"),
-    ("00996A", "兆豐台灣豐收"),
-    ("00405A", "富邦台灣龍耀"),
-    ("00407A", "凱基台灣"),
-]
+TW_ETFS = etf_registry.pairs("shortName", group="tw")
 
-# 海外／台美混合 ETF（持股含美股，T+1 更新；未來新增混合型 ETF 加在這裡即可）
-OVERSEAS_ETFS = [
-    ("00988A", "統一全球創新"),
-    ("00997A", "群益美國增長"),
-    ("00990A", "元大全球AI新經濟"),
-    ("00411A", "統一前沿科技"),
-    ("00409A", "復華全球50"),
-    ("00412A", "安聯亞洲半導體"),
-    ("00402A", "安聯美國科技"),
-]
+# 海外／台美混合 ETF（持股含美股，T+1 更新）；兩組都由 etfs.json 的 group 決定
+OVERSEAS_ETFS = etf_registry.pairs("shortName", group="overseas")
 
 # 報告群組設定。tw 用「今天」為報告日；overseas 因 T+1，用該組目前最新的資料日。
 GROUPS = {

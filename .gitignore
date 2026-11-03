@@ -10,3 +10,10 @@ test_info.html
 logs/
 google_sa.json
 .claude/
+price_cache/
+
+# 早期除錯傾印（留在本機、不進 git）
+00988A_html.txt
+00988A_screenshot.png
+ez_html.txt
+ez_pcf.txt

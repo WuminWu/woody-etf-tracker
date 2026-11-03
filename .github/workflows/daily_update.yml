@@ -50,29 +50,15 @@ jobs:
           pip install -r requirements.txt
           python -m playwright install --with-deps chromium
 
-      - name: Run ETF update scripts (台股，不含 00988A)
+      - name: Run ETF update scripts (etfs.json 全部，不含 00988A)
         if: env.SKIP_RUN != 'true'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
         run: |
-          python check_and_update_00981A.py || true
-          python check_and_update_00400A.py || true
-          python check_and_update_00403A.py || true
-          python check_and_update_00980A.py || true
-          python check_and_update_00985A.py || true
-          python check_and_update_00991A.py || true
-          python check_and_update_00992A.py || true
-          python check_and_update_00982A.py || true
-          python check_and_update_00987A.py || true
-          python check_and_update_00416A.py || true
-          python check_and_update_00993A.py || true
-          python check_and_update_00995A.py || true
-          python check_and_update_00406A.py || true
-          python check_and_update_00996A.py || true
-          python check_and_update_00405A.py || true
-          python check_and_update_00997A.py || true
+          # 爬蟲清單來自 etfs.json；00988A 由 daily_update_00988A.yml 另跑
+          for s in $(python etf_registry.py 00988A); do python "$s" || true; done
           python check_and_update_index.py || true
           python update_cost_basis.py || true
           python record_common_actions.py || true
