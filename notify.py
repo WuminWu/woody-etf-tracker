@@ -12,6 +12,7 @@ notify.py — Telegram 發送單一來源（節流 + 429 洪水重試 + 過長�
 import json
 import logging
 import os
+import sys
 import time as _time
 import urllib.error
 import urllib.parse
@@ -42,6 +43,16 @@ def _split_message(message, limit=3900):
     return parts
 
 
+def safe_print(text):
+    """print，但主控台印不出的字元（cp950 下的 emoji）換成 ?，不讓整支程式因 UnicodeEncodeError 當掉。
+    排程的 stdout 是 cp950：看門狗與 run_summary 以前都是先 print 再發送，一印 emoji 就中斷、警報發不出去。"""
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        enc = getattr(sys.stdout, "encoding", None) or "utf-8"
+        print(text.encode(enc, errors="replace").decode(enc, errors="replace"))
+
+
 def send_telegram(message):
     parts = _split_message(message)
     if len(parts) > 1:
@@ -56,7 +67,7 @@ def _send_one(message):
     chat = os.environ.get("TELEGRAM_CHAT_ID", "")
     if not token or not chat:
         log.warning("Telegram credentials not set - printing message instead.")
-        print(message)
+        safe_print(message)
         return False
     payload = urllib.parse.urlencode({"chat_id": chat, "text": message}).encode()
     url = f"https://api.telegram.org/bot{token}/sendMessage"

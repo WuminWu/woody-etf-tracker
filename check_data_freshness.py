@@ -20,11 +20,12 @@ import glob
 import json
 import os
 import sys
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 from daily_digest import send_telegram, TW_ETFS, OVERSEAS_ETFS, SITE_URL  # noqa: E402
+from notify import safe_print   # noqa: E402
 
 from tw_calendar import is_trading_day, prev_trading_day, last_trading_day   # 單一來源：休市日與交易日判斷
 
@@ -37,6 +38,23 @@ def _data_date(code):
         return json.load(open(path, encoding="utf-8")).get("meta", {}).get("dataDate")
     except Exception:
         return None
+
+
+def stuck_run_note(now=None):
+    """今天有一輪排程沒跑完（run_update.ps1 的執行中標記還在、而且超過 60 分鐘）就回傳說明。
+
+    卡住的那一輪發不出失敗通知（2026-10-08 21:00 的 git push 在等登入視窗，掛了好幾天），
+    最後一輪（21:00）出事時，下一個交易日之前只有看門狗看得到。"""
+    try:
+        m = json.load(open(os.path.join("logs", "run_in_progress.json"), encoding="utf-8-sig"))
+        start = datetime.strptime(m["start"], "%Y-%m-%d %H:%M:%S")
+    except Exception:
+        return ""
+    now = now or datetime.now()
+    if start.date() != now.date() or (now - start).total_seconds() < 3600:
+        return ""
+    return (f"⏱️ {start:%H:%M} 開始的那一輪排程沒有跑完（多半是 git push 在等登入視窗，或某支爬蟲卡住）。"
+            f"下一輪會結束它並重試；細節見 logs/run_{start:%Y%m%d}.log。")
 
 
 def main():
@@ -55,15 +73,19 @@ def main():
         if dd is None or dd < ov_ok_s:
             ov_stale.append((code, name, dd or "無資料"))
 
-    if not tw_stale and not ov_stale and not force:
+    stuck = stuck_run_note()
+
+    if not tw_stale and not ov_stale and not stuck and not force:
         print(f"[freshness] OK — 台股皆已更新至最後交易日 {ltd_s}")
         return 0
 
     lines = [
-        "⚠️ ETF 追蹤資料過期警報",
+        "⚠️ ETF 追蹤資料過期警報" if (tw_stale or ov_stale or not stuck) else "⏱️ ETF 排程有一輪沒有跑完",
         f"📅 最後交易日應為：{ltd_s}",
         "",
     ]
+    if stuck:
+        lines += [stuck, ""]
     if tw_stale:
         lines.append(f"🔴 台股 {len(tw_stale)}/{len(TW_ETFS)} 檔未更新：")
         for code, name, dd in tw_stale[:15]:
@@ -81,8 +103,8 @@ def main():
         SITE_URL,
     ]
     msg = "\n".join(lines)
-    print(msg)
-    send_telegram(msg)
+    send_telegram(msg)       # 先發送再印：以前先 print，cp950 主控台一印 emoji 就當掉、警報發不出去
+    safe_print(msg)
     return 1
 
 
