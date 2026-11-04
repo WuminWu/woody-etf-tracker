@@ -1,0 +1,302 @@
+[
+  {
+    "code": "2330",
+    "name": "台積電",
+    "shares": 615000,
+    "weight": 11.65
+  },
+  {
+    "code": "3653",
+    "name": "健策",
+    "shares": 105000,
+    "weight": 5.68
+  },
+  {
+    "code": "3443",
+    "name": "創意",
+    "shares": 90000,
+    "weight": 5.37
+  },
+  {
+    "code": "3711",
+    "name": "日月光投控",
+    "shares": 1002000,
+    "weight": 5.27
+  },
+  {
+    "code": "2383",
+    "name": "台光電",
+    "shares": 132000,
+    "weight": 5.04
+  },
+  {
+    "code": "2408",
+    "name": "南亞科",
+    "shares": 1502000,
+    "weight": 5.03
+  },
+  {
+    "code": "5274",
+    "name": "信驊",
+    "shares": 42000,
+    "weight": 4.94
+  },
+  {
+    "code": "3081",
+    "name": "聯亞",
+    "shares": 270000,
+    "weight": 4.75
+  },
+  {
+    "code": "3037",
+    "name": "欣興",
+    "shares": 621000,
+    "weight": 4.62
+  },
+  {
+    "code": "6274",
+    "name": "台燿",
+    "shares": 445000,
+    "weight": 4.16
+  },
+  {
+    "code": "3017",
+    "name": "奇鋐",
+    "shares": 118000,
+    "weight": 2.79
+  },
+  {
+    "code": "3231",
+    "name": "緯創",
+    "shares": 1830000,
+    "weight": 2.7
+  },
+  {
+    "code": "2454",
+    "name": "聯發科",
+    "shares": 86000,
+    "weight": 2.68
+  },
+  {
+    "code": "2059",
+    "name": "川湖",
+    "shares": 37000,
+    "weight": 2.67
+  },
+  {
+    "code": "1303",
+    "name": "南亞",
+    "shares": 1125000,
+    "weight": 2.61
+  },
+  {
+    "code": "2395",
+    "name": "研華",
+    "shares": 483000,
+    "weight": 2.55
+  },
+  {
+    "code": "8046",
+    "name": "南電",
+    "shares": 273000,
+    "weight": 2.47
+  },
+  {
+    "code": "3661",
+    "name": "世芯-KY",
+    "shares": 89000,
+    "weight": 2.37
+  },
+  {
+    "code": "4958",
+    "name": "臻鼎-KY",
+    "shares": 632000,
+    "weight": 2.29
+  },
+  {
+    "code": "3189",
+    "name": "景碩",
+    "shares": 331000,
+    "weight": 2.28
+  },
+  {
+    "code": "6531",
+    "name": "愛普*",
+    "shares": 375000,
+    "weight": 2.26
+  },
+  {
+    "code": "6223",
+    "name": "旺矽",
+    "shares": 65000,
+    "weight": 2.25
+  },
+  {
+    "code": "6213",
+    "name": "聯茂",
+    "shares": 437000,
+    "weight": 2.24
+  },
+  {
+    "code": "3264",
+    "name": "欣銓",
+    "shares": 1337000,
+    "weight": 2.21
+  },
+  {
+    "code": "8021",
+    "name": "尖點",
+    "shares": 659000,
+    "weight": 2.09
+  },
+  {
+    "code": "6187",
+    "name": "萬潤",
+    "shares": 220000,
+    "weight": 1.96
+  },
+  {
+    "code": "6515",
+    "name": "穎崴",
+    "shares": 1000,
+    "weight": 0.03
+  },
+  {
+    "code": "6510",
+    "name": "精測",
+    "shares": 1000,
+    "weight": 0.02
+  },
+  {
+    "code": "6446",
+    "name": "藥華藥",
+    "shares": 2000,
+    "weight": 0.02
+  },
+  {
+    "code": "2382",
+    "name": "廣達",
+    "shares": 8000,
+    "weight": 0.02
+  },
+  {
+    "code": "2344",
+    "name": "華邦電",
+    "shares": 17000,
+    "weight": 0.02
+  },
+  {
+    "code": "1560",
+    "name": "中砂",
+    "shares": 3000,
+    "weight": 0.02
+  },
+  {
+    "code": "3702",
+    "name": "大聯大",
+    "shares": 23000,
+    "weight": 0.02
+  },
+  {
+    "code": "2337",
+    "name": "旺宏",
+    "shares": 25000,
+    "weight": 0.02
+  },
+  {
+    "code": "6526",
+    "name": "達發",
+    "shares": 3000,
+    "weight": 0.02
+  },
+  {
+    "code": "2303",
+    "name": "聯電",
+    "shares": 20000,
+    "weight": 0.02
+  },
+  {
+    "code": "6770",
+    "name": "力積電",
+    "shares": 35000,
+    "weight": 0.02
+  },
+  {
+    "code": "2301",
+    "name": "光寶科",
+    "shares": 9000,
+    "weight": 0.02
+  },
+  {
+    "code": "5289",
+    "name": "宜鼎",
+    "shares": 2000,
+    "weight": 0.02
+  },
+  {
+    "code": "6285",
+    "name": "啟碁",
+    "shares": 10000,
+    "weight": 0.02
+  },
+  {
+    "code": "3044",
+    "name": "健鼎",
+    "shares": 4000,
+    "weight": 0.02
+  },
+  {
+    "code": "2455",
+    "name": "全新",
+    "shares": 5000,
+    "weight": 0.02
+  },
+  {
+    "code": "3260",
+    "name": "威剛",
+    "shares": 6000,
+    "weight": 0.02
+  },
+  {
+    "code": "6257",
+    "name": "矽格",
+    "shares": 10000,
+    "weight": 0.02
+  },
+  {
+    "code": "8358",
+    "name": "金居",
+    "shares": 5000,
+    "weight": 0.02
+  },
+  {
+    "code": "6669",
+    "name": "緯穎",
+    "shares": 1000,
+    "weight": 0.01
+  },
+  {
+    "code": "2357",
+    "name": "華碩",
+    "shares": 2000,
+    "weight": 0.01
+  },
+  {
+    "code": "8299",
+    "name": "群聯",
+    "shares": 1000,
+    "weight": 0.01
+  },
+  {
+    "code": "2345",
+    "name": "智邦",
+    "shares": 1000,
+    "weight": 0.01
+  },
+  {
+    "code": "6944",
+    "name": "兆聯實業",
+    "shares": 2000,
+    "weight": 0.01
+  }
+]

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-capitalfund.py — 群益 ETF 持股 xlsx 下載（00982A / 00992A / 00997A 共用）。
+capitalfund.py — 群益 ETF 持股 xlsx 下載（00982A / 00992A / 00997A / 00415A 共用）。
 
 ## 為什麼有這個檔案
 這三支原本各有一份幾乎逐字相同的 download_xlsx（00982A 與 00992A 完全相同，
