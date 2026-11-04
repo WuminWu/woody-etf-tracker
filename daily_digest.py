@@ -451,7 +451,10 @@ def render_digest(today_str, etf_data, updated, prev_snap,
         for c, s in stock.items():
             if s["name"]:
                 name_of[c] = s["name"]
-        for c in set(stock) | set(y_add):
+        # 必須走訪排序後的代號、排序也要有完整的次要鍵：原本走訪 set，而字串雜湊每次啟動都不同，
+        # 變化幅度同分的幾檔每跑一次順序就不一樣，取前 4 名時會換人（2026-10-13 同一份資料
+        # 跑 5 輪、網站日報改寫 4 次；第 4 名在昇達科技／萬潤／臻鼎-KY／穩懋之間跳動）。
+        for c in sorted(set(stock) | set(y_add)):
             t_codes = sorted(stock[c]["add_etfs"]) if c in stock else []
             y_codes = sorted(y_add.get(c, []))
             t = len(t_codes)
@@ -461,8 +464,9 @@ def render_digest(today_str, etf_data, updated, prev_snap,
                 rising.append((c, nm, y, t, t_codes))     # 升溫：附今日加碼的 ETF
             elif y >= 2 and t < y:
                 cooling.append((c, nm, y, t, y_codes))     # 退潮：附前一日加碼的 ETF
-        rising.sort(key=lambda x: -(x[3] - x[2]))
-        cooling.sort(key=lambda x: (x[3] - x[2]))
+        # 同幅度：升溫看今日家數多者、退潮看前一日家數多者，再依代號
+        rising.sort(key=lambda x: (-(x[3] - x[2]), -x[3], x[0]))
+        cooling.sort(key=lambda x: (x[3] - x[2], -x[2], x[0]))
 
     # ---- 組訊息 ----
     md = today_str[5:].replace("-", "/").lstrip("0").replace("/0", "/")
