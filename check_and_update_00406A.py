@@ -247,6 +247,14 @@ def build_notification(wrapper):
 def main():
     log.info(f"=== {ETF_CODE} Check & Update started ===")
 
+    # 今天的持股已經存過就不連中信：中信 API 自 2026-11-05 起約 20:30 之後會直接斷線，
+    # 18:00 那輪抓到後，晚上剩下的幾輪不必再打 API（也就不會因斷線發異常通知）。
+    # 只在「今天」的檔已存在時跳過；資料日落後（API 還在給前一日）時照常去抓。
+    today_iso = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
+    if holdings_exist_for(CFG, today_iso):
+        log.info(f"Holdings for {today_iso} already exist. Nothing to do（未連線中信）.")
+        return
+
     token = get_ctbc_token()
     manager = fetch_manager(token)
 
