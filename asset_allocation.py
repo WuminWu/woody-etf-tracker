@@ -67,6 +67,7 @@ def parse_asset_allocation(xlsx_path, sheet=0):
     fut_margin_ccy = "NTD"
     futures = []
     in_fut_detail = False
+    fut_cols = {}
 
     for i in range(min(30, len(df))):
         c0 = str(df.iloc[i, 0]).strip() if pd.notna(df.iloc[i, 0]) else ""
@@ -91,13 +92,23 @@ def parse_asset_allocation(xlsx_path, sheet=0):
             repo = val
         elif "應收付" in c0 and val is not None:
             recv = val
-        elif c0 == "期貨代號":          # 期貨明細表頭
+        elif c0 == "期貨代號":          # 期貨明細表頭：期貨代號｜期貨名稱｜持股權重｜口數｜契約年月
             in_fut_detail = True
+            # 依表頭名稱找欄位（不寫死欄號）；舊版面沒有口數欄就不給 contracts
+            fut_cols = {str(df.iloc[i, j]).strip(): j for j in range(df.shape[1]) if pd.notna(df.iloc[i, j])}
         elif in_fut_detail:
             if c0 == "股票" or not c0:
                 in_fut_detail = False
             elif c1 is not None:
-                futures.append({"code": c0, "name": str(c1).strip(), "weight": _pct(c2)})
+                f = {"code": c0, "name": str(c1).strip(), "weight": _pct(c2)}
+                jc, jm = fut_cols.get("口數"), fut_cols.get("契約年月")
+                if jc is not None and pd.notna(df.iloc[i, jc]):
+                    n, _ = _num(df.iloc[i, jc])
+                    if n is not None:
+                        f["contracts"] = int(n)
+                if jm is not None and pd.notna(df.iloc[i, jm]):
+                    f["month"] = str(df.iloc[i, jm]).strip()
+                futures.append(f)
 
     if not net:
         return {}
@@ -116,7 +127,7 @@ def parse_asset_allocation(xlsx_path, sheet=0):
         # 期貨保證金：NTD 才換算佔比；USD 保留原值與幣別
         "futuresMarginPct": pct(fut_margin) if fut_margin_ccy == "NTD" else None,
         "futuresMargin": {"amount": int(fut_margin), "ccy": fut_margin_ccy} if fut_margin is not None else None,
-        "futures": futures,          # [{code,name,weight}]，無期貨則為空陣列
+        "futures": futures,          # [{code,name,weight,contracts(口),month(契約年月)}]，無期貨則為空陣列
         "hasFutures": bool(futures) or bool(fut_notional),
     }
     return alloc
@@ -150,14 +161,23 @@ def attach_delta(alloc, prev_alloc):
         a, b = alloc.get(k), prev_alloc.get(k)
         if isinstance(a, (int, float)) and isinstance(b, (int, float)):
             d[k] = round(a - b, 2)
-    prevf = {f.get("code"): f.get("weight") for f in (prev_alloc.get("futures") or [])}
-    fd = {}
+    prevf = {f.get("code"): f for f in (prev_alloc.get("futures") or [])}
+    fd, cd = {}, {}
     for f in (alloc.get("futures") or []):
-        pw = prevf.get(f.get("code"))
+        p = prevf.get(f.get("code")) or {}
+        pw = p.get("weight")
         if isinstance(f.get("weight"), (int, float)) and isinstance(pw, (int, float)):
             fd[f["code"]] = round(f["weight"] - pw, 2)
+        # 口數變化（口）：前一日沒有這檔期貨視為 0 口；前一日舊版面沒有口數欄則不算
+        if isinstance(f.get("contracts"), int):
+            if not p:
+                cd[f["code"]] = f["contracts"]
+            elif isinstance(p.get("contracts"), int):
+                cd[f["code"]] = f["contracts"] - p["contracts"]
     if fd:
         d["futures"] = fd
+    if cd:
+        d["futuresContracts"] = cd
     if d:
         alloc["delta"] = d
     return alloc
@@ -168,6 +188,17 @@ def _fmt_pp(delta):
     if delta is None or abs(delta) < 0.01:
         return ""
     return f"（{'↑' if delta > 0 else '↓'}{abs(delta):.2f}）"
+
+
+def _fmt_contracts(f, delta):
+    """期貨口數 → '867 口（↑120 口）・'；沒有口數回傳空字串，持平不加括號。"""
+    n = f.get("contracts")
+    if not isinstance(n, int):
+        return ""
+    s = f"{n:,} 口"
+    if delta:
+        s += f"（{'↑' if delta > 0 else '↓'}{abs(delta):,} 口）"
+    return s + "・"
 
 
 def _fmt_zhang(n):
@@ -220,8 +251,10 @@ def format_alloc_lines(alloc):
         lines.append("🧩 資產配置（括號為較前一日 pp 變化）：" + "｜".join(parts))
     futs = alloc.get("futures") or []
     fdelta = delta.get("futures") or {}
+    cdelta = delta.get("futuresContracts") or {}
     if futs:
-        fl = "、".join(f"{f['code']} {f['name']} {f['weight']}%{_fmt_pp(fdelta.get(f['code']))}" for f in futs)
+        fl = "、".join(f"{f['code']} {f['name']} {_fmt_contracts(f, cdelta.get(f['code']))}"
+                       f"{f['weight']}%{_fmt_pp(fdelta.get(f['code']))}" for f in futs)
         lines.append(f"⚡ 期貨曝險：{fl}（名目本金，做多台股）")
     elif alloc.get("futuresNotionalPct"):
         lines.append(f"⚡ 期貨曝險 {alloc['futuresNotionalPct']}%{_fmt_pp(delta.get('futuresNotionalPct'))}（名目本金）")

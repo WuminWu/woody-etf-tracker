@@ -28,7 +28,9 @@
                 {
                     "code": "TX",
                     "name": "台指期貨",
-                    "weight": 2.95
+                    "weight": 2.95,
+                    "contracts": 867,
+                    "month": "2026/11"
                 }
             ],
             "hasFutures": true,
@@ -41,6 +43,9 @@
                 "futuresMarginPct": -0.04,
                 "futures": {
                     "TX": 0.68
+                },
+                "futuresContracts": {
+                    "TX": 188
                 }
             }
         }

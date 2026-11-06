@@ -187,9 +187,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const sharesDisplay = (() => {
                 const prev = holding.prevShares ?? 0, curr = holding.shares;
-                if (prev === 0 || prev === curr) return `<span>${formatNumber(curr)}</span>`;
+                const unit = holding.isFutures ? ' 口' : '';   // 期貨（安聯 00993A 的 TX）單位是口，不是股
+                if (prev === 0 || prev === curr) return `<span>${formatNumber(curr)}${unit}</span>`;
                 const color = curr > prev ? '#ff4d4d' : '#4ade80';
-                return `<span style="color:#9ca3af;font-size:0.8em;">${formatNumber(prev)}</span> <span style="color:${color};">→</span> <span style="font-weight:600;">${formatNumber(curr)}</span>`;
+                return `<span style="color:#9ca3af;font-size:0.8em;">${formatNumber(prev)}</span> <span style="color:${color};">→</span> <span style="font-weight:600;">${formatNumber(curr)}${unit}</span>`;
             })();
 
             const costDisplay = (() => {
@@ -540,7 +541,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                            ${s.k} <b style="color:var(--text-primary);">${s.v}%</b></span>`).join('');
                     let futNote = '';
                     if (aa.futures && aa.futures.length) {
-                        const list = aa.futures.map(f => `${f.code} ${f.name} <b>${f.weight}%</b>`).join('、');
+                        const cd = (aa.delta && aa.delta.futuresContracts) || {};
+                        const list = aa.futures.map(f => {
+                            // 口數（舊資料沒有 contracts 就只顯示權重）；括號為較前一日口數變化
+                            let lots = '';
+                            if (Number.isInteger(f.contracts)) {
+                                const d = cd[f.code];
+                                const dStr = d ? ` <span style="color:${d > 0 ? '#ff4d4d' : '#4ade80'};">(${d > 0 ? '↑' : '↓'}${Math.abs(d).toLocaleString()} 口)</span>` : '';
+                                lots = `<b>${f.contracts.toLocaleString()} 口</b>${dStr}・`;
+                            }
+                            return `${f.code} ${f.name} ${lots}<b>${f.weight}%</b>`;
+                        }).join('、');
                         futNote = `<div style="margin-top:5px;font-size:0.82em;color:#a855f7;"><i class="fa-solid fa-bolt"></i> 期貨曝險：${list}（名目本金，做多台股）</div>`;
                     }
                     elAA.innerHTML =
