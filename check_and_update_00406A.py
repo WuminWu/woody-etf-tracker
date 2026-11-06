@@ -6,11 +6,14 @@ https://www.ctbcinvestments.com.tw/Etf/00682450/Combination
 API: https://www.ctbcinvestments.com.tw/API/etf/ETFHoldingWeight
 """
 
+import http.client
 import json
 import logging
 import os
 import re
 import sys
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import date, datetime, timedelta, timezone
@@ -54,15 +57,36 @@ if not os.path.exists(HOLDINGS_DIR):
 
 # --------------- CTBC API ---------------
 
+# 中信官網偶爾會直接斷線（RemoteDisconnected）或逾時；這類暫時性錯誤等幾秒重試，
+# 4xx（請求本身有問題）不重試，避免把真正的錯誤藏起來。
+_RETRY_WAITS = (5, 15)   # 第 1、2 次失敗後各等幾秒；共最多 3 次
+
+
+def _is_transient(e):
+    if isinstance(e, urllib.error.HTTPError):
+        return e.code >= 500 or e.code == 429
+    return isinstance(e, (urllib.error.URLError, http.client.HTTPException,
+                          ConnectionError, TimeoutError))
+
+
 def _post(url, body):
     data = json.dumps(body).encode()
-    req = urllib.request.Request(
-        url, data=data,
-        headers={"Content-Type": "application/json", "Referer": CTBC_REFERER},
-        method="POST"
-    )
-    with urllib.request.urlopen(req, timeout=20) as r:
-        return json.loads(r.read())
+    for attempt in range(len(_RETRY_WAITS) + 1):
+        req = urllib.request.Request(
+            url, data=data,
+            headers={"Content-Type": "application/json", "Referer": CTBC_REFERER},
+            method="POST"
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                return json.loads(r.read())
+        except Exception as e:
+            if attempt >= len(_RETRY_WAITS) or not _is_transient(e):
+                raise
+            wait = _RETRY_WAITS[attempt]
+            log.warning(f"CTBC 請求失敗（{type(e).__name__}: {e}），{wait}s 後重試 "
+                        f"({attempt + 1}/{len(_RETRY_WAITS)})：{url.split('?')[0]}")
+            time.sleep(wait)
 
 
 def get_ctbc_token():
