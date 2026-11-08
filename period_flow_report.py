@@ -292,7 +292,7 @@ def render(flow, canon):
     # 每檔 ETF 摘要與全體合計
     summ = {}
     agg = collections.defaultdict(lambda: {"net_shares": 0, "net_amt": 0.0, "buy_amt": 0.0, "sell_amt": 0.0,
-                                           "buyers": [], "sellers": [], "new": [], "exit": []})
+                                           "buyers": [], "sellers": [], "new": [], "exit": [], "by_etf": {}})
     for etf, v in E.items():
         st = v["stocks"]
         m0, m1 = v["meta_start"], v["meta_end"]
@@ -309,6 +309,7 @@ def render(flow, canon):
             a = agg[code]
             a["net_shares"] += x["net_shares"]; a["net_amt"] += x["buy_amt"] + x["sell_amt"]
             a["buy_amt"] += x["buy_amt"]; a["sell_amt"] += x["sell_amt"]
+            a["by_etf"][etf] = (x["buy_amt"] + x["sell_amt"], action(x["start_shares"], x["end_shares"]))
             if x["net_shares"] > 0: a["buyers"].append(etf)
             elif x["net_shares"] < 0: a["sellers"].append(etf)
             if x["start_shares"] == 0 < x["end_shares"]: a["new"].append(etf)
@@ -353,7 +354,18 @@ def render(flow, canon):
     ranked = sorted(agg.items(), key=lambda kv: (-kv[1]["net_amt"], kv[0]))
     top_buy = [kv for kv in ranked if kv[1]["net_amt"] > 0][:30]
     top_sell = [kv for kv in reversed(ranked) if kv[1]["net_amt"] < 0][:30]
-    parts["TOP_BUY"], parts["TOP_SELL"], parts["FULL"] = agg_table(top_buy), agg_table(top_sell), agg_table(ranked)
+    parts["TOP_BUY"], parts["FULL"] = agg_table(top_buy), agg_table(ranked)
+
+    # 淨賣超表多一欄：是哪些 ETF 賣的（淨賣金額由大到小，出清另外標註）
+    def sellers_txt(a):
+        out = []
+        for e in sorted(a["sellers"], key=lambda e: a["by_etf"][e][0]):
+            amt, act = a["by_etf"][e]
+            out.append(f"{e}（{yi(amt)}{'，出清' if act == '出清' else ''}）")
+        return "、".join(out)
+    parts["TOP_SELL"] = ("| # | 標的 | 市場 | 淨增減股數 | 淨買賣（億） | 買進（億） | 賣出（億） | 淨買／淨賣 ETF 數 | 期間股價 | 淨賣的 ETF（淨賣金額，億） |\n"
+                         "|--:|---|---|--:|--:|--:|--:|--:|--:|---|\n"
+                         + "\n".join(agg_row(i + 1, c, a) + f" {sellers_txt(a)} |" for i, (c, a) in enumerate(top_sell)))
 
     def cons_table(key, other, label, olabel, sign):
         items = sorted([kv for kv in agg.items() if len(kv[1][key]) >= 5],
