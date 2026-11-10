@@ -100,14 +100,27 @@ def main():
 
     if a.no_cost:
         return
-    cb = load_cost_basis()
-    if cb.get(a.code) and not a.force:
+    if load_cost_basis().get(a.code) and not a.force:
         sys.exit(f"cost_basis.json 已有 {a.code} 的成本紀錄，要覆寫請加 --force")
-    cb[a.code] = {str(h["code"]): {"avgCost": round(prices[str(h["code"])], 2), "shares": h["shares"], "since": a.date}
-                  for h in holdings if h.get("shares", 0) > 0}
-    cb.setdefault("_lastProcessed", {})[a.code] = a.date
+    n = seed_cost_basis(a.code, a.date, holdings, lambda c: prices[str(c)])
+    print(f"  已寫 cost_basis.json：{n} 檔，成本＝{a.date} 收盤，_lastProcessed＝{a.date}")
+
+
+def seed_cost_basis(code, date_str, holdings, price_of):
+    """以基準日收盤當成本，整組覆寫 cost_basis.json[code]，_lastProcessed＝基準日。回傳建檔檔數。
+
+    也給「掛牌前沒揭露持股」的爬蟲在第一次拿到持股時呼叫（如 00418A），
+    之後 update_cost_basis 看到 _lastProcessed 已是當天就跳過，隔天照常加權平均。
+    """
+    cb = load_cost_basis()
+    cb[code] = {}
+    for h in holdings:
+        p = price_of(h["code"]) or 0
+        if h.get("shares", 0) > 0 and p > 0:
+            cb[code][str(h["code"])] = {"avgCost": round(p, 2), "shares": h["shares"], "since": date_str}
+    cb.setdefault("_lastProcessed", {})[code] = date_str
     save_cost_basis(cb)
-    print(f"  已寫 cost_basis.json：{len(cb[a.code])} 檔，成本＝{a.date} 收盤，_lastProcessed＝{a.date}")
+    return len(cb[code])
 
 
 if __name__ == "__main__":
