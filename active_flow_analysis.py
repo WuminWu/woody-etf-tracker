@@ -17,6 +17,10 @@ active_flow_analysis.py
   [3] 訊號回測：主動加碼、單純看 diffShares>0、新建倉、多家共識 等事件，
       資料公布隔天收盤進場，之後 5/10/20 個交易日相對「所有主動 ETF 台股持股等權平均」的超額報酬。
 
+  [4] 主動加碼依 ETF 拆開。
+  [5] 多日累積（同一 ETF 在 W 份快照內多天主動買進）＋排除追高（事件前 L 日超額漲幅分組），
+      並附「所有持股在同樣前段漲幅下」的對照組，以及前後半段穩定度。
+
 價格：取當天任何一檔 ETF 快照裡該股的 price（只有台股代號）。
      某檔股票若當天已無任何 ETF 持有就沒有價格，該事件會被略過，覆蓋率另外列出。
 報酬未含股利，除息會讓報酬略低估。
@@ -122,6 +126,7 @@ def decompose(dates, snaps, baseline="units"):
                                          kind="new", g=g, ratio=None, active_pct=None,
                                          active_amt=s * (h.get("price") or 0),
                                          diff=s, wt=h.get("todayWeight") or 0, ywt=0,
+                                         shares=s, ps=0, act=s, px=h.get("price") or 0,
                                          buy_share=(s * (h.get("price") or 0) / buys) if buys else 0))
                     continue
                 r = s / ps - 1
@@ -132,6 +137,7 @@ def decompose(dates, snaps, baseline="units"):
                                  kind="held", g=g, ratio=r, active_pct=act / ps,
                                  active_amt=act * (h.get("price") or 0),
                                  diff=s - ps, wt=h.get("todayWeight") or 0, ywt=h.get("yestWeight") or 0,
+                                 shares=s, ps=ps, act=act, px=h.get("price") or 0,
                                  buy_share=(max(0, s - ps) * (h.get("price") or 0) / buys) if buys else 0))
             if chg:
                 days.append(dict(date=d, etf=code_etf, g=g, med=st.median(chg),
@@ -381,6 +387,161 @@ def report_by_etf(dates, price, rows, args):
               f"勝率 {s['hit']:4.0%}  t {s['t'] / math.sqrt(10):+.1f}")
 
 
+# ----------------------------------------------------------------- [5] 多日累積＋排除追高
+RUNUP_BUCKETS = [("前段跌 ≤−5%", -9, -0.05), ("小跌 −5%~0", -0.05, 0.0), ("小漲 0~+5%", 0.0, 0.05),
+                 ("漲 +5%~+10%", 0.05, 0.10), ("大漲 >+10%", 0.10, 9)]
+
+
+def runup_of(dates, price, bench, di, d, code, L):
+    """資料日 d 往前 L 個交易日的超額報酬（決策當下已知的資訊）。"""
+    i = di[d]
+    if i - L < 0:
+        return None
+    a, b = price[dates[i - L]].get(code), price[d].get(code)
+    bm = bench(i - L, L)
+    if not a or not b or bm is None:
+        return None
+    return b / a - 1 - bm
+
+
+def bucket_of(x):
+    for name, lo, hi in RUNUP_BUCKETS:
+        if lo < x <= hi:
+            return name
+    return None
+
+
+def accumulation_events(rows, W, min_days, min_amt, min_built, cooldown):
+    """
+    多日累積：同一檔 ETF 對同一檔股票，在自己最近 W 份快照內
+      - 有主動買進的天數 ≥ min_days（新建倉當天也算一天）
+      - 主動買進累積金額 ≥ min_amt
+      - 這 W 天主動買進的股數占目前部位 ≥ min_built（排除大部位上的零星加碼）
+    條件第一次成立那天記一個事件；之後 cooldown 份快照內同一 (ETF, 股票) 不重複記。
+    回傳 {(date, code): set(etf)}。
+    """
+    etf_dates = defaultdict(set)
+    by = defaultdict(dict)
+    for r in rows:
+        if not TW_CODE.match(r["code"]):
+            continue
+        etf_dates[r["etf"]].add(r["date"])
+        by[(r["etf"], r["code"])][r["date"]] = r
+    etf_dates = {e: sorted(v) for e, v in etf_dates.items()}
+    events = defaultdict(set)
+    for (etf, code), rec in by.items():
+        ds = etf_dates[etf]
+        last_k = -10 ** 9
+        for k, d in enumerate(ds):
+            r = rec.get(d)
+            if not r or k - last_k < cooldown:
+                continue
+            win = [rec[x] for x in ds[max(0, k - W + 1): k + 1] if x in rec]
+            buys = [x for x in win if x["act"] > 0 and x["act"] * x["px"] > 0]
+            if len(buys) < min_days:
+                continue
+            amt = sum(x["act"] * x["px"] for x in buys)
+            built = sum(x["act"] for x in buys) / r["shares"] if r["shares"] else 0
+            if amt >= min_amt and built >= min_built and r["act"] > 0:   # 當天仍在買
+                events[(d, code)].add(etf)
+                last_k = k
+    return events
+
+
+def eval_events(dates, price, bench, di, events, L, date_filter=None):
+    """回傳 {bucket或'全部': {h: [當日組合超額]}}，以及每筆的 runup。"""
+    res = defaultdict(lambda: {h: defaultdict(list) for h in HORIZONS})
+    for (d, code) in events:
+        if date_filter and not date_filter(d):
+            continue
+        ru = runup_of(dates, price, bench, di, d, code, L)
+        fr, _ = fwd_returns(dates, price, d, code)
+        if fr is None:
+            continue
+        keys = ["全部"] + ([bucket_of(ru)] if ru is not None else [])
+        for h in HORIZONS:
+            b = bench(di[d] + 1, h)
+            if fr[h] is None or b is None:
+                continue
+            for k in keys:
+                res[k][h][d].append(fr[h] - b)
+    return res
+
+
+def fmt_cell(cohorts, h):
+    s = summarize([st.mean(v) for v in cohorts.values()])
+    if not s:
+        return f"{'n/a':>8s} {'':4s} {'':4s}"
+    return f"{pct(s['mean']):>8s} {s['hit']:4.0%} {s['t'] / math.sqrt(h):+4.1f}"
+
+
+def print_table(title, res, n_events):
+    print(f"\n  ▶ {title}（事件 {n_events}）")
+    print(f"    {'前 L 日超額漲幅':16s} {'交易日':>5s}" + "".join(f" | {h:>2d}日超額 勝率  t值" for h in HORIZONS))
+    for k in ["全部"] + [b[0] for b in RUNUP_BUCKETS]:
+        if k not in res:
+            continue
+        n = len(res[k][HORIZONS[0]])
+        print(f"    {k:16s} {n:5d}" + "".join(" | " + fmt_cell(res[k][h], h) for h in HORIZONS))
+
+
+def report_accumulation(dates, price, rows, args):
+    L = args.runup_days
+    print("\n" + "=" * 78)
+    print(f"[5] 多日累積＋排除追高（前 L={L} 個交易日的超額漲幅分組）")
+    print("=" * 78)
+    bench = bench_returns(dates, price)
+    di = {d: i for i, d in enumerate(dates)}
+
+    # 對照組：所有台股持股在同樣的前段漲幅下，之後本來就會怎樣（判斷「排除追高」是訊號的功勞還是動能/反轉本身）
+    universe = {}
+    for d in dates:
+        for c in price[d]:
+            universe[(d, c)] = None
+    print_table("對照組：所有主動 ETF 台股持股（不管有沒有加碼）", eval_events(dates, price, bench, di, universe, L),
+                len(universe))
+
+    single = defaultdict(set)
+    for r in rows:
+        if (TW_CODE.match(r["code"]) and r["kind"] == "held"
+                and r["active_pct"] >= args.min_pct / 100 and r["active_amt"] >= args.min_amt):
+            single[(r["date"], r["code"])].add(r["etf"])
+    print_table("單日主動加碼（上一段的 C）", eval_events(dates, price, bench, di, single, L), len(single))
+
+    variants = [
+        ("累積 A：5 天內 ≥3 天買、≥3000 萬、占部位 ≥10%", dict(W=5, min_days=3, min_amt=30e6, min_built=0.10)),
+        ("累積 B：10 天內 ≥5 天買、≥5000 萬、占部位 ≥20%", dict(W=10, min_days=5, min_amt=50e6, min_built=0.20)),
+        ("累積 C：5 天內 5 天都買、≥3000 萬", dict(W=5, min_days=5, min_amt=30e6, min_built=0.0)),
+    ]
+    acc_all = {}
+    for title, kw in variants:
+        ev = accumulation_events(rows, cooldown=args.cooldown, **kw)
+        acc_all[title] = ev
+        print_table(title, eval_events(dates, price, bench, di, ev, L), len(ev))
+        multi = {k: v for k, v in ev.items() if len(v) >= 2}
+        if len(multi) >= 20:
+            print_table(title + "，且同日 ≥2 家", eval_events(dates, price, bench, di, multi, L), len(multi))
+
+    # 前後半段：看結果是不是只在某一段成立
+    mid = dates[len(dates) // 2]
+    print(f"\n  ▶ 前後半段穩定度（以 {mid} 切開；只看「全部」與「前段沒漲 ≤0」兩組）")
+    print(f"    {'訊號':44s} {'段':6s} {'組':8s} {'交易日':>5s} | 10日超額 勝率  t值 | 20日超額 勝率  t值")
+    tests = [("對照組", universe), ("單日主動加碼", single)] + list(acc_all.items())
+    for title, ev in tests:
+        for half, f in (("前半", lambda d: d < mid), ("後半", lambda d: d >= mid)):
+            res = eval_events(dates, price, bench, di, ev, L, f)
+            not_chase = {h: defaultdict(list) for h in HORIZONS}
+            for b in ("前段跌 ≤−5%", "小跌 −5%~0"):
+                for h in HORIZONS:
+                    for d, v in res.get(b, {}).get(h, {}).items():
+                        not_chase[h][d].extend(v)
+            for grp, rr in (("全部", res.get("全部")), ("沒漲≤0", not_chase)):
+                if not rr:
+                    continue
+                print(f"    {title[:22]:44s} {half:6s} {grp:8s} {len(rr[10]):5d}"
+                      + "".join(" | " + fmt_cell(rr[h], h) for h in (10, 20)))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--min-pct", type=float, default=1.0, help="主動比例門檻（%%）")
@@ -388,6 +549,9 @@ def main():
     ap.add_argument("--baseline", choices=["units", "median"], default="median",
                     help="被動預期的基準：units＝單位數成長 g；median＝當天持股股數變化中位數（預設）")
     ap.add_argument("--csv", help="另存逐筆事件 CSV")
+    ap.add_argument("--runup-days", type=int, default=10, help="追高判斷：看事件前幾個交易日的超額漲幅")
+    ap.add_argument("--cooldown", type=int, default=10, help="多日累積：同一 ETF×股票觸發後幾份快照內不重複記")
+    ap.add_argument("--accum-only", action="store_true", help="只跑 [5] 多日累積＋排除追高")
     args = ap.parse_args()
 
     dates, snaps, group = load()
@@ -395,10 +559,12 @@ def main():
     rows, days = decompose(dates, snaps, args.baseline)
     print(f"被動基準：{args.baseline}")
     print(f"快照 {len(dates)} 天（{dates[0]} ~ {dates[-1]}），持股異動列 {len(rows)} 筆\n")
-    report_alignment(days, group)
-    report_cash(days)
-    report_backtest(dates, price, rows, args)
-    report_by_etf(dates, price, rows, args)
+    if not args.accum_only:
+        report_alignment(days, group)
+        report_cash(days)
+        report_backtest(dates, price, rows, args)
+        report_by_etf(dates, price, rows, args)
+    report_accumulation(dates, price, rows, args)
 
 
 if __name__ == "__main__":
