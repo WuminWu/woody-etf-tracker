@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tabSearch   = document.getElementById('tab-search');
     const tabCommon   = document.getElementById('tab-common');
     const tabDigest   = document.getElementById('tab-digest');
+    const tabInsider  = document.getElementById('tab-insider');
     const appHeader   = document.querySelector('.app-header');
     const ytdRankingBar = document.getElementById('ytd-ranking-bar');
 
@@ -33,6 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 tabSearch.style.display = 'none';
                 if (tabCommon) tabCommon.style.display = 'none';
                 if (tabDigest) tabDigest.style.display = 'none';
+                if (tabInsider) tabInsider.style.display = 'none';
             };
             if (activeTab === 'holdings') {
                 hideAll();
@@ -63,8 +65,60 @@ document.addEventListener('DOMContentLoaded', async () => {
                 appHeader.style.display = 'none';
                 if (ytdRankingBar) ytdRankingBar.style.display = 'none';
                 loadDigests(true);
+            } else if (activeTab === 'insider') {
+                hideAll();
+                tabInsider.style.display = '';
+                appHeader.style.display = 'none';
+                if (ytdRankingBar) ytdRankingBar.style.display = 'none';
+                loadInsider();
             }
         });
+    });
+
+    // ── Insider tab（大股東申報交易）──────────────────────────
+    // 另一個專案（WuminWu/tw-insider-transfer）部署在自己的 Cloudflare Pages，這裡用 iframe 嵌入。
+    // ?embed=1：對方隱藏自己的標題、固定深色；iframe 高度與「捲到明細」由對方用 postMessage 通知。
+    // 本機測試（localhost）改嵌本機的 http.server。
+    const INSIDER_ORIGIN = ['localhost', '127.0.0.1'].includes(location.hostname)
+        ? 'http://127.0.0.1:8765'
+        : 'https://tw-insider-transfer.pages.dev';
+    const insiderFrame = document.getElementById('insider-frame');
+    const insiderOpen = document.getElementById('insider-open');
+    if (insiderOpen) insiderOpen.href = INSIDER_ORIGIN + '/';
+    // 請對方回報目前高度：iframe 載入完成、以及每次切回這個分頁時（隱藏期間寬度為 0，高度會亂掉）
+    // 載入後每 0.4 秒 ping 一次，直到收到高度（最多 10 秒），避免第一則訊息遺失時 iframe 停在預設高度
+    let insiderPingTimer = null;
+    const pingInsider = () => {
+        try { insiderFrame.contentWindow.postMessage({ src: 'etf', type: 'ping' }, INSIDER_ORIGIN); } catch (e) {}
+    };
+    const pingUntilSized = () => {
+        clearInterval(insiderPingTimer);
+        let n = 0;
+        pingInsider();
+        insiderPingTimer = setInterval(() => {
+            if (++n >= 25) clearInterval(insiderPingTimer); else pingInsider();
+        }, 400);
+    };
+    function loadInsider() {
+        if (!insiderFrame) return;
+        // 第一次切到這個分頁才載入；之後保留狀態（月份、篩選）
+        if (!insiderFrame.src) {
+            insiderFrame.addEventListener('load', pingUntilSized);
+            insiderFrame.src = INSIDER_ORIGIN + '/?embed=1&theme=dark';
+        } else {
+            pingUntilSized();
+        }
+    }
+    window.addEventListener('message', (e) => {
+        if (e.origin !== INSIDER_ORIGIN || !e.data || e.data.src !== 'insider') return;
+        if (e.data.type === 'height' && e.data.height > 0) {
+            clearInterval(insiderPingTimer);
+            insiderFrame.style.height = Math.ceil(e.data.height) + 'px';
+        } else if (e.data.type === 'scroll' && typeof e.data.top === 'number') {
+            const top = insiderFrame.getBoundingClientRect().top + window.scrollY + e.data.top - 12;
+            if (e.data.onlyIfHidden && top - window.scrollY < window.innerHeight - 120) return;
+            window.scrollTo({ top, behavior: 'smooth' });
+        }
     });
 
     // ── Holdings tab ───────────────────────────────────────────

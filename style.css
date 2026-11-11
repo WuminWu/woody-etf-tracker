@@ -556,6 +556,23 @@ tbody tr:last-child td {
     color: var(--text-primary);
 }
 
+/* 大股東申報交易（iframe 嵌入另一個網站，高度由對方 postMessage 通知） */
+.insider-frame {
+    display: block;
+    width: 100%;
+    height: 80vh;            /* 收到高度前的預設 */
+    border: 0;
+    background: transparent;
+    color-scheme: dark;      /* 與嵌入頁一致，否則瀏覽器會在 iframe 底下畫不透明背景 */
+}
+.insider-open { text-decoration: none; cursor: pointer; }
+@media (max-width: 768px) {
+    /* 手機：分頁鈕換行（6 個放不下一列，原本會撐出水平捲軸）；嵌入頁需要寬度，卡片內距縮小 */
+    .page-tabs { flex-wrap: wrap; }
+    .tab-btn { padding: 0.5rem 0.9rem; font-size: 0.85rem; }
+    .card.insider-panel { padding: 1rem 0.5rem; }
+}
+
 /* ETF Tags in cross-compare */
 .etf-tags {
     display: flex;

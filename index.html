@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=13">
+    <link rel="stylesheet" href="style.css?v=14">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
 </head>
@@ -68,6 +68,9 @@
             </button>
             <button class="tab-btn" data-tab="digest">
                 <i class="fa-solid fa-newspaper"></i> 每日分析
+            </button>
+            <button class="tab-btn" data-tab="insider">
+                <i class="fa-solid fa-user-tie"></i> 大股東申報
             </button>
         </nav>
 
@@ -149,6 +152,18 @@
                         <tbody id="cross-body"></tbody>
                     </table>
                 </div>
+            </div>
+        </section>
+        <!-- Tab: Insider Transfer（大股東申報交易，另一個專案：tw-insider-transfer，以 iframe 嵌入） -->
+        <section class="dashboard-content fade-in-up delay-1" id="tab-insider" style="display:none;">
+            <div class="card glass-panel insider-panel">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-user-tie"></i> 大股東申報交易</h2>
+                    <a class="badge insider-open" id="insider-open" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-up-right-from-square"></i> 新視窗開啟
+                    </a>
+                </div>
+                <iframe id="insider-frame" title="大股東申報交易" class="insider-frame"></iframe>
             </div>
         </section>
     </main>
@@ -345,6 +360,6 @@
         <div id="lightbox-close">✕</div>
     </div>
 
-    <script src="app.js?v=51"></script>
+    <script src="app.js?v=52"></script>
 </body>
 </html>
