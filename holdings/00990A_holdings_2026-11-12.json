@@ -1,0 +1,212 @@
+[
+  {
+    "code": "AMD US",
+    "name": "ADVANCED MICRO DEVICES",
+    "shares": 100699,
+    "weight": 6.47
+  },
+  {
+    "code": "MSFT US",
+    "name": "MICROSOFT CORP",
+    "shares": 100680,
+    "weight": 5.78
+  },
+  {
+    "code": "BE US",
+    "name": "BLOOM ENERGY CORP- A",
+    "shares": 255293,
+    "weight": 5.66
+  },
+  {
+    "code": "PLTR US",
+    "name": "PALANTIR TECHNOLOGIES INC-A",
+    "shares": 266842,
+    "weight": 5.03
+  },
+  {
+    "code": "AMZN US",
+    "name": "AMAZON.COM INC",
+    "shares": 151860,
+    "weight": 4.46
+  },
+  {
+    "code": "META US",
+    "name": "META PLATFORMS INC-CLASS A",
+    "shares": 64600,
+    "weight": 4.42
+  },
+  {
+    "code": "2330",
+    "name": "台積電",
+    "shares": 518000,
+    "weight": 4.04
+  },
+  {
+    "code": "AVGO US",
+    "name": "BROADCOM INC",
+    "shares": 97480,
+    "weight": 3.9
+  },
+  {
+    "code": "SPCX US",
+    "name": "SPACE EXPLORATION TECHN-CL A",
+    "shares": 251728,
+    "weight": 3.87
+  },
+  {
+    "code": "SHOP US",
+    "name": "SHOPIFY INC - CLASS A",
+    "shares": 204100,
+    "weight": 3.29
+  },
+  {
+    "code": "GOOGL US",
+    "name": "ALPHABET INC-CL A",
+    "shares": 100040,
+    "weight": 3.28
+  },
+  {
+    "code": "LLY US",
+    "name": "ELI LILLY & CO",
+    "shares": 19380,
+    "weight": 3.04
+  },
+  {
+    "code": "3443",
+    "name": "創意",
+    "shares": 109000,
+    "weight": 2.85
+  },
+  {
+    "code": "CRWD US",
+    "name": "CROWDSTRIKE HOLDINGS INC - A",
+    "shares": 112463,
+    "weight": 2.84
+  },
+  {
+    "code": "SNOW US",
+    "name": "SNOWFLAKE INC",
+    "shares": 84880,
+    "weight": 2.78
+  },
+  {
+    "code": "NET US",
+    "name": "CLOUDFLARE INC - CLASS A",
+    "shares": 79260,
+    "weight": 2.77
+  },
+  {
+    "code": "GE US",
+    "name": "GENERAL ELECTRIC",
+    "shares": 75800,
+    "weight": 2.75
+  },
+  {
+    "code": "2454",
+    "name": "聯發科",
+    "shares": 193000,
+    "weight": 2.48
+  },
+  {
+    "code": "ANET US",
+    "name": "ARISTA NETWORKS INC",
+    "shares": 103800,
+    "weight": 2.35
+  },
+  {
+    "code": "6098 JP",
+    "name": "RECRUIT HOLDINGS CO LTD",
+    "shares": 174100,
+    "weight": 2.0
+  },
+  {
+    "code": "MU US",
+    "name": "MICRON TECHNOLOGY INC",
+    "shares": 22425,
+    "weight": 1.97
+  },
+  {
+    "code": "2383",
+    "name": "台光電",
+    "shares": 134000,
+    "weight": 1.83
+  },
+  {
+    "code": "3017",
+    "name": "奇鋐",
+    "shares": 190000,
+    "weight": 1.76
+  },
+  {
+    "code": "3037",
+    "name": "欣興",
+    "shares": 667000,
+    "weight": 1.76
+  },
+  {
+    "code": "HWM US",
+    "name": "HOWMET AEROSPACE INC",
+    "shares": 65100,
+    "weight": 1.59
+  },
+  {
+    "code": "2368",
+    "name": "金像電",
+    "shares": 442000,
+    "weight": 1.44
+  },
+  {
+    "code": "FROG US",
+    "name": "JFROG LTD",
+    "shares": 108900,
+    "weight": 1.32
+  },
+  {
+    "code": "NVDA US",
+    "name": "NVIDIA CORP",
+    "shares": 67400,
+    "weight": 1.23
+  },
+  {
+    "code": "ZS US",
+    "name": "ZSCALER INC",
+    "shares": 53000,
+    "weight": 1.12
+  },
+  {
+    "code": "2308",
+    "name": "台達電",
+    "shares": 240000,
+    "weight": 0.99
+  },
+  {
+    "code": "SMTC US",
+    "name": "SEMTECH CORP",
+    "shares": 68308,
+    "weight": 0.9
+  },
+  {
+    "code": "APP US",
+    "name": "APPLOVIN CORP-CLASS A",
+    "shares": 17560,
+    "weight": 0.76
+  },
+  {
+    "code": "8046",
+    "name": "南電",
+    "shares": 170000,
+    "weight": 0.55
+  },
+  {
+    "code": "HPE US",
+    "name": "HEWLETT PACKARD ENTERPRISE",
+    "shares": 94200,
+    "weight": 0.52
+  },
+  {
+    "code": "9602 JP",
+    "name": "TOHO CO LTD",
+    "shares": 159500,
+    "weight": 0.19
+  }
+]
