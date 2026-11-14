@@ -91,8 +91,37 @@ if (Test-Path $wdVbs) {
     Write-Warning "找不到 $wdVbs，略過看門狗註冊"
 }
 
+# ------------------------------------------------------------
+# 晚間補抓：三大法人分頁的融資融券資料證交所約 22:00 才公布（主排程最後一輪 21:00 抓不到）。
+# 只跑 institutional.py 並提交 institutional/，不重跑 ETF 爬蟲。週一～五 22:15、22:45、23:15。
+# ------------------------------------------------------------
+$lateName = "ETF_Tracker_Institutional_Late"
+$lateVbs  = Join-Path (Split-Path -Parent $script) "run_institutional.vbs"
+if (Test-Path $lateVbs) {
+    $lateAction  = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$lateVbs`""
+    $lateTrigger = New-ScheduledTaskTrigger -Weekly `
+        -DaysOfWeek Monday,Tuesday,Wednesday,Thursday,Friday -At 22:15
+    $lateTrigger.Repetition = (New-ScheduledTaskTrigger -Once -At 22:15 `
+        -RepetitionInterval (New-TimeSpan -Minutes 30) `
+        -RepetitionDuration (New-TimeSpan -Minutes 60)).Repetition
+    $lateSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+        -ExecutionTimeLimit (New-TimeSpan -Minutes 15) -MultipleInstances IgnoreNew
+    try {
+        Register-ScheduledTask -TaskName $lateName `
+            -Action $lateAction -Trigger $lateTrigger -Settings $lateSettings -Principal $principal `
+            -Description "三大法人買賣超分頁：晚間補抓融資融券（證交所約 22:00 公布）並推送" `
+            -Force -ErrorAction Stop | Out-Null
+        Write-Host "已註冊工作排程：$lateName（週一～五 22:15、22:45、23:15）"
+    } catch {
+        Write-Error "註冊 $lateName 失敗：$($_.Exception.Message)"
+    }
+} else {
+    Write-Warning "找不到 $lateVbs，略過晚間補抓註冊"
+}
+
 Write-Host ""
 Write-Host "  主排程觸發：週一～五 18:00–21:00，每 30 分鐘一次"
+Write-Host "  晚間補抓：  週一～五 22:15、22:45、23:15（三大法人／融資融券）"
 Write-Host "  看門狗觸發：每日 22:30"
 Write-Host "  立即測試： Start-ScheduledTask -TaskName `"$taskName`""
 Write-Host "  查看狀態： Get-ScheduledTask -TaskName `"$taskName`" | Get-ScheduledTaskInfo"

@@ -1279,7 +1279,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let instIndex = null;
     const instDays = {};            // 日期 → 單日資料（Promise 快取）
     let instDate = null;
-    let instParty = 'total', instSort = 'amt', instMkt = 'all', instLimit = 30;
+    let instParty = 'total', instSort = 'amt', instMkt = 'all', instLimit = 30, instTrendLimit = 30;
 
     const instEsc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const instCls = v => v > 0 ? 'inst-pos' : v < 0 ? 'inst-neg' : 'inst-zero';
@@ -1470,7 +1470,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const items = instIndex || [];
         if (badge) badge.textContent = `共 ${items.length} 天`;
         const dash = '<td class="align-right inst-zero">—</td>';
-        body.innerHTML = items.slice(0, 120).map(it => {
+        const shown = Math.max(instTrendLimit, items.findIndex(it => it.date === instDate) + 1);   // 選到的日期一定要在表內
+        body.innerHTML = items.slice(0, shown).map(it => {
             const sp = it.spot, fu = it.futures;
             const spotCells = sp
                 ? ['foreign', 'trust', 'dealer', 'total'].map(p => instCell(sp[p], instYi(sp[p]), p === 'total' ? 'inst-strong' : '')).join('')
@@ -1491,6 +1492,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${spotCells}${futCells}${mgCells}
             </tr>`;
         }).join('') || '<tr><td colspan="13" class="inst-empty">尚無資料</td></tr>';
+        const tMore = document.getElementById('inst-trend-more');
+        if (tMore) tMore.style.display = items.length > shown ? '' : 'none';
     };
 
     const instRenderDay = async () => {
@@ -1569,6 +1572,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('inst-stock-search')?.addEventListener('input', () => { instLimit = 30; instRerenderStocks(); });
     document.getElementById('inst-more')?.addEventListener('click', () => { instLimit += 30; instRerenderStocks(); });
     document.getElementById('inst-fut-all')?.addEventListener('change', instRenderDay);
+    document.getElementById('inst-trend-more')?.addEventListener('click', () => { instTrendLimit += 60; instRenderTrend(); });
 
     // ── Daily Digest tab ───────────────────────────────────────
     const DIGEST_FILES = {

@@ -409,17 +409,28 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--date", help="只處理這一天 YYYY-MM-DD")
     ap.add_argument("--backfill", type=int, default=5, help="檢查最近 N 個交易日（預設 5）")
+    ap.add_argument("--since", help="回補從這天（YYYY-MM-DD）到最近一個交易日的所有交易日")
+    ap.add_argument("--pause", type=float, default=PAUSE, help=f"每次請求間隔秒數（預設 {PAUSE}）")
     a = ap.parse_args()
+    globals()["PAUSE"] = a.pause
 
-    days = [datetime.strptime(a.date, "%Y-%m-%d").date()] if a.date else recent_trading_days(a.backfill)
+    if a.date:
+        days = [datetime.strptime(a.date, "%Y-%m-%d").date()]
+    elif a.since:
+        start = datetime.strptime(a.since, "%Y-%m-%d").date()
+        days = [d for d in recent_trading_days((date.today() - start).days + 1) if d >= start]
+    else:
+        days = recent_trading_days(a.backfill)
     pending = []
-    for d in sorted(days):
+    for i, d in enumerate(sorted(days), 1):
         changed, done = update_day(d)
         state = "齊全" if done else "未齊全"
         if changed:
-            say(f"{d} 已更新（{state}）")
+            say(f"{d} 已更新（{state}）[{i}/{len(days)}]")
         if not done:
             pending.append(str(d))
+        if changed and i % 10 == 0:
+            rebuild_index()     # 長時間回補時，網頁可先看到已完成的部分
     n = rebuild_index()
     say(f"index.json：{n} 天" + (f"；未齊全：{', '.join(pending)}" if pending else ""))
     return 0
