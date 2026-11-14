@@ -730,10 +730,26 @@ tbody tr:last-child td {
 
     .etf-name-row {
         justify-content: center;
+        flex-wrap: wrap;          /* ETF 名稱很長時，經理人卡換到下一行，不撐出水平捲軸 */
     }
 
     #manager-card-img {
         height: 60px;
+    }
+
+    .app-header {
+        padding: 1.25rem 1rem;
+    }
+
+    .etf-select-wrapper {
+        max-width: 100%;
+    }
+
+    .etf-select {
+        font-size: 1.1rem;        /* 375px 寬可完整顯示最長的「00981A 主動統一台股增長」；更窄的手機以 … 截斷 */
+        padding-right: 1.6rem;
+        max-width: 100%;
+        text-overflow: ellipsis;
     }
 
     /* Card Table Layout */
