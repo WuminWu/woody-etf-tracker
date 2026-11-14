@@ -154,19 +154,6 @@
                 </div>
             </div>
         </section>
-        <!-- Tab: Insider Transfer（大股東申報交易，另一個專案：tw-insider-transfer，以 iframe 嵌入） -->
-        <section class="dashboard-content fade-in-up delay-1" id="tab-insider" style="display:none;">
-            <div class="card glass-panel insider-panel">
-                <div class="card-header">
-                    <h2><i class="fa-solid fa-user-tie"></i> 大股東申報交易</h2>
-                    <a class="badge insider-open" id="insider-open" target="_blank" rel="noopener">
-                        <i class="fa-solid fa-up-right-from-square"></i> 新視窗開啟
-                    </a>
-                </div>
-                <iframe id="insider-frame" title="大股東申報交易" class="insider-frame"></iframe>
-            </div>
-        </section>
-    </main>
 
         <!-- Tab: Stock Search -->
         <section class="dashboard-content fade-in-up delay-1" id="tab-search" style="display:none;">
@@ -340,6 +327,20 @@
                 <pre id="digest-text" style="white-space:pre-wrap;word-break:break-word;font-family:inherit;line-height:1.7;font-size:0.95rem;color:var(--text-primary);margin:0;padding:1rem 0.5rem;">載入中...</pre>
             </div>
         </section>
+
+        <!-- Tab: Insider Transfer（大股東申報交易，另一個專案：tw-insider-transfer，以 iframe 嵌入） -->
+        <section class="dashboard-content fade-in-up delay-1" id="tab-insider" style="display:none;">
+            <div class="card glass-panel insider-panel">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-user-tie"></i> 大股東申報交易</h2>
+                    <a class="badge insider-open" id="insider-open" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-up-right-from-square"></i> 新視窗開啟
+                    </a>
+                </div>
+                <iframe id="insider-frame" title="大股東申報交易" class="insider-frame"></iframe>
+            </div>
+        </section>
+    </main>
 
     <!-- Stock History Modal -->
     <div id="history-modal-overlay" class="modal-overlay" style="display:none;">
