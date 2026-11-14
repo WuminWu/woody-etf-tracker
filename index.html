@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=15">
+    <link rel="stylesheet" href="style.css?v=16">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
 </head>
@@ -68,6 +68,9 @@
             </button>
             <button class="tab-btn" data-tab="digest">
                 <i class="fa-solid fa-newspaper"></i> 每日分析
+            </button>
+            <button class="tab-btn" data-tab="inst">
+                <i class="fa-solid fa-building-columns"></i> 三大法人買賣超
             </button>
             <button class="tab-btn" data-tab="insider">
                 <i class="fa-solid fa-user-tie"></i> 大股東申報
@@ -331,6 +334,156 @@
             </div>
         </section>
 
+        <!-- Tab: 三大法人買賣超（institutional.py 每日產生 institutional/*.json）-->
+        <section class="dashboard-content fade-in-up delay-1" id="tab-inst" style="display:none;">
+            <div class="card glass-panel">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-building-columns"></i> 三大法人買賣超</h2>
+                    <span class="badge" id="inst-badge">載入中...</span>
+                </div>
+                <div class="last-update-bar inst-toolbar">
+                    <span><i class="fa-regular fa-clock"></i> <span id="inst-update-time">資料載入中...</span></span>
+                    <span class="inst-picker">
+                        <i class="fa-solid fa-calendar-days"></i>
+                        <label for="inst-date-picker">查看日期：</label>
+                        <select id="inst-date-picker" class="etf-select inst-select"></select>
+                    </span>
+                </div>
+                <h3 class="inst-h3"><i class="fa-solid fa-sack-dollar"></i> 現貨買賣超金額（億元）</h3>
+                <div class="table-container">
+                    <table class="inst-table">
+                        <thead>
+                            <tr>
+                                <th>身份別</th>
+                                <th class="align-right">上市</th>
+                                <th class="align-right">上櫃</th>
+                                <th class="align-right">合計</th>
+                                <th class="align-right inst-hide-sm">買進</th>
+                                <th class="align-right inst-hide-sm">賣出</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inst-summary-body"></tbody>
+                    </table>
+                </div>
+
+                <h3 class="inst-h3"><i class="fa-solid fa-scale-balanced"></i> 期貨未平倉（留倉）口數</h3>
+                <div class="table-container">
+                    <table class="inst-table">
+                        <thead>
+                            <tr>
+                                <th>契約</th>
+                                <th>身份別</th>
+                                <th class="align-right">淨留倉</th>
+                                <th class="align-right">較前日</th>
+                                <th class="align-right">多方留倉</th>
+                                <th class="align-right">空方留倉</th>
+                                <th class="align-right inst-hide-sm">當日交易淨額</th>
+                                <th class="align-right inst-hide-sm">淨留倉金額(億)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inst-futures-body"></tbody>
+                    </table>
+                </div>
+                <label class="inst-check"><input type="checkbox" id="inst-fut-all"> 顯示全部期貨契約</label>
+                <p class="inst-note">大台約當 = 臺股期貨 + 小型臺指 ÷ 4 + 微型臺指 ÷ 20。資料來源：臺灣期貨交易所。</p>
+            </div>
+
+            <div class="card glass-panel">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-ranking-star"></i> 個股買賣超排行</h2>
+                    <span class="badge" id="inst-stock-badge"></span>
+                </div>
+                <div class="inst-controls">
+                    <div class="inst-seg" id="inst-party-seg">
+                        <button data-party="total" class="active">三大法人</button>
+                        <button data-party="foreign">外資</button>
+                        <button data-party="trust">投信</button>
+                        <button data-party="dealer">自營商</button>
+                    </div>
+                    <div class="inst-seg" id="inst-sort-seg">
+                        <button data-sort="amt" class="active">依金額</button>
+                        <button data-sort="lots">依張數</button>
+                    </div>
+                    <div class="inst-seg" id="inst-mkt-seg">
+                        <button data-mkt="all" class="active">全部</button>
+                        <button data-mkt="0">上市</button>
+                        <button data-mkt="1">上櫃</button>
+                    </div>
+                    <label class="inst-check"><input type="checkbox" id="inst-no-etf"> 排除 ETF</label>
+                    <input type="search" id="inst-stock-search" class="inst-search" placeholder="搜尋代號或名稱…">
+                </div>
+
+                <h3 class="inst-h3 inst-buy"><i class="fa-solid fa-arrow-trend-up"></i> 買超</h3>
+                <div class="table-container">
+                    <table class="inst-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>股票</th>
+                                <th class="align-right">收盤</th>
+                                <th class="align-right">買賣超(張)</th>
+                                <th class="align-right">估計金額</th>
+                                <th class="align-right inst-hide-sm">外資(張)</th>
+                                <th class="align-right inst-hide-sm">投信(張)</th>
+                                <th class="align-right inst-hide-sm">自營商(張)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inst-buy-body"></tbody>
+                    </table>
+                </div>
+                <h3 class="inst-h3 inst-sell"><i class="fa-solid fa-arrow-trend-down"></i> 賣超</h3>
+                <div class="table-container">
+                    <table class="inst-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>股票</th>
+                                <th class="align-right">收盤</th>
+                                <th class="align-right">買賣超(張)</th>
+                                <th class="align-right">估計金額</th>
+                                <th class="align-right inst-hide-sm">外資(張)</th>
+                                <th class="align-right inst-hide-sm">投信(張)</th>
+                                <th class="align-right inst-hide-sm">自營商(張)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inst-sell-body"></tbody>
+                    </table>
+                </div>
+                <button class="inst-more" id="inst-more">顯示更多</button>
+                <p class="inst-note">個股金額官方不公布，以「買賣超股數 × 當日收盤價」估算；外資不含外資自營商，自營商含自行買賣與避險。</p>
+            </div>
+
+            <div class="card glass-panel">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-chart-line"></i> 每日紀錄</h2>
+                    <span class="badge" id="inst-trend-badge"></span>
+                </div>
+                <div class="table-container">
+                    <table class="inst-table inst-trend">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">日期</th>
+                                <th colspan="4" class="inst-group">現貨買賣超（億元，上市＋上櫃）</th>
+                                <th colspan="3" class="inst-group">臺指期淨留倉（口）</th>
+                                <th rowspan="2" class="align-right">外資<br>大台約當</th>
+                            </tr>
+                            <tr>
+                                <th class="align-right">外資</th>
+                                <th class="align-right">投信</th>
+                                <th class="align-right">自營商</th>
+                                <th class="align-right">合計</th>
+                                <th class="align-right">外資</th>
+                                <th class="align-right">投信</th>
+                                <th class="align-right">自營商</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inst-trend-body"></tbody>
+                    </table>
+                </div>
+                <p class="inst-note">點日期可切換上方的明細。</p>
+            </div>
+        </section>
+
         <!-- Tab: Insider Transfer（大股東申報交易，另一個專案：tw-insider-transfer，以 iframe 嵌入） -->
         <section class="dashboard-content fade-in-up delay-1" id="tab-insider" style="display:none;">
             <div class="card glass-panel insider-panel">
@@ -377,6 +530,6 @@
         <div id="lightbox-close">✕</div>
     </div>
 
-    <script src="app.js?v=52"></script>
+    <script src="app.js?v=53"></script>
 </body>
 </html>

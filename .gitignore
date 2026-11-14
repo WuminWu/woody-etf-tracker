@@ -19,3 +19,6 @@ ez_html.txt
 ez_pcf.txt
 
 period_flow_out/
+
+# 三大法人個股原始股數暫存（等收盤價齊全再合併，不進 git）
+institutional/_raw/

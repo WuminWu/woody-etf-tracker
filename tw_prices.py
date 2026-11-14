@@ -29,6 +29,8 @@ _MEMO = {}
 TWSE_URL = "https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?date={ymd}&type=ALLBUT0999&response=json"
 TPEX_URL = ("https://www.tpex.org.tw/web/stock/aftertrading/daily_close_quotes/"
             "stk_quote_result.php?l=zh-tw&d={roc}&o=json")
+TPEX_HIST_URL = ("https://www.tpex.org.tw/web/stock/aftertrading/otc_quotes_no1430/"
+                 "stk_wn1430_result.php?l=zh-tw&d={roc}&se=EW&o=json")
 
 
 def _get_json(url, tries=2):
@@ -53,7 +55,7 @@ def _num(s):
 
 def _table(tables, code_field, close_field):
     for t in tables or []:
-        f = t.get("fields") or []
+        f = [str(x).strip() for x in (t.get("fields") or [])]   # 櫃買部分欄名帶空白（"收盤 "）
         if code_field in f and close_field in f and t.get("data"):
             ci, pi = f.index(code_field), f.index(close_field)
             return {str(r[ci]).strip(): _num(r[pi]) for r in t["data"]}
@@ -69,10 +71,17 @@ def _fetch_twse(date_str):
 
 def _fetch_tpex(date_str):
     y, m, dd = date_str.split("-")
-    d = _get_json(TPEX_URL.format(roc=f"{int(y) - 1911}/{m}/{dd}"))
-    if d.get("date") != date_str.replace("-", ""):
-        return {}   # 回的是前一個交易日 → 這天還沒有
-    return _table(d.get("tables"), "代號", "收盤")
+    roc = f"{int(y) - 1911}/{m}/{dd}"
+    d = _get_json(TPEX_URL.format(roc=roc))
+    if d.get("date") == date_str.replace("-", ""):
+        return _table(d.get("tables"), "代號", "收盤")
+    # 上面的 API 查「過去的日子」也只回最新一天（回補時拿不到）；改用「每日收盤行情（不含定價）」，
+    # 它會照指定日期回，未公布／休市時 data 為空（→ {}）。
+    d = _get_json(TPEX_HIST_URL.format(roc=roc))
+    t = (d.get("tables") or [{}])[0]
+    if t.get("date") != roc:
+        return {}
+    return _table([t], "代號", "收盤")
 
 
 def closes_for(date_str):

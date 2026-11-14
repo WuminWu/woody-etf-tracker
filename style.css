@@ -919,3 +919,74 @@ tbody tr:last-child td {
 }
 .clickable-stock:hover .stock-id::after { opacity: 0.7; }
 
+
+/* ── 三大法人買賣超 tab ─────────────────────────────────── */
+.inst-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+.inst-picker { display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary); font-size: 0.85rem; }
+.inst-select { min-width: 140px; font-size: 0.85rem !important; padding: 0.3rem 0.6rem !important; }
+.inst-h3 { margin: 1.25rem 0 0.6rem; padding: 0 0.25rem; font-size: 1.02rem; color: var(--text-primary); }
+.inst-h3 i { color: var(--accent-color); margin-right: 0.35rem; }
+.inst-h3.inst-buy, .inst-h3.inst-buy i { color: #ff6b6b; }
+.inst-h3.inst-sell, .inst-h3.inst-sell i { color: #4ade80; }
+.inst-table th, .inst-table td { padding: 0.55rem 0.7rem; font-size: 0.9rem; white-space: nowrap; text-align: left; }
+.inst-table th { font-size: 0.78rem; text-transform: none; letter-spacing: 0; }
+.inst-table .align-right { text-align: right; font-variant-numeric: tabular-nums; }
+.inst-table th.inst-group { text-align: center; border-bottom: 1px solid var(--glass-border); }
+.inst-table tbody tr:hover { transform: none; }
+.inst-table tbody tr.inst-group-start td { border-top: 1px solid rgba(255, 255, 255, 0.14); }
+.inst-pos { color: #ff6b6b; }
+.inst-neg { color: #4ade80; }
+.inst-zero { color: var(--text-secondary); }
+.inst-strong { font-weight: 700; }
+.inst-total-row td { font-weight: 700; background: rgba(255, 255, 255, 0.03); }
+.inst-fut-name { font-weight: 600; vertical-align: middle; }
+.inst-equiv td { background: rgba(59, 130, 246, 0.06); }
+.inst-empty { text-align: center !important; color: var(--text-secondary); padding: 1.5rem !important; }
+.inst-note { color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.75rem; padding: 0 0.25rem; line-height: 1.6; }
+.inst-check { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--text-secondary); font-size: 0.85rem; cursor: pointer; margin-top: 0.6rem; }
+.inst-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 0.9rem; margin: 0.4rem 0 0.25rem; }
+.inst-controls .inst-check { margin-top: 0; }
+.inst-seg { display: inline-flex; border: 1px solid var(--glass-border); border-radius: 0.6rem; overflow: hidden; }
+.inst-seg button {
+    background: transparent; color: var(--text-secondary); border: 0; padding: 0.35rem 0.8rem;
+    font-size: 0.82rem; font-family: inherit; cursor: pointer; transition: background 0.15s, color 0.15s;
+}
+.inst-seg button + button { border-left: 1px solid var(--glass-border); }
+.inst-seg button:hover { color: var(--text-primary); }
+.inst-seg button.active { background: rgba(59, 130, 246, 0.25); color: var(--text-primary); font-weight: 600; }
+.inst-search {
+    background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border); color: var(--text-primary);
+    border-radius: 0.6rem; padding: 0.35rem 0.7rem; font-size: 0.85rem; font-family: inherit; min-width: 180px;
+}
+.inst-rank { color: var(--text-secondary); width: 2.5rem; }
+.inst-code { color: #60a5fa; font-weight: 600; margin-right: 0.25rem; }
+.inst-tag {
+    font-size: 0.68rem; padding: 0.05rem 0.35rem; border-radius: 0.3rem; margin-left: 0.2rem;
+    background: rgba(148, 163, 184, 0.15); color: var(--text-secondary); vertical-align: 1px;
+}
+.inst-more {
+    display: block; margin: 0.9rem auto 0; background: rgba(255, 255, 255, 0.05); color: var(--text-primary);
+    border: 1px solid var(--glass-border); border-radius: 2rem; padding: 0.4rem 1.4rem; font-family: inherit; cursor: pointer;
+}
+.inst-more:hover { background: rgba(255, 255, 255, 0.1); }
+.inst-trend-row { cursor: pointer; }
+.inst-trend-row:hover td { background: rgba(96, 165, 250, 0.06); }
+.inst-trend-row.inst-selected td { background: rgba(59, 130, 246, 0.14); }
+.inst-date { font-variant-numeric: tabular-nums; }
+@media (max-width: 768px) {
+    /* 這幾張是數字對照表：不套用全站的「手機卡片式表格」，維持表格、可左右捲動 */
+    #tab-inst table { display: table; }
+    #tab-inst thead { display: table-header-group; }
+    #tab-inst tbody { display: table-row-group; }
+    #tab-inst thead tr { position: static; }
+    #tab-inst tr { display: table-row; border: 0; border-radius: 0; margin: 0; padding: 0; background: none; }
+    #tab-inst th, #tab-inst td { display: table-cell; min-height: 0; text-align: left !important; border-bottom: 1px solid var(--glass-border); }
+    #tab-inst td:before { content: none; }
+    #tab-inst .inst-table .align-right { text-align: right !important; }
+    #tab-inst .inst-table th.inst-group { text-align: center !important; }
+    #tab-inst .table-container { overflow-x: auto; }
+    #tab-inst .inst-hide-sm { display: none; }
+    #tab-inst .card { padding: 1rem 0.6rem; }
+    .inst-table th, .inst-table td { padding: 0.45rem 0.4rem; font-size: 0.82rem; }
+    .inst-search { min-width: 0; flex: 1 1 100%; }
+}

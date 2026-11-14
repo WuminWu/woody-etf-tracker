@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tabDigest   = document.getElementById('tab-digest');
     const tabInsider  = document.getElementById('tab-insider');
     const tabChips    = document.getElementById('tab-chips');
+    const tabInst     = document.getElementById('tab-inst');
     const appHeader   = document.querySelector('.app-header');
     const ytdRankingBar = document.getElementById('ytd-ranking-bar');
 
@@ -37,6 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (tabDigest) tabDigest.style.display = 'none';
                 if (tabInsider) tabInsider.style.display = 'none';
                 if (tabChips) tabChips.style.display = 'none';
+                if (tabInst) tabInst.style.display = 'none';
             };
             if (activeTab === 'holdings') {
                 hideAll();
@@ -67,6 +69,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 appHeader.style.display = 'none';
                 if (ytdRankingBar) ytdRankingBar.style.display = 'none';
                 loadDigests(true);
+            } else if (activeTab === 'inst') {
+                hideAll();
+                tabInst.style.display = '';
+                appHeader.style.display = 'none';
+                if (ytdRankingBar) ytdRankingBar.style.display = 'none';
+                loadInst(true);
             } else if (activeTab === 'insider') {
                 hideAll();
                 tabInsider.style.display = '';
@@ -1262,6 +1270,263 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     refreshCommonDatePicker();
+
+    // ── 三大法人買賣超 tab ─────────────────────────────────────
+    // institutional.py 每日產生 institutional/index.json（每日摘要）與 institutional/{日期}.json（單日明細）
+    const INST_PARTIES = [['foreign', '外資'], ['trust', '投信'], ['dealer', '自營商']];
+    const INST_MAIN_FUT = ['臺股期貨', '小型臺指期貨', '微型臺指期貨'];
+    const INST_EQUIV_W = { '臺股期貨': 1, '小型臺指期貨': 0.25, '微型臺指期貨': 0.05 };
+    let instIndex = null;
+    const instDays = {};            // 日期 → 單日資料（Promise 快取）
+    let instDate = null;
+    let instParty = 'total', instSort = 'amt', instMkt = 'all', instLimit = 30;
+
+    const instEsc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const instCls = v => v > 0 ? 'inst-pos' : v < 0 ? 'inst-neg' : 'inst-zero';
+    const instSign = (v, s) => (v > 0 ? '+' : '') + s;
+    const instYi = v => (v / 1e8).toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const instNum = v => Math.round(v).toLocaleString('zh-TW');
+    const instCell = (v, text, extra = '') => `<td class="align-right ${instCls(v)} ${extra}">${instSign(v, text)}</td>`;
+    const instAmt = v => {
+        const a = Math.abs(v);
+        const s = a >= 1e8 ? (a / 1e8).toFixed(2) + ' 億' : Math.round(a / 1e4).toLocaleString('zh-TW') + ' 萬';
+        return (v < 0 ? '-' : v > 0 ? '+' : '') + s;
+    };
+
+    const instLoadDay = date => {
+        if (!instDays[date]) {
+            instDays[date] = fetch(`institutional/${date}.json?t=${Date.now()}`, { cache: 'no-store' })
+                .then(r => r.ok ? r.json() : null).catch(() => null);
+        }
+        return instDays[date];
+    };
+
+    const instRenderSummary = day => {
+        const body = document.getElementById('inst-summary-body');
+        const s = (day && day.summary) || {};
+        if (!s.twse && !s.tpex) {
+            body.innerHTML = '<tr><td colspan="6" class="inst-empty">該日現貨資料尚未公布</td></tr>';
+            return;
+        }
+        const get = (m, p, k) => ((s[m] || {})[p] || {})[k] || 0;
+        body.innerHTML = [...INST_PARTIES, ['total', '三大法人合計']].map(([p, label]) => {
+            const a = get('twse', p, 'net'), b = get('tpex', p, 'net');
+            const buy = get('twse', p, 'buy') + get('tpex', p, 'buy');
+            const sell = get('twse', p, 'sell') + get('tpex', p, 'sell');
+            return `<tr class="${p === 'total' ? 'inst-total-row' : ''}">
+                <td>${label}</td>
+                ${s.twse ? instCell(a, instYi(a)) : '<td class="align-right inst-zero">—</td>'}
+                ${s.tpex ? instCell(b, instYi(b)) : '<td class="align-right inst-zero">—</td>'}
+                ${instCell(a + b, instYi(a + b), 'inst-strong')}
+                <td class="align-right inst-hide-sm">${instYi(buy)}</td>
+                <td class="align-right inst-hide-sm">${instYi(sell)}</td>
+            </tr>`;
+        }).join('');
+    };
+
+    const instRenderFutures = (day, prev) => {
+        const body = document.getElementById('inst-futures-body');
+        const fut = (day && day.futures) || null;
+        if (!fut) {
+            body.innerHTML = '<tr><td colspan="8" class="inst-empty">該日期貨資料尚未公布</td></tr>';
+            return;
+        }
+        const showAll = document.getElementById('inst-fut-all').checked;
+        const key = r => r.name + '|' + r.party;
+        const prevMap = {};
+        ((prev && prev.futures) || []).forEach(r => { prevMap[key(r)] = r; });
+        const names = [];
+        fut.forEach(r => { if (!names.includes(r.name)) names.push(r.name); });
+        const list = showAll ? names : INST_MAIN_FUT.filter(n => names.includes(n));
+
+        // 大台約當（每身份別加權合計）
+        const equiv = (rows, party) => {
+            let v = 0, has = false;
+            rows.forEach(r => { if (r.party === party && INST_EQUIV_W[r.name] != null) { v += r.oi_net * INST_EQUIV_W[r.name]; has = true; } });
+            return has ? v : null;
+        };
+        const fmtEq = v => v.toLocaleString('zh-TW', { maximumFractionDigits: 1 });
+
+        let html = '';
+        list.forEach(name => {
+            INST_PARTIES.forEach(([p, label], i) => {
+                const r = fut.find(x => x.name === name && x.party === p);
+                if (!r) return;
+                const pr = prevMap[key(r)];
+                const diff = pr ? r.oi_net - pr.oi_net : null;
+                html += `<tr class="${i === 0 ? 'inst-group-start' : ''}">
+                    ${i === 0 ? `<td rowspan="3" class="inst-fut-name">${instEsc(name)}</td>` : ''}
+                    <td>${label}</td>
+                    ${instCell(r.oi_net, instNum(r.oi_net), 'inst-strong')}
+                    ${diff == null ? '<td class="align-right inst-zero">—</td>' : instCell(diff, instNum(diff))}
+                    <td class="align-right">${instNum(r.oi_long)}</td>
+                    <td class="align-right">${instNum(r.oi_short)}</td>
+                    ${instCell(r.trade_net, instNum(r.trade_net), 'inst-hide-sm')}
+                    ${instCell(r.oi_net_amt, instYi(r.oi_net_amt * 1000), 'inst-hide-sm')}
+                </tr>`;
+            });
+        });
+        INST_PARTIES.forEach(([p, label], i) => {
+            const v = equiv(fut, p);
+            if (v == null) return;
+            const pv = prev && prev.futures ? equiv(prev.futures, p) : null;
+            const diff = pv == null ? null : v - pv;
+            html += `<tr class="inst-equiv ${i === 0 ? 'inst-group-start' : ''}">
+                ${i === 0 ? '<td rowspan="3" class="inst-fut-name">大台約當</td>' : ''}
+                <td>${label}</td>
+                ${instCell(v, fmtEq(v), 'inst-strong')}
+                ${diff == null ? '<td class="align-right inst-zero">—</td>' : instCell(diff, fmtEq(diff))}
+                <td class="align-right inst-zero">—</td>
+                <td class="align-right inst-zero">—</td>
+                <td class="align-right inst-hide-sm inst-zero">—</td>
+                <td class="align-right inst-hide-sm inst-zero">—</td>
+            </tr>`;
+        });
+        body.innerHTML = html;
+    };
+
+    const instRenderStocks = day => {
+        const buyBody = document.getElementById('inst-buy-body');
+        const sellBody = document.getElementById('inst-sell-body');
+        const badge = document.getElementById('inst-stock-badge');
+        const more = document.getElementById('inst-more');
+        const st = day && day.stocks;
+        if (!st || !st.rows) {
+            const msg = '<tr><td colspan="8" class="inst-empty">該日個股資料尚未公布</td></tr>';
+            buyBody.innerHTML = msg; sellBody.innerHTML = msg;
+            if (badge) badge.textContent = '';
+            more.style.display = 'none';
+            return;
+        }
+        const noEtf = document.getElementById('inst-no-etf').checked;
+        const q = document.getElementById('inst-stock-search').value.trim().toLowerCase();
+        const rows = [];
+        st.rows.forEach(([code, name, mkt, close, f, t, d]) => {
+            if (instMkt !== 'all' && String(mkt) !== instMkt) return;
+            if (noEtf && code.startsWith('00')) return;
+            if (q && !code.toLowerCase().includes(q) && !name.toLowerCase().includes(q)) return;
+            const sh = instParty === 'total' ? f + t + d : instParty === 'foreign' ? f : instParty === 'trust' ? t : d;
+            if (!sh) return;
+            rows.push({ code, name, mkt, close, f, t, d, sh, amt: sh * close });
+        });
+        const k = instSort === 'amt' ? 'amt' : 'sh';
+        const buys = rows.filter(r => r.sh > 0).sort((a, b) => b[k] - a[k]);
+        const sells = rows.filter(r => r.sh < 0).sort((a, b) => a[k] - b[k]);
+        const lots = v => instNum(v / 1000);
+        const tr = (r, i) => `<tr>
+            <td class="inst-rank">${i + 1}</td>
+            <td><span class="inst-code">${instEsc(r.code)}</span> ${instEsc(r.name)}${r.mkt === 1 ? ' <span class="inst-tag">櫃</span>' : ''}</td>
+            <td class="align-right">${r.close.toLocaleString('zh-TW')}</td>
+            ${instCell(r.sh, lots(r.sh), 'inst-strong')}
+            ${instCell(r.amt, instAmt(r.amt).replace(/^[+-]/, ''), 'inst-strong')}
+            ${instCell(r.f, lots(r.f), 'inst-hide-sm')}
+            ${instCell(r.t, lots(r.t), 'inst-hide-sm')}
+            ${instCell(r.d, lots(r.d), 'inst-hide-sm')}
+        </tr>`;
+        const empty = '<tr><td colspan="8" class="inst-empty">無符合的個股</td></tr>';
+        buyBody.innerHTML = buys.slice(0, instLimit).map(tr).join('') || empty;
+        sellBody.innerHTML = sells.slice(0, instLimit).map(tr).join('') || empty;
+        if (badge) badge.textContent = `買超 ${buys.length} 檔／賣超 ${sells.length} 檔`;
+        more.style.display = (buys.length > instLimit || sells.length > instLimit) ? '' : 'none';
+    };
+
+    const instRenderTrend = () => {
+        const body = document.getElementById('inst-trend-body');
+        const badge = document.getElementById('inst-trend-badge');
+        const items = instIndex || [];
+        if (badge) badge.textContent = `共 ${items.length} 天`;
+        const dash = '<td class="align-right inst-zero">—</td>';
+        body.innerHTML = items.slice(0, 120).map(it => {
+            const sp = it.spot, fu = it.futures;
+            const spotCells = sp
+                ? ['foreign', 'trust', 'dealer', 'total'].map(p => instCell(sp[p], instYi(sp[p]), p === 'total' ? 'inst-strong' : '')).join('')
+                : dash.repeat(4);
+            const futCells = fu
+                ? INST_PARTIES.map(([p]) => instCell(fu[p].tx, instNum(fu[p].tx))).join('') +
+                  instCell(fu.foreign.tx_equiv, fu.foreign.tx_equiv.toLocaleString('zh-TW', { maximumFractionDigits: 1 }), 'inst-strong')
+                : dash.repeat(4);
+            return `<tr class="inst-trend-row ${it.date === instDate ? 'inst-selected' : ''}" data-date="${it.date}">
+                <td class="inst-date">${it.date.slice(5)}${it.complete ? '' : ' <span class="inst-tag">未齊</span>'}</td>
+                ${spotCells}${futCells}
+            </tr>`;
+        }).join('') || '<tr><td colspan="9" class="inst-empty">尚無資料</td></tr>';
+    };
+
+    const instRenderDay = async () => {
+        if (!instDate) return;
+        const idx = (instIndex || []).findIndex(it => it.date === instDate);
+        const prevDate = idx >= 0 && instIndex[idx + 1] ? instIndex[idx + 1].date : null;
+        const [day, prev] = await Promise.all([instLoadDay(instDate), prevDate ? instLoadDay(prevDate) : null]);
+        if (!day) return;
+        const upd = document.getElementById('inst-update-time');
+        if (upd) upd.textContent = `資料日期 ${day.date}（更新於 ${day.updated || '—'}）`;
+        instRenderSummary(day);
+        instRenderFutures(day, prev);
+        instRenderStocks(day);
+        instRenderTrend();
+    };
+
+    const loadInst = (force = false) => {
+        if (instIndex && !force) { instRenderDay(); return; }
+        fetch(`institutional/index.json?t=${Date.now()}`, { cache: 'no-store' })
+            .then(r => r.ok ? r.json() : [])
+            .then(items => {
+                instIndex = items || [];
+                const badge = document.getElementById('inst-badge');
+                if (!instIndex.length) {
+                    if (badge) badge.textContent = '無資料';
+                    document.getElementById('inst-update-time').textContent = '目前尚無資料，收盤後會自動產生。';
+                    return;
+                }
+                if (badge) badge.textContent = `共 ${instIndex.length} 天`;
+                // 重新抓 index 時，最新一天的明細可能剛補齊：丟掉它的快取
+                delete instDays[instIndex[0].date];
+                if (!instDate || !instIndex.some(it => it.date === instDate)) instDate = instIndex[0].date;
+                const picker = document.getElementById('inst-date-picker');
+                picker.innerHTML = instIndex.map(it => `<option value="${it.date}">${it.date}</option>`).join('');
+                picker.value = instDate;
+                instRenderDay();
+            })
+            .catch(() => {
+                const upd = document.getElementById('inst-update-time');
+                if (upd) upd.textContent = '載入失敗，請稍後再試。';
+            });
+    };
+
+    const instSetDate = date => {
+        instDate = date;
+        instLimit = 30;
+        const picker = document.getElementById('inst-date-picker');
+        if (picker) picker.value = date;
+        instRenderDay();
+    };
+    document.getElementById('inst-date-picker')?.addEventListener('change', e => instSetDate(e.target.value));
+    document.getElementById('inst-trend-body')?.addEventListener('click', e => {
+        const row = e.target.closest('tr[data-date]');
+        if (!row) return;
+        instSetDate(row.dataset.date);
+        document.getElementById('tab-inst').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    const instSeg = (id, attr, set) => {
+        const seg = document.getElementById(id);
+        if (!seg) return;
+        seg.addEventListener('click', e => {
+            const b = e.target.closest('button');
+            if (!b) return;
+            seg.querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+            set(b.dataset[attr]);
+            instLimit = 30;
+            instLoadDay(instDate).then(instRenderStocks);
+        });
+    };
+    instSeg('inst-party-seg', 'party', v => { instParty = v; });
+    instSeg('inst-sort-seg', 'sort', v => { instSort = v; });
+    instSeg('inst-mkt-seg', 'mkt', v => { instMkt = v; });
+    const instRerenderStocks = () => { if (instDate) instLoadDay(instDate).then(instRenderStocks); };
+    document.getElementById('inst-no-etf')?.addEventListener('change', () => { instLimit = 30; instRerenderStocks(); });
+    document.getElementById('inst-stock-search')?.addEventListener('input', () => { instLimit = 30; instRerenderStocks(); });
+    document.getElementById('inst-more')?.addEventListener('click', () => { instLimit += 30; instRerenderStocks(); });
+    document.getElementById('inst-fut-all')?.addEventListener('change', instRenderDay);
 
     // ── Daily Digest tab ───────────────────────────────────────
     const DIGEST_FILES = {
