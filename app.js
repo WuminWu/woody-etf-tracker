@@ -1324,6 +1324,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).join('');
     };
 
+    const instRenderMargin = day => {
+        const body = document.getElementById('inst-margin-body');
+        const m = (day && day.margin) || {};
+        if (!m.twse && !m.tpex) {
+            body.innerHTML = '<tr><td colspan="5" class="inst-empty">該日融資融券資料尚未公布</td></tr>';
+            return;
+        }
+        const val = (mk, k, f) => m[mk] ? m[mk][k][f] : null;
+        const both = m.twse && m.tpex;
+        const sum = (k, f) => both ? val('twse', k, f) + val('tpex', k, f) : null;
+        const na = '<td class="align-right inst-zero">—</td>';
+        const plain = v => v == null ? na : `<td class="align-right">${v}</td>`;
+        const yiK = v => v == null ? null : instYi(v * 1000);         // 千元 → 億元
+        const row = (label, k, fmt) => {
+            const tot = sum(k, 'bal'), diff = both ? tot - sum(k, 'prev') : null;
+            return `<tr><td>${label}</td>
+                ${plain(val('twse', k, 'bal') == null ? null : fmt(val('twse', k, 'bal')))}
+                ${plain(val('tpex', k, 'bal') == null ? null : fmt(val('tpex', k, 'bal')))}
+                ${tot == null ? na : `<td class="align-right inst-strong">${fmt(tot)}</td>`}
+                ${diff == null ? na : instCell(diff, fmt(diff))}
+            </tr>`;
+        };
+        const ratio = mk => {
+            const ml = mk === 'all' ? sum('margin_lots', 'bal') : val(mk, 'margin_lots', 'bal');
+            const sl = mk === 'all' ? sum('short_lots', 'bal') : val(mk, 'short_lots', 'bal');
+            return ml ? (sl / ml * 100).toFixed(2) + '%' : null;
+        };
+        body.innerHTML =
+            row('融資餘額（億元）', 'margin_amt', yiK) +
+            row('融資餘額（張）', 'margin_lots', instNum) +
+            row('融券餘額（張）', 'short_lots', instNum) +
+            `<tr><td>券資比</td>${plain(ratio('twse'))}${plain(ratio('tpex'))}${plain(both ? ratio('all') : null)}${na}</tr>`;
+    };
+
     const instRenderFutures = (day, prev) => {
         const body = document.getElementById('inst-futures-body');
         const fut = (day && day.futures) || null;
@@ -1445,11 +1479,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ? INST_PARTIES.map(([p]) => instCell(fu[p].tx, instNum(fu[p].tx))).join('') +
                   instCell(fu.foreign.tx_equiv, fu.foreign.tx_equiv.toLocaleString('zh-TW', { maximumFractionDigits: 1 }), 'inst-strong')
                 : dash.repeat(4);
+            const mg = it.margin;
+            const mgCells = mg
+                ? `<td class="align-right">${instYi(mg.margin_amt.bal * 1000)}</td>` +
+                  instCell(mg.margin_amt.bal - mg.margin_amt.prev, instYi((mg.margin_amt.bal - mg.margin_amt.prev) * 1000)) +
+                  `<td class="align-right">${instNum(mg.short_lots.bal)}</td>` +
+                  instCell(mg.short_lots.bal - mg.short_lots.prev, instNum(mg.short_lots.bal - mg.short_lots.prev))
+                : dash.repeat(4);
             return `<tr class="inst-trend-row ${it.date === instDate ? 'inst-selected' : ''}" data-date="${it.date}">
                 <td class="inst-date">${it.date.slice(5)}${it.complete ? '' : ' <span class="inst-tag">未齊</span>'}</td>
-                ${spotCells}${futCells}
+                ${spotCells}${futCells}${mgCells}
             </tr>`;
-        }).join('') || '<tr><td colspan="9" class="inst-empty">尚無資料</td></tr>';
+        }).join('') || '<tr><td colspan="13" class="inst-empty">尚無資料</td></tr>';
     };
 
     const instRenderDay = async () => {
@@ -1461,6 +1502,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const upd = document.getElementById('inst-update-time');
         if (upd) upd.textContent = `資料日期 ${day.date}（更新於 ${day.updated || '—'}）`;
         instRenderSummary(day);
+        instRenderMargin(day);
         instRenderFutures(day, prev);
         instRenderStocks(day);
         instRenderTrend();

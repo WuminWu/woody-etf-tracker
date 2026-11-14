@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=16">
+    <link rel="stylesheet" href="style.css?v=17">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
 </head>
@@ -366,6 +366,23 @@
                     </table>
                 </div>
 
+                <h3 class="inst-h3"><i class="fa-solid fa-credit-card"></i> 大盤融資融券餘額</h3>
+                <div class="table-container">
+                    <table class="inst-table">
+                        <thead>
+                            <tr>
+                                <th>項目</th>
+                                <th class="align-right">上市</th>
+                                <th class="align-right">上櫃</th>
+                                <th class="align-right">合計</th>
+                                <th class="align-right">較前日</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inst-margin-body"></tbody>
+                    </table>
+                </div>
+                <p class="inst-note">券資比 = 融券張數 ÷ 融資張數。融資融券資料公布較晚（晚間），當晚沒抓到會在下一個交易日補上。</p>
+
                 <h3 class="inst-h3"><i class="fa-solid fa-scale-balanced"></i> 期貨未平倉（留倉）口數</h3>
                 <div class="table-container">
                     <table class="inst-table">
@@ -466,6 +483,7 @@
                                 <th colspan="4" class="inst-group">現貨買賣超（億元，上市＋上櫃）</th>
                                 <th colspan="3" class="inst-group">臺指期淨留倉（口）</th>
                                 <th rowspan="2" class="align-right">外資<br>大台約當</th>
+                                <th colspan="4" class="inst-group">融資融券（上市＋上櫃）</th>
                             </tr>
                             <tr>
                                 <th class="align-right">外資</th>
@@ -475,6 +493,10 @@
                                 <th class="align-right">外資</th>
                                 <th class="align-right">投信</th>
                                 <th class="align-right">自營商</th>
+                                <th class="align-right">融資餘額(億)</th>
+                                <th class="align-right">增減(億)</th>
+                                <th class="align-right">融券(張)</th>
+                                <th class="align-right">增減(張)</th>
                             </tr>
                         </thead>
                         <tbody id="inst-trend-body"></tbody>
@@ -530,6 +552,6 @@
         <div id="lightbox-close">✕</div>
     </div>
 
-    <script src="app.js?v=53"></script>
+    <script src="app.js?v=54"></script>
 </body>
 </html>

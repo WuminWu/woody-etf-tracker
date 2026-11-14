@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-institutional.py — 每日三大法人買賣超（現貨：總金額＋個股）與期貨留倉口數。
+institutional.py — 每日三大法人買賣超（現貨：總金額＋個股）、期貨留倉口數、大盤融資融券餘額。
 
 輸出（皆進 git，網頁「三大法人買賣超」分頁讀取）：
   institutional/{YYYY-MM-DD}.json  單日完整資料
@@ -8,6 +8,7 @@ institutional.py — 每日三大法人買賣超（現貨：總金額＋個股�
       stocks    個股買賣超股數（上市＋上櫃），rows = [代號, 名稱, 市場(0上市/1上櫃), 收盤價, 外資, 投信, 自營商]
                 個股「金額」官方不公布，前端以 股數 × 收盤價 估算
       futures   期交所各期貨契約 × 身份別：交易口數淨額、多/空方未平倉口數、未平倉淨額口數與契約金額（千元）
+      margin    上市／上櫃 融資（張、金額千元）、融券（張）的 買進/賣出/現償/前日餘額/今日餘額
   institutional/index.json         每日摘要（趨勢表用），由所有單日檔重建、最新在前
 
 來源（皆可指定日期）：
@@ -15,11 +16,13 @@ institutional.py — 每日三大法人買賣超（現貨：總金額＋個股�
   上市個股  https://www.twse.com.tw/rwd/zh/fund/T86?date=YYYYMMDD&selectType=ALLBUT0999&response=json
   上櫃總額  https://www.tpex.org.tw/web/stock/3insti/3insti_summary/3itrdsum_result.php?l=zh-tw&t=D&p=1&d=ROC/MM/DD&o=json
   上櫃個股  https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&se=EW&t=D&d=ROC/MM/DD&o=json
+  上市信用  https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN?date=YYYYMMDD&selectType=MS&response=json
+  上櫃信用  https://www.tpex.org.tw/web/stock/margin_trading/margin_balance/margin_bal_result.php?l=zh-tw&d=ROC/MM/DD&o=json
   期貨      https://www.taifex.com.tw/cht/3/futContractsDateDown?queryStartDate=YYYY/MM/DD&queryEndDate=YYYY/MM/DD&commodityId=
   收盤價    tw_prices.closes_for()（同一份快取，其他爬蟲也用）
 ★ 櫃買中心未公布時會「默默回前一個交易日」，一定要核對回傳日期。
 
-各部分分開抓：還沒公布的部分（期交所約 15:00、證交所個股約 16:30）留給下一輪（run_update.ps1 每 30 分鐘）補，
+各部分分開抓：還沒公布的部分（期交所約 15:00、證交所個股約 16:30、融資融券較晚）留給下一輪（run_update.ps1 每 30 分鐘）補，
 已抓到的不重抓。預設檢查最近 5 個交易日，電腦沒開的日子會自動補上。
 
 用法：
@@ -43,7 +46,7 @@ import tw_prices
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.join(ROOT, "institutional")
-PARTS = ("twse_sum", "tpex_sum", "twse_stk", "tpex_stk", "futures", "closes")
+PARTS = ("twse_sum", "tpex_sum", "twse_stk", "tpex_stk", "futures", "closes", "twse_margin", "tpex_margin")
 PAUSE = 2.5          # 證交所連續請求太快會被擋，每次請求間隔
 UA = {"User-Agent": "Mozilla/5.0"}
 
@@ -196,6 +199,41 @@ def fetch_futures(d):
     return out or None
 
 
+# ── 融資融券（大盤）─────────────────────────────────────────
+def _mg(buy, sell, repay, prev, bal):
+    return {"buy": _int(buy), "sell": _int(sell), "repay": _int(repay), "prev": _int(prev), "bal": _int(bal)}
+
+
+def fetch_twse_margin(d):
+    j = _get_json(f"https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN?date={d:%Y%m%d}&selectType=MS&response=json")
+    if j.get("stat") != "OK" or j.get("date") != f"{d:%Y%m%d}":
+        return None
+    for t in j.get("tables") or []:
+        rows = {r[0].strip(): r for r in t.get("data") or []}
+        if "融資(交易單位)" in rows and "融資金額(仟元)" in rows:
+            # 融券列：買進＝融券回補、賣出＝融券賣出
+            return {"margin_lots": _mg(*rows["融資(交易單位)"][1:6]),
+                    "short_lots": _mg(*rows["融券(交易單位)"][1:6]),
+                    "margin_amt": _mg(*rows["融資金額(仟元)"][1:6])}
+    return None
+
+
+def fetch_tpex_margin(d):
+    j = _get_json("https://www.tpex.org.tw/web/stock/margin_trading/margin_balance/margin_bal_result.php"
+                  f"?l=zh-tw&d={_roc(d)}&o=json")
+    t = (j.get("tables") or [{}])[0]
+    if j.get("date") != f"{d:%Y%m%d}" or t.get("date") != _roc(d) or not t.get("summary"):
+        return None
+    rows = {str(r[1]).strip(): r for r in t["summary"]}
+    lots, amt = rows.get("合計(張)"), rows.get("融資金(仟元)")
+    if not lots or not amt:
+        return None
+    # 欄位：前資餘額[2],資買[3],資賣[4],現償[5],資餘額[6] … 前券餘額[10],券賣[11],券買[12],券償[13],券餘額[14]
+    return {"margin_lots": _mg(lots[3], lots[4], lots[5], lots[2], lots[6]),
+            "short_lots": _mg(lots[12], lots[11], lots[13], lots[10], lots[14]),
+            "margin_amt": _mg(amt[3], amt[4], amt[5], amt[2], amt[6])}
+
+
 # ── 組裝 ──────────────────────────────────────────────────
 def _path(d):
     return os.path.join(OUT_DIR, f"{d:%Y-%m-%d}.json")
@@ -235,6 +273,8 @@ def update_day(d):
         ("twse_stk", lambda: fetch_twse_stk(d)),
         ("tpex_stk", lambda: fetch_tpex_stk(d)),
         ("futures", lambda: fetch_futures(d)),
+        ("twse_margin", lambda: fetch_twse_margin(d)),
+        ("tpex_margin", lambda: fetch_tpex_margin(d)),
     ]
     for part, fn in jobs:
         if part in have or (part in ("twse_stk", "tpex_stk") and part in raw):
@@ -254,6 +294,8 @@ def update_day(d):
             day["summary"]["tpex"] = v
         elif part == "futures":
             day["futures"] = v
+        elif part in ("twse_margin", "tpex_margin"):
+            day.setdefault("margin", {})[part.split("_")[0]] = v
         else:
             raw[part] = v
         if part not in ("twse_stk", "tpex_stk"):
@@ -314,6 +356,16 @@ def _fut_summary(futures):
     return out
 
 
+def _margin_summary(m):
+    """上市＋上櫃合計：融資餘額（千元）、融資張數、融券張數，各含前日餘額；兩邊都到才算。"""
+    if not m or "twse" not in m or "tpex" not in m:
+        return None
+    out = {}
+    for k in ("margin_amt", "margin_lots", "short_lots"):
+        out[k] = {f: m["twse"][k][f] + m["tpex"][k][f] for f in ("bal", "prev")}
+    return out
+
+
 def rebuild_index():
     if not os.path.isdir(OUT_DIR):
         return 0
@@ -334,6 +386,7 @@ def rebuild_index():
             "complete": set(day.get("parts") or []).issuperset(PARTS),
             "spot": spot if s else None,
             "futures": _fut_summary(day["futures"]) if day.get("futures") else None,
+            "margin": _margin_summary(day.get("margin")),
         })
     with open(os.path.join(OUT_DIR, "index.json"), "w", encoding="utf-8") as f:
         json.dump(items, f, ensure_ascii=False, separators=(",", ":"))
