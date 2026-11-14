@@ -1,0 +1,3 @@
+# cmd.exe 讀 LF 換行的批次檔會錯亂（指令被截斷、靜默失敗），批次檔一律 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
