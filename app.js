@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tabCommon   = document.getElementById('tab-common');
     const tabDigest   = document.getElementById('tab-digest');
     const tabInsider  = document.getElementById('tab-insider');
+    const tabChips    = document.getElementById('tab-chips');
     const appHeader   = document.querySelector('.app-header');
     const ytdRankingBar = document.getElementById('ytd-ranking-bar');
 
@@ -35,6 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (tabCommon) tabCommon.style.display = 'none';
                 if (tabDigest) tabDigest.style.display = 'none';
                 if (tabInsider) tabInsider.style.display = 'none';
+                if (tabChips) tabChips.style.display = 'none';
             };
             if (activeTab === 'holdings') {
                 hideAll();
@@ -71,6 +73,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 appHeader.style.display = 'none';
                 if (ytdRankingBar) ytdRankingBar.style.display = 'none';
                 loadInsider();
+            } else if (activeTab === 'chips') {
+                hideAll();
+                tabChips.style.display = '';
+                appHeader.style.display = 'none';
+                if (ytdRankingBar) ytdRankingBar.style.display = 'none';
+                loadChips();
             }
         });
     });
@@ -118,6 +126,45 @@ document.addEventListener('DOMContentLoaded', async () => {
             const top = insiderFrame.getBoundingClientRect().top + window.scrollY + e.data.top - 12;
             if (e.data.onlyIfHidden && top - window.scrollY < window.innerHeight - 120) return;
             window.scrollTo({ top, behavior: 'smooth' });
+        }
+    });
+
+    // ── Chips tab（大戶籌碼觀察表）──────────────────────────
+    // 另一個專案（WuminWu/tw-big-holder-chips）部署在自己的 Cloudflare Pages，作法同大股東申報：
+    // ?embed=1 隱藏對方標題、高度由對方 postMessage({src:'chips',type:'height'}) 通知；本機測試改嵌 127.0.0.1:8766。
+    const CHIPS_ORIGIN = ['localhost', '127.0.0.1'].includes(location.hostname)
+        ? 'http://127.0.0.1:8766'
+        : 'https://tw-big-holder-chips.pages.dev';
+    const chipsFrame = document.getElementById('chips-frame');
+    const chipsOpen = document.getElementById('chips-open');
+    if (chipsOpen) chipsOpen.href = CHIPS_ORIGIN + '/';
+    let chipsPingTimer = null;
+    const pingChips = () => {
+        try { chipsFrame.contentWindow.postMessage({ src: 'etf', type: 'ping' }, CHIPS_ORIGIN); } catch (e) {}
+    };
+    const pingChipsUntilSized = () => {
+        clearInterval(chipsPingTimer);
+        let n = 0;
+        pingChips();
+        chipsPingTimer = setInterval(() => {
+            if (++n >= 25) clearInterval(chipsPingTimer); else pingChips();
+        }, 400);
+    };
+    function loadChips() {
+        if (!chipsFrame) return;
+        // 第一次切到這個分頁才載入（資料約 7MB）；之後保留篩選狀態
+        if (!chipsFrame.src) {
+            chipsFrame.addEventListener('load', pingChipsUntilSized);
+            chipsFrame.src = CHIPS_ORIGIN + '/?embed=1&theme=dark';
+        } else {
+            pingChipsUntilSized();
+        }
+    }
+    window.addEventListener('message', (e) => {
+        if (e.origin !== CHIPS_ORIGIN || !e.data || e.data.src !== 'chips') return;
+        if (e.data.type === 'height' && e.data.height > 0) {
+            clearInterval(chipsPingTimer);
+            chipsFrame.style.height = Math.ceil(e.data.height) + 'px';
         }
     });
 

@@ -72,6 +72,9 @@
             <button class="tab-btn" data-tab="insider">
                 <i class="fa-solid fa-user-tie"></i> 大股東申報
             </button>
+            <button class="tab-btn" data-tab="chips">
+                <i class="fa-solid fa-chart-pie"></i> 大戶籌碼
+            </button>
         </nav>
 
         <!-- Tab: Holdings -->
@@ -338,6 +341,19 @@
                     </a>
                 </div>
                 <iframe id="insider-frame" title="大股東申報交易" class="insider-frame"></iframe>
+            </div>
+        </section>
+
+        <!-- Tab: 大戶籌碼觀察表（另一個專案：tw-big-holder-chips，以 iframe 嵌入） -->
+        <section class="dashboard-content fade-in-up delay-1" id="tab-chips" style="display:none;">
+            <div class="card glass-panel insider-panel">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-chart-pie"></i> 大戶籌碼觀察表</h2>
+                    <a class="badge insider-open" id="chips-open" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-up-right-from-square"></i> 新視窗開啟
+                    </a>
+                </div>
+                <iframe id="chips-frame" title="大戶籌碼觀察表" class="insider-frame"></iframe>
             </div>
         </section>
     </main>

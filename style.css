@@ -567,7 +567,8 @@ tbody tr:last-child td {
 }
 .insider-open { text-decoration: none; cursor: pointer; }
 @media (max-width: 768px) {
-    /* 手機：分頁鈕換行（6 個放不下一列，原本會撐出水平捲軸）；嵌入頁需要寬度，卡片內距縮小 */
+    /* 手機：分頁鈕換行（7 個放不下一列，原本會撐出水平捲軸）；嵌入頁需要寬度，卡片內距縮小
+       （大戶籌碼分頁也共用 insider-frame / insider-panel / insider-open 這三個樣式） */
     .page-tabs { flex-wrap: wrap; }
     .tab-btn { padding: 0.5rem 0.9rem; font-size: 0.85rem; }
     .card.insider-panel { padding: 1rem 0.5rem; }
