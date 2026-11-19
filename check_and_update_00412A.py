@@ -27,7 +27,7 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 from sheets_helper import append_holdings_to_sheets
 from notify import send_telegram, send_update_notification   # 單一來源：節流＋429重試＋自動分段；持股更新通知排程時依規模排序
 from etf_registry import site_link   # 網站網址（GitHub Pages 已停用，舊網址 404）
-from asset_allocation import format_scale_line
+from asset_allocation import format_scale_line, format_alloc_lines
 from allianz import fetch_fund_assets, parse_fund_assets, expected_date   # 安聯兩支共用
 
 # --------------- Config ---------------
@@ -53,6 +53,7 @@ if not os.path.exists(HOLDINGS_DIR):
     os.makedirs(HOLDINGS_DIR)
 
 # --- 共用核心（等價重構，見 etf_core.py 檔頭）---
+from alloc_sources import get_alloc   # 🧩 各投信資產配置（現金／期貨／保證金…）
 from etf_core import (
     FundConfig, build_data_json, fmt_zhang, trade_amount, change_text, format_trade_line, today_tw,
     holdings_exist_for, load_prev_holdings, save_holdings, is_trading_day,
@@ -84,7 +85,7 @@ def build_notification(wrapper):
         f"🟣 新增：{len(added)} 檔　🟠 出清：{len(removed)} 檔",
         format_trade_line(wrapper),   # 💹 當日買超/賣超/淨額（etf_core，與日報同一套算法）
     ]
-    _scale = format_scale_line(meta)
+    _scale = format_scale_line(meta) + format_alloc_lines(meta.get("assetAllocation"))
     if _scale:
         lines[4:4] = _scale   # 插在「持股數量」與空行之間：基金規模（淨申購/淨贖回）
     if added:
@@ -153,8 +154,9 @@ def main():
 
     save_holdings(CFG, data_date_str, today_holdings)
     prev_holdings = load_prev_holdings(CFG, data_date_str)
+    _alloc = get_alloc(CFG.code, data_date_str, raw=raw_data)
     wrapper = build_data_json(CFG, today_holdings, prev_holdings, data_date_str,
-                              aum_ntd=aum_ntd, units=units, manager=manager)
+                              aum_ntd=aum_ntd, units=units, manager=manager, asset_alloc=_alloc)
     append_holdings_to_sheets(ETF_CODE, wrapper["meta"]["dataDate"], wrapper["holdings"], meta=wrapper["meta"])
     send_update_notification(CFG.code, build_notification(wrapper), wrapper["meta"].get("totalMarketCap", 0))
     log.info("=== Done! ===")

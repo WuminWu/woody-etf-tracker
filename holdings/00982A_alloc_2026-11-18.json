@@ -1,0 +1,12 @@
+{
+ "source": "capital",
+ "dataDate": "2026-11-18",
+ "netAsset": 40310758524,
+ "stockPct": 99.02,
+ "cashPct": 2.96,
+ "cashAmount": 1192366975,
+ "futuresMarginPct": 0.0,
+ "netReceivablePct": 2.76,
+ "futures": [],
+ "hasFutures": false
+}

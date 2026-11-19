@@ -50,7 +50,8 @@ if not os.path.exists(HOLDINGS_DIR):
 
 
 # --- 共用核心（等價重構，見 etf_core.py 檔頭）---
-from asset_allocation import format_scale_line   # 📈 基金規模行（與 00981A 同一套）
+from asset_allocation import format_scale_line, format_alloc_lines   # 📈 基金規模行（與 00981A 同一套）
+from alloc_sources import get_alloc   # 🧩 各投信資產配置（現金／期貨／保證金…）
 from etf_core import (
     FundConfig, build_data_json, get_price, fmt_zhang, trade_amount, change_text, format_trade_line, today_tw,
     holdings_exist_for, load_prev_holdings, save_holdings,
@@ -142,6 +143,7 @@ def build_notification(wrapper, first_day=False):
             f"💰 ETF 股價：{meta['etfPrice']}",
             f"📦 持股數量：{len(top)} 檔（成本以當日收盤建立，明天起比較加減碼）",
             *format_scale_line(meta),   # 📈 基金規模（淨申購/淨贖回）＋💵 市值
+        *format_alloc_lines(meta.get("assetAllocation")),   # 🧩 資產配置＋⚡ 期貨曝險
             "",
             "前十大：",
         ] + [f"  • {h['code']} {h['name']}　{h.get('todayWeight', 0):.2f}%" for h in top[:10]]
@@ -160,6 +162,7 @@ def build_notification(wrapper, first_day=False):
         f"💰 ETF 股價：{meta['etfPrice']}　　YTD：{ytd_sign}{meta['ytd']}%",
         f"📦 持股數量：{len([h for h in holdings if h['shares'] > 0])} 檔",
         *format_scale_line(meta),   # 📈 基金規模（淨申購/淨贖回）＋💵 市值
+        *format_alloc_lines(meta.get("assetAllocation")),   # 🧩 資產配置＋⚡ 期貨曝險
         "",
         f"🔴 加碼：{len(increased)} 檔　🟢 減碼：{len(decreased)} 檔",
         f"🟣 新增：{len(added)} 檔　🟠 出清：{len(removed)} 檔",
@@ -236,7 +239,8 @@ def main():
     if first_day:
         log.info("首次揭露持股：前一日用同一份持股，成本＝當日收盤")
         prev_holdings = holdings
-    wrapper = build_data_json(CFG, holdings, prev_holdings, data_date_str, aum_ntd=aum_ntd, units=units)
+    _alloc = get_alloc(CFG.code, data_date_str)
+    wrapper = build_data_json(CFG, holdings, prev_holdings, data_date_str, aum_ntd=aum_ntd, units=units, asset_alloc=_alloc)
     if first_day:
         from onboard_etf import seed_cost_basis
         prices = {h["code"]: h.get("price", 0) for h in wrapper["holdings"]}

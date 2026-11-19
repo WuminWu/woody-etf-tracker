@@ -1,0 +1,38 @@
+{
+ "source": "ctbc",
+ "dataDate": "2026-11-19",
+ "netAsset": 148220725003,
+ "stockPct": 79.39,
+ "cashPct": 19.15,
+ "cashAmount": 28387253423,
+ "futuresMarginPct": 9.53,
+ "netReceivablePct": -5.59,
+ "futuresNotionalPct": 23.65,
+ "futures": [
+  {
+   "code": "TX",
+   "name": "臺股期貨",
+   "contracts": 4540,
+   "weight": 23.65,
+   "month": "202612"
+  }
+ ],
+ "hasFutures": true,
+ "options": [
+  {
+   "code": "TX4",
+   "name": "臺指選擇權第四週週三到期契約（買權）",
+   "contracts": -6000,
+   "weight": -3.48,
+   "month": "202611"
+  },
+  {
+   "code": "TXX",
+   "name": "臺指選擇權第三週週五到期契約（買權）",
+   "contracts": -25300,
+   "weight": -7.6,
+   "month": "202611"
+  }
+ ],
+ "optionsPct": -11.08
+}

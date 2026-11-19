@@ -30,7 +30,7 @@ import pandas as pd
 from sheets_helper import append_holdings_to_sheets
 from notify import send_telegram, send_update_notification   # 單一來源：節流＋429重試＋自動分段；持股更新通知排程時依規模排序
 from etf_registry import site_link   # 網站網址（GitHub Pages 已停用，舊網址 404）
-from asset_allocation import format_scale_line
+from asset_allocation import format_scale_line, format_alloc_lines
 
 # --------------- Config ---------------
 FUND_ID = "J024"
@@ -63,6 +63,7 @@ if not os.path.exists(HOLDINGS_DIR):
     os.makedirs(HOLDINGS_DIR)
 
 # --- 共用核心（等價重構，見 etf_core.py 檔頭）---
+from alloc_sources import get_alloc   # 🧩 各投信資產配置（現金／期貨／保證金…）
 from etf_core import (
     FundConfig, build_data_json, get_price, fmt_zhang, trade_amount, change_text, format_trade_line, today_tw,
     holdings_exist_for, load_prev_holdings, save_holdings,
@@ -149,7 +150,7 @@ def build_notification(wrapper):
         f"🟣 新增：{len(added)} 檔　🟠 出清：{len(removed)} 檔",
         format_trade_line(wrapper),   # 💹 當日買超/賣超/淨額（etf_core，與日報同一套算法）
     ]
-    _scale = format_scale_line(meta)
+    _scale = format_scale_line(meta) + format_alloc_lines(meta.get("assetAllocation"))
     if _scale:
         lines[4:4] = _scale   # 插在「持股數量」與空行之間：基金規模（淨申購/淨贖回）
     if added:
@@ -207,7 +208,8 @@ def main():
         json.dump(today_holdings, f, ensure_ascii=False, indent=2)
 
     prev_holdings = load_prev_holdings(CFG, data_date_str)
-    wrapper = build_data_json(CFG, today_holdings, prev_holdings, data_date_str, aum_ntd=aum_ntd, units=units)
+    _alloc = get_alloc(CFG.code, data_date_str, holdings=today_holdings)
+    wrapper = build_data_json(CFG, today_holdings, prev_holdings, data_date_str, aum_ntd=aum_ntd, units=units, asset_alloc=_alloc)
     append_holdings_to_sheets(ETF_CODE, wrapper["meta"]["dataDate"], wrapper["holdings"], meta=wrapper["meta"])
     send_update_notification(CFG.code, build_notification(wrapper), wrapper["meta"].get("totalMarketCap", 0))
     log.info("=== Done! ===")

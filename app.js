@@ -630,13 +630,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     elScale.style.display = 'none';
                 }
 
-                // 資產配置面板（統一投信系：股票/現金/期貨/附買回，來自 ezmoney 資產彙總）
+                // 資產配置面板（統一投信系來自 ezmoney 資產彙總；其他投信來自 alloc_sources.py）
                 const elAA = document.getElementById('etf-asset-alloc');
                 const aa = meta.assetAllocation;
                 if (elAA && aa && aa.stockPct != null) {
                     const segDefs = [
                         { k: '股票', v: aa.stockPct, c: '#3b82f6' },
-                        { k: '現金', v: aa.cashPct, c: '#22c55e' },
+                        { k: aa.cashEstimated ? '現金及其他(推算)' : '現金', v: aa.cashPct, c: '#22c55e' },   // 安聯／凱基來源沒給現金 → 推算
                         { k: '附買回債券', v: aa.repoBondPct, c: '#f59e0b' },
                         { k: '期貨保證金', v: aa.futuresMarginPct, c: '#8b5cf6' },
                         { k: '應收付證券款', v: aa.netReceivablePct, c: '#94a3b8' },
@@ -661,7 +661,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             }
                             return `${f.code} ${f.name} ${lots}<b>${f.weight}%</b>`;
                         }).join('、');
-                        futNote = `<div style="margin-top:5px;font-size:0.82em;color:#a855f7;"><i class="fa-solid fa-bolt"></i> 期貨曝險：${list}（名目本金，做多台股）</div>`;
+                        futNote = `<div style="margin-top:5px;font-size:0.82em;color:#a855f7;"><i class="fa-solid fa-bolt"></i> 期貨曝險：${list}（名目本金，${aa.futures.some(f => (f.contracts || 0) < 0 || (f.weight || 0) < 0) ? '含空單' : '做多'}${aa.futures.every(f => /^(TX|MTX|TMF|MXF|TXF)/i.test(f.code || '')) ? '台股' : ''}）</div>`;
                     }
                     elAA.innerHTML =
                         `<div style="font-size:0.82em;color:var(--text-secondary);margin:2px 0 4px;">

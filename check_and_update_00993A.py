@@ -40,7 +40,8 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 from tw_calendar import TW_MARKET_HOLIDAYS   # 單一來源：台股休市日（tw_calendar.py）
 
 # --- 共用核心（等價重構，見 etf_core.py 檔頭）---
-from asset_allocation import format_scale_line   # 📈 基金規模行（與 00981A 同一套）
+from asset_allocation import format_scale_line, format_alloc_lines   # 📈 基金規模行（與 00981A 同一套）
+from alloc_sources import get_alloc   # 🧩 各投信資產配置（現金／期貨／保證金…）
 from etf_core import (
     FundConfig, build_data_json, get_price, fmt_zhang, trade_amount, change_text, format_trade_line, today_tw,
     holdings_exist_for, load_prev_holdings, save_holdings,
@@ -208,12 +209,14 @@ def build_notification(wrapper):
         f"💰 ETF 股價：{meta['etfPrice']}　　YTD：{ytd_sign}{meta['ytd']}%",
         f"📦 持股數量：{len([h for h in holdings if h['shares'] > 0])} 檔",
         *format_scale_line(meta),   # 📈 基金規模（淨申購/淨贖回）＋💵 市值
+        *format_alloc_lines(meta.get("assetAllocation")),   # 🧩 資產配置＋⚡ 期貨曝險
         "",
         f"🔴 加碼：{len(increased)} 檔　🟢 減碼：{len(decreased)} 檔",
         f"🟣 新增：{len(added)} 檔　🟠 出清：{len(removed)} 檔",
         format_trade_line(wrapper),   # 💹 當日買超/賣超/淨額（etf_core，與日報同一套算法）
     ]
-    if futures:
+    # 資產配置（alloc_sources）已有期貨曝險行時就不重複列；抓不到資產配置時才用持股裡的期貨列
+    if futures and not (meta.get("assetAllocation") or {}).get("futures"):
         fl = "、".join(f"{h['code']} {h['name']} {h['shares']} 口（{h['todayWeight']}%）" for h in futures)
         lines.insert(4, f"⚡ 期貨部位：{fl}")
     if added:
@@ -285,8 +288,9 @@ def main():
     log.info(f"Saved holdings snapshot: {json_path}")
 
     prev_holdings = load_prev_holdings(CFG, data_date_str)
+    _alloc = get_alloc(CFG.code, data_date_str, raw=raw_data)
     wrapper = build_data_json(CFG, today_holdings, prev_holdings, data_date_str,
-                                  aum_ntd, units_zhang, manager=manager)
+                                  aum_ntd, units_zhang, manager=manager, asset_alloc=_alloc)
     append_holdings_to_sheets(ETF_CODE, wrapper["meta"]["dataDate"], wrapper["holdings"], meta=wrapper["meta"])
 
     send_update_notification(CFG.code, build_notification(wrapper), wrapper["meta"].get("totalMarketCap", 0))

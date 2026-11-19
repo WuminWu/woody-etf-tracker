@@ -520,7 +520,8 @@ def build_data_json(cfg, today_holdings, prev_holdings, data_date_str,
         "totalMarketCap": total_market_cap,
         "prevTotalMarketCap": prev_total_market_cap,
     }
-    if cfg.has_asset_alloc:
+    # 統一系（has_asset_alloc）一律寫；其他投信由 alloc_sources 取得，有資料才寫
+    if cfg.has_asset_alloc or asset_alloc:
         meta["assetAllocation"] = asset_alloc or {}
 
     wrapper = {"meta": meta, "holdings": final_output}

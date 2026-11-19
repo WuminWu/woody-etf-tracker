@@ -239,12 +239,15 @@ def format_alloc_lines(alloc):
     if not alloc or alloc.get("stockPct") is None:
         return []
     delta = alloc.get("delta") or {}
+    # 來源沒給現金（安聯、凱基）時 cashPct 是 100 − 其他項目 推算出來的，標示清楚
+    cash_label = "現金及其他(推算)" if alloc.get("cashEstimated") else "現金"
     parts = []
-    for label, key in (("股票", "stockPct"), ("現金", "cashPct"),
+    for label, key in (("股票", "stockPct"), (cash_label, "cashPct"),
                        ("附買回", "repoBondPct"), ("期貨保證金", "futuresMarginPct"),
                        ("應收付", "netReceivablePct")):
         v = alloc.get(key)
-        if v is not None and v > 0.005:
+        # 負值也要顯示：應付買回款、未交割買進（復華的負現金）都是真實部位
+        if v is not None and abs(v) > 0.005:
             parts.append(f"{label} {v}%{_fmt_pp(delta.get(key))}")
     lines = []
     if parts:
@@ -253,12 +256,29 @@ def format_alloc_lines(alloc):
     fdelta = delta.get("futures") or {}
     cdelta = delta.get("futuresContracts") or {}
     if futs:
-        fl = "、".join(f"{f['code']} {f['name']} {_fmt_contracts(f, cdelta.get(f['code']))}"
-                       f"{f['weight']}%{_fmt_pp(fdelta.get(f['code']))}" for f in futs)
-        lines.append(f"⚡ 期貨曝險：{fl}（名目本金，做多台股）")
+        fl = "、".join(f"{f.get('code', '')} {f.get('name', '')} {_fmt_contracts(f, cdelta.get(f.get('code')))}"
+                       f"{f.get('weight')}%{_fmt_pp(fdelta.get(f.get('code')))}" for f in futs)
+        lines.append(f"⚡ 期貨曝險：{fl}（名目本金，{_futures_direction(futs)}）")
     elif alloc.get("futuresNotionalPct"):
         lines.append(f"⚡ 期貨曝險 {alloc['futuresNotionalPct']}%{_fmt_pp(delta.get('futuresNotionalPct'))}（名目本金）")
+    opts = alloc.get("options") or []
+    if opts:
+        ol = "、".join(f"{o.get('code', '')} {o.get('name', '')} {_fmt_contracts(o, None)}{o.get('weight')}%"
+                       for o in opts)
+        lines.append(f"🎯 選擇權：{ol}（合計 {alloc.get('optionsPct')}%，口數負值＝賣出）")
     return lines
+
+
+# 台指期系列（含小台、微台）；其他期貨（海外指數等）不寫「台股」
+_TW_INDEX_FUTURES = ("TX", "MTX", "TMF", "MXF", "TXF")
+
+
+def _futures_direction(futs):
+    """依口數／權重正負判斷多空；全部是台指期才加「台股」。"""
+    signs = {(-1 if ((f.get("contracts") or 0) < 0 or (f.get("weight") or 0) < 0) else 1) for f in futs}
+    side = "做多" if signs == {1} else ("做空" if signs == {-1} else "多空並存")
+    tw = all(str(f.get("code", "")).upper().startswith(_TW_INDEX_FUTURES) for f in futs)
+    return side + ("台股" if tw else "")
 
 
 if __name__ == "__main__":
