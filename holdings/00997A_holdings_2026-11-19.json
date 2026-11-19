@@ -1,0 +1,260 @@
+[
+  {
+    "code": "AAPL US",
+    "name": "蘋果公司",
+    "shares": 41772,
+    "weight": 5.29
+  },
+  {
+    "code": "AMD US",
+    "name": "ADVANCED MICRO DEVICES",
+    "shares": 27491,
+    "weight": 5.23
+  },
+  {
+    "code": "MSFT US",
+    "name": "微軟公司",
+    "shares": 28556,
+    "weight": 5.21
+  },
+  {
+    "code": "CRWD US",
+    "name": "Crowdstrike控股公司",
+    "shares": 54746,
+    "weight": 4.66
+  },
+  {
+    "code": "MU US",
+    "name": "美光科技公司",
+    "shares": 17373,
+    "weight": 4.4
+  },
+  {
+    "code": "SPCX US",
+    "name": "太空探索科技公司",
+    "shares": 72940,
+    "weight": 3.76
+  },
+  {
+    "code": "NVDA US",
+    "name": "輝達公司",
+    "shares": 58576,
+    "weight": 3.18
+  },
+  {
+    "code": "2330",
+    "name": "台積電",
+    "shares": 132000,
+    "weight": 3.12
+  },
+  {
+    "code": "STX US",
+    "name": "希捷科技控股公開有限公司",
+    "shares": 15810,
+    "weight": 2.93
+  },
+  {
+    "code": "SNDK US",
+    "name": "晟碟公司（德拉瓦州）",
+    "shares": 10322,
+    "weight": 2.88
+  },
+  {
+    "code": "WDC US",
+    "name": "WESTERN DIGITAL CORP",
+    "shares": 27614,
+    "weight": 2.86
+  },
+  {
+    "code": "ABBV US",
+    "name": "艾伯維公司",
+    "shares": 27170,
+    "weight": 2.79
+  },
+  {
+    "code": "GOOGL US",
+    "name": "ALPHABET INC-CL A",
+    "shares": 26903,
+    "weight": 2.73
+  },
+  {
+    "code": "3037",
+    "name": "欣興",
+    "shares": 360000,
+    "weight": 2.59
+  },
+  {
+    "code": "CRL US",
+    "name": "查爾斯河實驗室國際公司",
+    "shares": 21222,
+    "weight": 2.54
+  },
+  {
+    "code": "ANET US",
+    "name": "Arista網路公司",
+    "shares": 35396,
+    "weight": 2.47
+  },
+  {
+    "code": "AMAT US",
+    "name": "應用材料",
+    "shares": 18332,
+    "weight": 2.32
+  },
+  {
+    "code": "FTNT US",
+    "name": "防特網公司",
+    "shares": 47007,
+    "weight": 2.23
+  },
+  {
+    "code": "LRCX US",
+    "name": "科林研發股份有限公司",
+    "shares": 26011,
+    "weight": 1.98
+  },
+  {
+    "code": "DELL US",
+    "name": "戴爾科技公司",
+    "shares": 17000,
+    "weight": 1.91
+  },
+  {
+    "code": "TXN US",
+    "name": "德州儀器公司",
+    "shares": 17765,
+    "weight": 1.87
+  },
+  {
+    "code": "INTC US",
+    "name": "英特爾",
+    "shares": 91816,
+    "weight": 1.8
+  },
+  {
+    "code": "CSCO US",
+    "name": "CISCO SYSTEMS INC",
+    "shares": 46687,
+    "weight": 1.63
+  },
+  {
+    "code": "2383",
+    "name": "台光電",
+    "shares": 41000,
+    "weight": 1.55
+  },
+  {
+    "code": "APH US",
+    "name": "安費諾",
+    "shares": 52516,
+    "weight": 1.44
+  },
+  {
+    "code": "BE US",
+    "name": "布魯姆能源公司",
+    "shares": 22976,
+    "weight": 1.41
+  },
+  {
+    "code": "AVGO US",
+    "name": "博通公司",
+    "shares": 11017,
+    "weight": 1.4
+  },
+  {
+    "code": "PLTR US",
+    "name": "帕蘭提爾科技公司",
+    "shares": 23556,
+    "weight": 1.33
+  },
+  {
+    "code": "GE US",
+    "name": "奇異公司",
+    "shares": 10935,
+    "weight": 1.29
+  },
+  {
+    "code": "KLAC US",
+    "name": "KLA CORP",
+    "shares": 24570,
+    "weight": 1.28
+  },
+  {
+    "code": "HWM US",
+    "name": "Howmet航太公司",
+    "shares": 15147,
+    "weight": 1.2
+  },
+  {
+    "code": "ADI US",
+    "name": "亞德諾公司",
+    "shares": 8609,
+    "weight": 1.18
+  },
+  {
+    "code": "U US",
+    "name": "UNITY",
+    "shares": 66793,
+    "weight": 1.17
+  },
+  {
+    "code": "PANW US",
+    "name": "Palo Alto Networks Inc",
+    "shares": 9609,
+    "weight": 1.17
+  },
+  {
+    "code": "VEEV US",
+    "name": "Veeva系統公司",
+    "shares": 10800,
+    "weight": 1.08
+  },
+  {
+    "code": "MRVL US",
+    "name": "Marvell Technology Inc",
+    "shares": 20339,
+    "weight": 1.06
+  },
+  {
+    "code": "MPWR US",
+    "name": "芯源系統有限公司",
+    "shares": 2200,
+    "weight": 1.04
+  },
+  {
+    "code": "SN US",
+    "name": "SharkNinja公司",
+    "shares": 12357,
+    "weight": 1.02
+  },
+  {
+    "code": "LMT US",
+    "name": "洛克希德馬丁",
+    "shares": 4854,
+    "weight": 1.01
+  },
+  {
+    "code": "CDNS US",
+    "name": "Cadence設計系統公司",
+    "shares": 7874,
+    "weight": 0.86
+  },
+  {
+    "code": "VRT US",
+    "name": "維諦控股公司",
+    "shares": 12136,
+    "weight": 0.85
+  },
+  {
+    "code": "DDOG US",
+    "name": "數據狗公司",
+    "shares": 11884,
+    "weight": 0.71
+  },
+  {
+    "code": "ARM US",
+    "name": "安謀控股公開有限公司",
+    "shares": 10410,
+    "weight": 0.68
+  }
+]

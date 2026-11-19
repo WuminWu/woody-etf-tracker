@@ -1,0 +1,146 @@
+[
+  {
+    "code": "2330",
+    "name": "台積電",
+    "shares": 90000,
+    "weight": 11.0764
+  },
+  {
+    "code": "3017",
+    "name": "奇鋐",
+    "shares": 52000,
+    "weight": 7.4511
+  },
+  {
+    "code": "3443",
+    "name": "創意",
+    "shares": 17000,
+    "weight": 5.9777
+  },
+  {
+    "code": "2454",
+    "name": "聯發科",
+    "shares": 27000,
+    "weight": 5.8863
+  },
+  {
+    "code": "2383",
+    "name": "台光電",
+    "shares": 29000,
+    "weight": 5.3026
+  },
+  {
+    "code": "3653",
+    "name": "健策",
+    "shares": 18000,
+    "weight": 4.3409
+  },
+  {
+    "code": "3491",
+    "name": "昇達科",
+    "shares": 52000,
+    "weight": 4.1446
+  },
+  {
+    "code": "3037",
+    "name": "欣興",
+    "shares": 116000,
+    "weight": 4.0517
+  },
+  {
+    "code": "6510",
+    "name": "精測",
+    "shares": 25000,
+    "weight": 3.846
+  },
+  {
+    "code": "1815",
+    "name": "富喬",
+    "shares": 580000,
+    "weight": 3.739
+  },
+  {
+    "code": "3665",
+    "name": "貿聯 -KY",
+    "shares": 44000,
+    "weight": 3.7132
+  },
+  {
+    "code": "3008",
+    "name": "大立光",
+    "shares": 15000,
+    "weight": 3.4987
+  },
+  {
+    "code": "6805",
+    "name": "富世達",
+    "shares": 36000,
+    "weight": 3.344
+  },
+  {
+    "code": "8358",
+    "name": "金居",
+    "shares": 200000,
+    "weight": 3.2116
+  },
+  {
+    "code": "6274",
+    "name": "台燿",
+    "shares": 75000,
+    "weight": 3.0416
+  },
+  {
+    "code": "6223",
+    "name": "旺矽",
+    "shares": 12000,
+    "weight": 2.7814
+  },
+  {
+    "code": "2368",
+    "name": "金像電",
+    "shares": 60000,
+    "weight": 2.7779
+  },
+  {
+    "code": "3081",
+    "name": "聯亞",
+    "shares": 29800,
+    "weight": 2.6458
+  },
+  {
+    "code": "8046",
+    "name": "南電",
+    "shares": 64000,
+    "weight": 2.618
+  },
+  {
+    "code": "4991",
+    "name": "環宇 -KY",
+    "shares": 162000,
+    "weight": 2.5871
+  },
+  {
+    "code": "8996",
+    "name": "高力",
+    "shares": 43000,
+    "weight": 2.583
+  },
+  {
+    "code": "6515",
+    "name": "穎崴",
+    "shares": 12000,
+    "weight": 2.254
+  },
+  {
+    "code": "4958",
+    "name": "臻鼎 -KY",
+    "shares": 100000,
+    "weight": 2.016
+  },
+  {
+    "code": "2455",
+    "name": "全新",
+    "shares": 115000,
+    "weight": 1.9814
+  }
+]
