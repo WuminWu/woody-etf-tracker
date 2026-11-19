@@ -55,6 +55,7 @@ if not os.path.exists(HOLDINGS_DIR):
 
 
 # --- 共用核心（等價重構，見 etf_core.py 檔頭）---
+from asset_allocation import format_scale_line   # 📈 基金規模行（與 00981A 同一套）
 from etf_core import (
     FundConfig, build_data_json, get_price, fmt_zhang, trade_amount, change_text, format_trade_line, today_tw,
     holdings_exist_for, load_prev_holdings, save_holdings,
@@ -159,6 +160,7 @@ def build_notification(wrapper):
         f"📅 資料日期：{meta['dataDate']}",
         f"💰 ETF 股價：{meta['etfPrice']}　　YTD：{ytd_sign}{meta['ytd']}%",
         f"📦 持股數量：{len([h for h in holdings if h['shares'] > 0])} 檔",
+        *format_scale_line(meta),   # 📈 基金規模（淨申購/淨贖回）＋💵 市值
         "",
         f"🔴 加碼：{len(increased)} 檔　🟢 減碼：{len(decreased)} 檔",
         f"🟣 新增：{len(added)} 檔　🟠 出清：{len(removed)} 檔",
