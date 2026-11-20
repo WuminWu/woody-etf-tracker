@@ -10,7 +10,19 @@
         "totalShares": 2508239,
         "prevTotalShares": 2484239,
         "totalMarketCap": 171.54,
-        "prevTotalMarketCap": 183.26
+        "prevTotalMarketCap": 183.26,
+        "assetAllocation": {
+            "source": "kgi",
+            "dataDate": "2026-11-19",
+            "netAsset": 17154207371,
+            "stockPct": 92.75,
+            "cashPct": 8.12,
+            "cashAmount": 1392749713,
+            "futuresMarginPct": 0.58,
+            "netReceivablePct": -0.03,
+            "futures": [],
+            "hasFutures": false
+        }
     },
     "holdings": [
         {

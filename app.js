@@ -636,7 +636,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (elAA && aa && aa.stockPct != null) {
                     const segDefs = [
                         { k: '股票', v: aa.stockPct, c: '#3b82f6' },
-                        { k: aa.cashEstimated ? '現金及其他(推算)' : '現金', v: aa.cashPct, c: '#22c55e' },   // 安聯／凱基來源沒給現金 → 推算
+                        { k: aa.cashEstimated ? '現金及其他(推算)' : '現金', v: aa.cashPct, c: '#22c55e' },   // 安聯來源沒給現金（凱基官網抓不到時也是）→ 推算
                         { k: '附買回債券', v: aa.repoBondPct, c: '#f59e0b' },
                         { k: '期貨保證金', v: aa.futuresMarginPct, c: '#8b5cf6' },
                         { k: '應收付證券款', v: aa.netReceivablePct, c: '#94a3b8' },

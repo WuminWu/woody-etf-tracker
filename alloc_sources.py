@@ -19,7 +19,7 @@ alloc_sources.py — 非統一投信系 ETF 的「資產配置」（股票／現
 | 安聯 | 00402A 00412A 00984A 00993A | GetFundAssets（腳本已用 Playwright 攔截）：股票% 在表頭、附買回債券、期貨表；**沒有現金欄 → 現金=推算** |
 | 富邦 | 00405A | Assets.aspx 頁面：股票合計、保證金、現金、應收(付)證券款 |
 | 中信 | 00406A 00995A | ETFHoldingWeight（腳本已抓）：STOCK/FUTURE/MARGIN/OPTION/CASH 各段都有權重 |
-| 凱基 | 00407A | xlsx 只有股票，**沒有現金/期貨 → 股票=權重加總、現金及其他=推算** |
+| 凱基 | 00407A | 基金頁 Fund/Detail?fundID=J024「持股比重」區塊（SSR）：淨資產、股票、現金、保證金、申贖付款 金額；只有最新一天，日期不符或抓不到才退回「股票=xlsx 權重加總、現金=推算」 |
 | 復華 | 00409A 00418A 00991A | /api/assets：股票、各幣別現金餘額（原幣，用 rate 表換算）、應付申購/買回款 |
 | 玉山 | 00413A | GetFundAssets 彙總表（同安聯版型） |
 | 群益 | 00415A 00982A 00992A 00997A | xlsx「其他資產」sheet：現金/保證金/應收付（可能是 USD → 用 yfinance 匯率換算） |
@@ -650,7 +650,49 @@ def fetch_mega(page_id, data_date=""):
     return parse_mega(_get(MEGA_URL.format(id=page_id)).decode("utf-8", errors="replace"))
 
 
-# ---- 凱基：只有股票權重 → 推算 ----
+# ---- 凱基：基金頁「持股比重」區塊（只有最新一天）----
+
+KGI_URL = "https://www.kgifund.com.tw/Fund/Detail?fundID={id}"
+
+
+def parse_kgi(html):
+    m = re.search(r'fund-asset__date">\s*\((\d{4})/(\d{2})/(\d{2})\)', html)
+    data_date = f"{m.group(1)}-{m.group(2)}-{m.group(3)}" if m else ""
+    pairs = re.findall(r'fund-asset__list-cell">\s*([^<]+?)\s*</span>\s*<span class="fund-asset__list-cell">\s*([^<]+?)\s*</span>', html)
+    net, kw = None, {}
+    import html as _html
+    for label, val in pairs:
+        label = _html.unescape(label).strip()
+        amt = _num(_html.unescape(val).replace("TWD$", "").replace("$", ""))
+        if amt is None:
+            continue
+        if "淨值資產" in label or "淨資產" in label:
+            net = amt
+        elif label == "股票":
+            kw["stock"] = amt
+        elif "現金" in label or "存款" in label:
+            kw["cash"] = (kw.get("cash") or 0) + amt
+        elif "保證金" in label:
+            kw["margin"] = (kw.get("margin") or 0) + amt
+        elif "申贖" in label or "應付" in label:
+            # 「申贖付款」＝應付申購/買回款 → 負的應收付
+            kw["recv"] = (kw.get("recv") or 0) - abs(amt)
+        elif "應收" in label:
+            kw["recv"] = (kw.get("recv") or 0) + amt
+    if not net or "stock" not in kw:
+        return {}
+    return make_alloc(net, "kgi", data_date, **kw)
+
+
+def fetch_kgi(fund_id, data_date=""):
+    alloc = parse_kgi(_get(KGI_URL.format(id=fund_id)).decode("utf-8", errors="replace"))
+    if data_date and alloc.get("dataDate") != data_date:
+        log.info(f"凱基基金頁資產日期 {alloc.get('dataDate')} ≠ {data_date}，改用持股權重推算")
+        return {}
+    return alloc
+
+
+# ---- 凱基備援：只有股票權重 → 推算 ----
 
 def from_holdings_weights(holdings, source="weights"):
     ws = [h.get("weight") or 0 for h in holdings or [] if not (h.get("is_futures") or h.get("isFutures"))]
@@ -674,7 +716,7 @@ REGISTRY = {
     "00405A": ("fetch", lambda d: fetch_fubon("00405A", d), False),
     "00406A": ("raw", parse_ctbc, False),
     "00995A": ("raw", parse_ctbc, False),
-    "00407A": ("holdings", from_holdings_weights, False),
+    "00407A": ("holdings", lambda h, d="": fetch_kgi("J024", d) or from_holdings_weights(h), False),
     "00409A": ("fetch", lambda d: fetch_fhtrust("ETF26", d), True),
     "00418A": ("fetch", lambda d: fetch_fhtrust("ETF27", d), True),
     "00991A": ("fetch", lambda d: fetch_fhtrust("ETF23", d), True),
@@ -732,7 +774,7 @@ def get_alloc(code, data_date, raw=None, holdings=None, xlsx_path=None):
         if kind == "raw":
             alloc = fn(raw) if raw else {}
         elif kind == "holdings":
-            alloc = fn(holdings)
+            alloc = fn(holdings, data_date)
         elif kind == "xlsx":
             path = xlsx_path or os.path.join(HOLDINGS_DIR, f"{code}_holdings_{data_date}.xlsx")
             alloc = fn(path) if os.path.exists(path) else {}
