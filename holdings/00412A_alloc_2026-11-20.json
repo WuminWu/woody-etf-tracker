@@ -1,0 +1,11 @@
+{
+ "source": "fundassets",
+ "dataDate": "2026-11-20",
+ "netAsset": 6346907866,
+ "stockPct": 79.33,
+ "repoBondPct": 17.57,
+ "futures": [],
+ "hasFutures": false,
+ "cashPct": 3.1,
+ "cashEstimated": true
+}

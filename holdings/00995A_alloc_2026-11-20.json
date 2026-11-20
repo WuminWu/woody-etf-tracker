@@ -1,0 +1,12 @@
+{
+ "source": "ctbc",
+ "dataDate": "2026-11-20",
+ "netAsset": 2937861545,
+ "stockPct": 93.41,
+ "cashPct": 8.03,
+ "cashAmount": 236002421,
+ "futuresMarginPct": 0.81,
+ "netReceivablePct": -0.62,
+ "futures": [],
+ "hasFutures": false
+}

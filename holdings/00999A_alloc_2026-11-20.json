@@ -1,0 +1,20 @@
+{
+ "source": "fundassets",
+ "dataDate": "2026-11-20",
+ "netAsset": 7921877466,
+ "stockPct": 88.34,
+ "cashPct": 8.8,
+ "cashAmount": 697391135,
+ "futuresMarginPct": 2.62,
+ "netReceivablePct": 0.27,
+ "futuresNotionalPct": 2.71,
+ "futures": [
+  {
+   "code": "TX",
+   "name": "台灣證交所加權股價指數",
+   "contracts": 30,
+   "weight": 2.71
+  }
+ ],
+ "hasFutures": true
+}
