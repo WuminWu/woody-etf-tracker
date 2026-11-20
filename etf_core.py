@@ -294,6 +294,82 @@ def trade_totals(holdings, meta):
     return buy, sell
 
 
+
+# ============================================================================
+# 依比例 vs 主動調整（2026-11-20）
+#   基金有申購/贖回時，經理人常「整個投資組合同步加減碼」，這部分是被動的。
+#   基準＝當日所有原持股（前一日有、非期貨）股數變動率的中位數：
+#     · 中位數接近 0 → 沒有同步調整，所有加減碼都是主動（平常日子）
+#     · |中位數| ≥ FLOW_MIN_PCT → 每檔與中位數比較：
+#         prop   依比例（差距在容忍範圍內）
+#         over   ⭐超比例（同方向、幅度明顯更大）
+#         contra ⭐逆勢（方向相反）
+#         under  少於比例（同方向但幅度小，含完全沒動）
+#   不直接用「淨申購 %」當基準：實測 00981A/00980A 7/31 淨申購約 8.7%，
+#   但多數持股股數完全沒動（資金先放現金），用申購比例會把正常日誤判成主動減碼。
+# ============================================================================
+
+FLOW_MIN_PCT = 1.0
+FLOW_TAGS = {"prop": "依比例", "over": "⭐超比例", "contra": "⭐逆勢", "under": "少於比例"}
+
+
+def _flow_eligible(h):
+    return (h.get("prevShares", 0) > 0 and not (h.get("isFutures") or h.get("is_futures"))
+            and is_stock_code(h.get("code", "")))
+
+
+def flow_baseline(holdings):
+    """當日原持股股數變動率（%）的中位數；資料不足或首日建倉回傳 None。"""
+    if is_first_day(holdings):
+        return None
+    rs = sorted((h.get("shares", 0) - h["prevShares"]) / h["prevShares"] * 100
+                for h in holdings if _flow_eligible(h))
+    if len(rs) < 5:
+        return None
+    n = len(rs)
+    med = rs[n // 2] if n % 2 else (rs[n // 2 - 1] + rs[n // 2]) / 2
+    return round(med, 2)
+
+
+def flow_class(h, base):
+    """回傳 prop/over/contra/under；基準不足 FLOW_MIN_PCT、新增、出清、期貨回傳 None。"""
+    if base is None or abs(base) < FLOW_MIN_PCT or not _flow_eligible(h) or h.get("shares", 0) <= 0:
+        return None
+    prev = h["prevShares"]
+    r = (h["shares"] - prev) / prev * 100
+    lot = 1000 if str(h.get("code", "")).strip().isdigit() else 1   # 台股 1 張＝1000 股的取整誤差
+    tol = max(0.35 * abs(base), 0.5, lot / prev * 100)
+    if abs(r - base) <= tol:
+        return "prop"
+    if r * base < 0:
+        return "contra"
+    return "over" if abs(r) > abs(base) else "under"
+
+
+def format_flow_line(wrapper):
+    """大額申購/贖回或全面同步調整的日子，說明哪些加減碼是被動的；平常日回傳 ""。"""
+    hs, meta = wrapper.get("holdings", []), wrapper.get("meta", {})
+    base = meta.get("flowBaseline")
+    ts, pts = meta.get("totalShares") or 0, meta.get("prevTotalShares") or 0
+    flow = (ts - pts) / pts * 100 if ts and pts else 0
+    flow_s = f"淨{'申購' if flow > 0 else '贖回'} {abs(flow):.1f}%" if abs(flow) >= 0.05 else ""
+    if base is None or abs(base) < FLOW_MIN_PCT:
+        if abs(flow) >= 2 and base is not None:
+            return (f"🔀 今日{flow_s}，但持股股數大多沒有同步調整"
+                    f"（{'新資金暫留現金' if flow > 0 else '以現金支應贖回'}），所列加減碼皆為主動")
+        return ""
+    cnt = {k: 0 for k in FLOW_TAGS}
+    for h in hs:
+        c = flow_class(h, base)
+        if c:
+            cnt[c] += 1
+    label = dict(FLOW_TAGS, under="少於比例(含未動)")
+    parts = [f"{label[k]} {cnt[k]}" for k in ("prop", "over", "contra", "under") if cnt[k]]
+    word = "加碼" if base > 0 else "減碼"
+    head = f"🔀 持股普遍同步{word}（中位數 {base:+.1f}%" + (f"，{flow_s}" if flow_s else "") + "）"
+    return head + "：" + "｜".join(parts) + "\n　　↳ 標 ⭐ 的才是經理人主動多買／少賣；依比例的是跟著資金進出"
+
+
 def sort_by_amount(items, meta):
     """持股異動依變動金額絕對值由大到小排序（張數會被股價誤導，金額才看得出誰買最多）。"""
     return sorted(items, key=lambda h: -abs(trade_amount(h, meta)))
@@ -308,11 +384,13 @@ def change_text(h, meta, kind):
     amt = trade_amount(h, meta)
     s = fmt_money(amt)
     amt_s = s if s == "0" else f"{'+' if amt > 0 else '-'}{s}"
+    fc = flow_class(h, meta.get("flowBaseline")) if kind in ("up", "down") else None
+    tag = f"　{FLOW_TAGS[fc]}" if fc else ""
     if kind == "added":
         return f"{amt_s}（{fmt_qty(h, h['shares'])}，0% → {h['todayWeight']}%）"
     if kind == "removed":
         return f"{amt_s}（{fmt_qty(h, -h.get('prevShares', 0))}）"
-    return f"{amt_s}（{fmt_qty(h, h['diffShares'])}，{h['yestWeight']}% → {h['todayWeight']}%）"
+    return f"{amt_s}（{fmt_qty(h, h['diffShares'])}，{h['yestWeight']}% → {h['todayWeight']}%）{tag}"
 
 
 def format_trade_line(wrapper):
@@ -330,7 +408,9 @@ def format_trade_line(wrapper):
     net = buy + sell
     net_s = fmt_money(net)
     sign = "" if net_s == "0" else ("+" if net > 0 else "-")
-    return f"💹 買超 {fmt_money(buy)}　賣超 {fmt_money(sell)}　淨 {sign}{net_s}"
+    line = f"💹 買超 {fmt_money(buy)}　賣超 {fmt_money(sell)}　淨 {sign}{net_s}"
+    fl = format_flow_line(wrapper)
+    return line + ("\n" + fl if fl else "")
 
 
 # ============================================================================
@@ -523,6 +603,14 @@ def build_data_json(cfg, today_holdings, prev_holdings, data_date_str,
     # 統一系（has_asset_alloc）一律寫；其他投信由 alloc_sources 取得，有資料才寫
     if cfg.has_asset_alloc or asset_alloc:
         meta["assetAllocation"] = asset_alloc or {}
+    # 依比例 vs 主動：基準存 meta，每檔分類存 flowTag（網站直接用，不必在 JS 重算）
+    _base = flow_baseline(final_output)
+    if _base is not None:
+        meta["flowBaseline"] = _base
+        for h in final_output:
+            fc = flow_class(h, _base)
+            if fc:
+                h["flowTag"] = fc
 
     wrapper = {"meta": meta, "holdings": final_output}
     tmp = cfg.data_file + ".tmp"

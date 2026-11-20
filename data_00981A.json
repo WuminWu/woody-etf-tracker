@@ -48,7 +48,8 @@
                     "TX": 0
                 }
             }
-        }
+        },
+        "flowBaseline": 0.0
     },
     "holdings": [
         {

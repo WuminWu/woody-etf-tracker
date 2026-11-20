@@ -31,7 +31,7 @@ import sys
 import logging
 from datetime import date, datetime, timedelta, timezone
 
-from etf_core import sort_by_amount, change_text   # 單一來源：金額排序與明細格式（與每日單檔通知共用）
+from etf_core import sort_by_amount, change_text, flow_baseline   # 單一來源：金額排序與明細格式（與每日單檔通知共用）
 from tw_calendar import is_trading_day, next_trading_day, last_trading_day
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -247,6 +247,7 @@ def build_etf_weekly_block(etf, syn, d1, d0):
     added     = [h for h in hs if h["prevShares"] == 0 and h["shares"] > 0]
     removed   = [h for h in hs if h["shares"] == 0 and h["prevShares"] > 0]
     m = syn["meta"]
+    m["flowBaseline"] = flow_baseline(hs)   # 週內「依比例 vs ⭐主動」標示（etf_core）
     # 張數會被股價誤導（低價股張數大但金額小），明細一律依異動金額絕對值由大到小排序
     increased = sort_by_amount([h for h in hs if h["shares"] > 0 and h["diffShares"] > 0 and h["prevShares"] > 0], m)
     decreased = sort_by_amount([h for h in hs if h["shares"] > 0 and h["diffShares"] < 0], m)

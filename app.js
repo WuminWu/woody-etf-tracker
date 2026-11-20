@@ -1,3 +1,32 @@
+// 依比例 vs ⭐主動（etf_core.flow_class 算好存在 holding.flowTag / meta.flowBaseline）
+const FLOW_TAG_LABEL = { prop: '依比例', over: '⭐超比例', contra: '⭐逆勢', under: '少於比例' };
+const FLOW_TAG_TIP = {
+    prop: '跟著基金申購/贖回同步調整（被動）',
+    over: '同方向但幅度明顯大於其他持股：經理人主動多買/多賣',
+    contra: '與其他持股方向相反：經理人主動調整',
+    under: '同方向但幅度小於其他持股：相對減碼/少加碼',
+};
+function renderFlowTag(h) {
+    const t = h && h.flowTag;
+    if (!t || !FLOW_TAG_LABEL[t]) return '';
+    const active = t === 'over' || t === 'contra';
+    const style = active
+        ? 'color:#facc15;border:1px solid #facc15;'
+        : 'color:#9ca3af;border:1px solid #4b5563;';
+    return `<div><span title="${FLOW_TAG_TIP[t]}" style="${style}display:inline-block;margin-top:2px;padding:0 6px;border-radius:8px;font-size:0.72em;font-weight:600;">${FLOW_TAG_LABEL[t]}</span></div>`;
+}
+function renderFlowNote(meta, sharesDiff, sharesPrev) {
+    const base = meta.flowBaseline;
+    const flow = sharesPrev > 0 ? sharesDiff / sharesPrev * 100 : 0;
+    if (base != null && Math.abs(base) >= 1) {
+        return ` &nbsp;|&nbsp; <span style="color:#facc15;" title="原持股股數變動率中位數 ${base > 0 ? '+' : ''}${base}%：標「依比例」的是跟著資金進出，標 ⭐ 的才是經理人主動調整">🔀 持股普遍同步${base > 0 ? '加碼' : '減碼'} ${base > 0 ? '+' : ''}${base.toFixed(1)}%（看 ⭐ 才是主動）</span>`;
+    }
+    if (base != null && Math.abs(flow) >= 2) {
+        return ` &nbsp;|&nbsp; <span style="color:#9ca3af;">🔀 持股大多未同步調整（${flow > 0 ? '新資金暫留現金' : '以現金支應贖回'}），加減碼皆為主動</span>`;
+    }
+    return '';
+}
+
 // app.js
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -338,7 +367,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td data-label="股數" class="stock-shares">${sharesDisplay}</td>
                 <td data-label="比例" class="align-right">${weightDisplay}</td>
                 <td data-label="狀態" class="align-right">${renderStatus(holding)}</td>
-                <td data-label="加/減碼股數" class="align-right">${renderDiff(holding.diffShares, 0)}</td>
+                <td data-label="加/減碼股數" class="align-right">${renderDiff(holding.diffShares, 0)}${renderFlowTag(holding)}</td>
                 <td data-label="加/減碼金額" class="align-right">$${renderDiff(holding.diffAmount, 0)}</td>
             `;
             tbody.appendChild(tr);
@@ -624,7 +653,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         capDiffStr = ` <span style="color:${color};font-weight:700;">(${arrow}${Math.abs(capDiff).toFixed(2)}億, ${pctSign}${capPct}%)</span>`;
                     }
 
-                    elScale.innerHTML = `<i class="fa-solid fa-layer-group"></i> 基金規模：${fmtZhang(sharesNow)}${sharesDiffStr} &nbsp;|&nbsp; <i class="fa-solid fa-coins"></i> 市值：${capNow.toFixed(2)}億${capDiffStr}`;
+                    elScale.innerHTML = `<i class="fa-solid fa-layer-group"></i> 基金規模：${fmtZhang(sharesNow)}${sharesDiffStr} &nbsp;|&nbsp; <i class="fa-solid fa-coins"></i> 市值：${capNow.toFixed(2)}億${capDiffStr}${renderFlowNote(meta, sharesDiff, sharesPrev)}`;
                     elScale.style.display = '';
                 } else if (elScale) {
                     elScale.style.display = 'none';

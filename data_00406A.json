@@ -10,7 +10,8 @@
         "totalShares": 23158562,
         "prevTotalShares": 22359062,
         "totalMarketCap": 1482.21,
-        "prevTotalMarketCap": 1529.67
+        "prevTotalMarketCap": 1529.67,
+        "flowBaseline": 0.0
     },
     "holdings": [
         {

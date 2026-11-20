@@ -33,7 +33,8 @@
                 "repoBondPct": 0.0,
                 "netReceivablePct": -0.84
             }
-        }
+        },
+        "flowBaseline": 0.0
     },
     "holdings": [
         {

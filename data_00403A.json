@@ -34,7 +34,8 @@
                 "netReceivablePct": 0.1,
                 "futuresMarginPct": 0.0
             }
-        }
+        },
+        "flowBaseline": 0.0
     },
     "holdings": [
         {
