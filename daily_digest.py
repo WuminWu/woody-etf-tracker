@@ -401,7 +401,7 @@ def render_digest(today_str, etf_data, updated, prev_snap,
         # 規模(受益權單位)變動 → 申購/贖回；只看計入分母的本群組 ETF
         if code in updated:
             ts, pts = meta.get("totalShares", 0), meta.get("prevTotalShares", 0)
-            if pts and ts and abs(ts - pts) / pts >= 0.03:
+            if pts and ts and abs(ts - pts) / pts >= 0.02:
                 fund_flows.append((code, (ts - pts) / pts * 100))
 
         for h in holdings:
