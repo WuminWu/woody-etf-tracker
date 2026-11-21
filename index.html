@@ -78,6 +78,9 @@
             <button class="tab-btn" data-tab="chips">
                 <i class="fa-solid fa-chart-pie"></i> 大戶籌碼
             </button>
+            <button class="tab-btn" data-tab="bias">
+                <i class="fa-solid fa-chart-line"></i> 乖離率紀錄
+            </button>
         </nav>
 
         <!-- Tab: Holdings -->
@@ -532,6 +535,19 @@
                 <iframe id="chips-frame" title="大戶籌碼觀察表" class="insider-frame"></iframe>
             </div>
         </section>
+
+        <!-- Tab: 乖離率紀錄（另一個專案：market-bias-vix，以 iframe 嵌入） -->
+        <section class="dashboard-content fade-in-up delay-1" id="tab-bias" style="display:none;">
+            <div class="card glass-panel insider-panel">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-chart-line"></i> 乖離率紀錄</h2>
+                    <a class="badge insider-open" id="bias-open" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-up-right-from-square"></i> 新視窗開啟
+                    </a>
+                </div>
+                <iframe id="bias-frame" title="乖離率紀錄" class="insider-frame"></iframe>
+            </div>
+        </section>
     </main>
 
     <!-- Stock History Modal -->
@@ -553,6 +569,6 @@
         <div id="lightbox-close">✕</div>
     </div>
 
-    <script src="app.js?v=55"></script>
+    <script src="app.js?v=56"></script>
 </body>
 </html>

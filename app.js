@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tabDigest   = document.getElementById('tab-digest');
     const tabInsider  = document.getElementById('tab-insider');
     const tabChips    = document.getElementById('tab-chips');
+    const tabBias     = document.getElementById('tab-bias');
     const tabInst     = document.getElementById('tab-inst');
     const appHeader   = document.querySelector('.app-header');
     const ytdRankingBar = document.getElementById('ytd-ranking-bar');
@@ -67,6 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (tabDigest) tabDigest.style.display = 'none';
                 if (tabInsider) tabInsider.style.display = 'none';
                 if (tabChips) tabChips.style.display = 'none';
+                if (tabBias) tabBias.style.display = 'none';
                 if (tabInst) tabInst.style.display = 'none';
             };
             if (activeTab === 'holdings') {
@@ -116,6 +118,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 appHeader.style.display = 'none';
                 if (ytdRankingBar) ytdRankingBar.style.display = 'none';
                 loadChips();
+            } else if (activeTab === 'bias') {
+                hideAll();
+                tabBias.style.display = '';
+                appHeader.style.display = 'none';
+                if (ytdRankingBar) ytdRankingBar.style.display = 'none';
+                loadBias();
             }
         });
     });
@@ -202,6 +210,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.data.type === 'height' && e.data.height > 0) {
             clearInterval(chipsPingTimer);
             chipsFrame.style.height = Math.ceil(e.data.height) + 'px';
+        }
+    });
+
+    // ── Bias tab（乖離率紀錄）──────────────────────────────────
+    // 另一個專案（WuminWu/market-bias-vix）部署在自己的 Cloudflare Pages，作法同大戶籌碼：
+    // ?embed=1 隱藏對方標題、高度由對方 postMessage({src:'bias',type:'height'}) 通知；本機測試改嵌 127.0.0.1:8780。
+    const BIAS_ORIGIN = ['localhost', '127.0.0.1'].includes(location.hostname)
+        ? 'http://127.0.0.1:8780'
+        : 'https://market-bias-vix.pages.dev';
+    const biasFrame = document.getElementById('bias-frame');
+    const biasOpen = document.getElementById('bias-open');
+    if (biasOpen) biasOpen.href = BIAS_ORIGIN + '/';
+    let biasPingTimer = null;
+    const pingBias = () => {
+        try { biasFrame.contentWindow.postMessage({ src: 'etf', type: 'ping' }, BIAS_ORIGIN); } catch (e) {}
+    };
+    const pingBiasUntilSized = () => {
+        clearInterval(biasPingTimer);
+        let n = 0;
+        pingBias();
+        biasPingTimer = setInterval(() => {
+            if (++n >= 25) clearInterval(biasPingTimer); else pingBias();
+        }, 400);
+    };
+    function loadBias() {
+        if (!biasFrame) return;
+        // 第一次切到這個分頁才載入；之後保留狀態（標的、乖離率均線、縮放區間）
+        if (!biasFrame.src) {
+            biasFrame.addEventListener('load', pingBiasUntilSized);
+            biasFrame.src = BIAS_ORIGIN + '/?embed=1&theme=dark';
+        } else {
+            pingBiasUntilSized();
+        }
+    }
+    window.addEventListener('message', (e) => {
+        if (e.origin !== BIAS_ORIGIN || !e.data || e.data.src !== 'bias') return;
+        if (e.data.type === 'height' && e.data.height > 0) {
+            clearInterval(biasPingTimer);
+            biasFrame.style.height = Math.ceil(e.data.height) + 'px';
         }
     });
 
