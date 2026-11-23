@@ -1,0 +1,12 @@
+{
+ "source": "kgi",
+ "dataDate": "2026-11-23",
+ "netAsset": 16673417978,
+ "stockPct": 91.12,
+ "cashPct": 8.36,
+ "cashAmount": 1394107114,
+ "futuresMarginPct": 0.6,
+ "netReceivablePct": -0.09,
+ "futures": [],
+ "hasFutures": false
+}

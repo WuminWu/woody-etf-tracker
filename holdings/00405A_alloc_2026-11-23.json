@@ -1,0 +1,12 @@
+{
+ "source": "fubon",
+ "dataDate": "2026-11-23",
+ "netAsset": 16581549071,
+ "stockPct": 81.89,
+ "cashPct": 11.73,
+ "cashAmount": 1944891809,
+ "futuresMarginPct": 1.21,
+ "netReceivablePct": 5.24,
+ "futures": [],
+ "hasFutures": false
+}

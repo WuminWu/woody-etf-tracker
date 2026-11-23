@@ -1,0 +1,12 @@
+{
+ "source": "mega",
+ "dataDate": "2026-11-23",
+ "netAsset": 4167289552,
+ "stockPct": 88.78,
+ "cashPct": 10.05,
+ "cashAmount": 418983860,
+ "futuresMarginPct": 0.81,
+ "netReceivablePct": 0.42,
+ "futures": [],
+ "hasFutures": false
+}
