@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const renderTable = (holdings) => {
-        tbody.innerHTML = '';
+        tbody.replaceChildren();
 
         // ── 現金及其他 row（序號 0，固定在第一列）──────────────
         const cashWeight = Math.max(0, parseFloat(
@@ -529,7 +529,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadManifest().then(m => {
             const etfDates = (m.etfs && m.etfs[etfId]) ? m.etfs[etfId] : [];
             // 由新到舊
-            const sorted = [...etfDates].sort().reverse();
+            const sorted = etfDates.toSorted().reverse();
             const prevValue = picker.value;
             picker.innerHTML = '<option value="latest">最新</option>'
                 + sorted.map(d => `<option value="${d}">${d}</option>`).join('');
@@ -924,17 +924,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const renderCrossTable = (rows) => {
         const crossBody = document.getElementById('cross-body');
-        const sorted = [...rows].sort((a, b) =>
+        const sorted = rows.toSorted((a, b) =>
             crossSortAsc ? a.etfs.length - b.etfs.length : b.etfs.length - a.etfs.length
         );
-        crossBody.innerHTML = '';
+        crossBody.replaceChildren();
         sorted.forEach((row, index) => {
             const tr = document.createElement('tr');
             tr.style.animation = `fadeInUp 0.3s cubic-bezier(0.16,1,0.3,1) ${Math.min(0.05 + index * 0.015, 0.8)}s forwards`;
             tr.style.opacity = '0';
             tr.style.transform = 'translateY(10px)';
 
-            const sortedEtfs = [...row.etfs].sort((a, b) => b.weight - a.weight);
+            const sortedEtfs = row.etfs.toSorted((a, b) => b.weight - a.weight);
             const etfTags = sortedEtfs.map(e => `
                 <span class="etf-tag">
                     <span class="etf-tag-id">${e.etfId}</span>
@@ -1028,8 +1028,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         searchResultTitle.textContent = `- ${stock.code} ${stock.name}`;
         searchStatus.innerHTML = `找到 <strong style="color:var(--text-primary)">${stock.etfs.length}</strong> 檔 ETF 持有此股票`;
 
-        const sortedEtfs = [...stock.etfs].sort((a, b) => b.weight - a.weight);
-        searchBody.innerHTML = '';
+        const sortedEtfs = stock.etfs.toSorted((a, b) => b.weight - a.weight);
+        searchBody.replaceChildren();
 
         sortedEtfs.forEach((etf, index) => {
             const tr = document.createElement('tr');
@@ -1119,7 +1119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const renderCommonRows = (rows, tbodyId, color) => {
         const body = document.getElementById(tbodyId);
-        body.innerHTML = '';
+        body.replaceChildren();
         if (rows.length === 0) {
             body.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);padding:1.5rem;">今日無 2 檔以上 ETF 共同${tbodyId.includes('add') ? '加碼' : '減碼'}的標的</td></tr>`;
             return;
@@ -1167,7 +1167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const renderAmountTable = (rows, bodyId, side) => {
         const body = document.getElementById(bodyId);
         if (!body) return;
-        body.innerHTML = '';
+        body.replaceChildren();
         if (rows.length === 0) {
             body.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-secondary);padding:1.5rem;">今日無${side === 'add' ? '加碼' : '減碼'}金額資料</td></tr>`;
             return;
@@ -1221,7 +1221,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const picker = document.getElementById('common-date-picker');
         if (!picker) return;
         loadManifest().then(m => {
-            const dates = (m.dates || []).slice().sort().reverse();
+            const dates = (m.dates || []).toSorted().reverse();
             const prev = picker.value;
             picker.innerHTML = '<option value="latest">最新</option>'
                 + dates.map(d => `<option value="${d}">${d}</option>`).join('');
@@ -1875,7 +1875,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         modalTitle.innerHTML = `<i class="fa-solid fa-coins" style="color:#facc15;"></i> ${row.code} ${row.name} <span style="color:var(--text-secondary);font-size:0.82em;font-weight:400;margin-left:0.4em;">變動 ETF 清單</span>`;
 
         // 依加減碼金額簽號值由大到小排序：買最多放上面、賣最多放下面
-        const sorted = [...row.etfs].sort((a, b) => b.diffAmount - a.diffAmount);
+        const sorted = row.etfs.toSorted((a, b) => b.diffAmount - a.diffAmount);
 
         const totalAmtColor = row.totalAmount >= 0 ? '#ff4d4d' : '#4ade80';
         const totalAmtSign = row.totalAmount >= 0 ? '+' : '-';
