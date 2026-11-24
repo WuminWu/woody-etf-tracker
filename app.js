@@ -22,7 +22,7 @@ function renderFlowNote(meta, sharesDiff, sharesPrev) {
         return ` &nbsp;|&nbsp; <span style="color:#facc15;" title="原持股股數變動率中位數 ${base > 0 ? '+' : ''}${base}%：標「依比例」的是跟著資金進出，標 ⭐ 的才是經理人主動調整">🔀 持股普遍同步${base > 0 ? '加碼' : '減碼'} ${base > 0 ? '+' : ''}${base.toFixed(1)}%（看 ⭐ 才是主動）</span>`;
     }
     if (base != null && Math.abs(flow) >= 2) {
-        return ` &nbsp;|&nbsp; <span style="color:#9ca3af;">🔀 持股大多未同步調整（${flow > 0 ? '新資金暫留現金' : '以現金支應贖回'}），加減碼皆為主動</span>`;
+        return ` &nbsp;|&nbsp; <span style="color:#9ca3af;">🔀 持股大多未同步調整（${flow > 0 ? '新資金尚未投入股票' : '贖回款未以賣股支應'}），加減碼皆為主動</span>`;
     }
     return '';
 }
@@ -691,6 +691,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         { k: '附買回債券', v: aa.repoBondPct, c: '#f59e0b' },
                         { k: '期貨保證金', v: aa.futuresMarginPct, c: '#8b5cf6' },
                         { k: '應收付證券款', v: aa.netReceivablePct, c: '#94a3b8' },
+                        // 淨資產 − 上面五項（統一投信系才有）：大額申購日多為尚未入帳的申購款
+                        { k: '未列項目(推算)', v: Math.abs(aa.unlistedPct ?? 0) >= 1 ? aa.unlistedPct : null, c: '#64748b' },
                     ].filter(s => s.v != null && s.v > 0.005);
                     const sum = segDefs.reduce((a, s) => a + s.v, 0) || 1;
                     const bar = segDefs.map(s =>

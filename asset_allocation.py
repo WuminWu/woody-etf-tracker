@@ -130,7 +130,19 @@ def parse_asset_allocation(xlsx_path, sheet=0):
         "futures": futures,          # [{code,name,weight,contracts(口),month(契約年月)}]，無期貨則為空陣列
         "hasFutures": bool(futures) or bool(fut_notional),
     }
+    # 未列項目(推算)＝淨資產 − 五項加總。表上只列股票/現金/期貨保證金/附買回/應收付，
+    # 大額申購日「尚未入帳的申購款」不在任何一項（例：00981A 2026-11-24 淨申購 15.8%，
+    # 淨資產多 594 億但現金只多 8 億，差額 377 億＝13.3% 就落在這裡）；負值則多為應付買回款／費用。
+    # 期貨保證金是 USD（00988A）時幣別不同無法相減 → 不算。
+    if stock is not None and fut_margin_ccy == "NTD":
+        listed = sum(x or 0 for x in (stock, cash, fut_margin, repo, recv))
+        alloc["unlistedPct"] = round((net - listed) / net * 100, 2)
+        alloc["unlistedAmount"] = int(net - listed)
     return alloc
+
+
+# 未列項目佔淨值 |x| 低於此值不顯示（平常日多在 ±0.5% 內：應付費用、四捨五入）
+UNLISTED_SHOW_PCT = 1.0
 
 
 def _xlsx_date(path, code):
@@ -157,7 +169,7 @@ def attach_delta(alloc, prev_alloc):
         return alloc
     d = {}
     for k in ("stockPct", "cashPct", "futuresNotionalPct",
-              "repoBondPct", "netReceivablePct", "futuresMarginPct"):
+              "repoBondPct", "netReceivablePct", "futuresMarginPct", "unlistedPct"):
         a, b = alloc.get(k), prev_alloc.get(k)
         if isinstance(a, (int, float)) and isinstance(b, (int, float)):
             d[k] = round(a - b, 2)
@@ -249,6 +261,10 @@ def format_alloc_lines(alloc):
         # 負值也要顯示：應付買回款、未交割買進（復華的負現金）都是真實部位
         if v is not None and abs(v) > 0.005:
             parts.append(f"{label} {v}%{_fmt_pp(delta.get(key))}")
+    # 只有 ezmoney 解析（統一投信系）會給 unlistedPct；其他來源欄位定義不一，不推算
+    un = alloc.get("unlistedPct")
+    if isinstance(un, (int, float)) and abs(un) >= UNLISTED_SHOW_PCT:
+        parts.append(f"未列項目(推算) {un}%{_fmt_pp(delta.get('unlistedPct'))}")
     lines = []
     if parts:
         lines.append("🧩 資產配置（括號為較前一日 pp 變化）：" + "｜".join(parts))

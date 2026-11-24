@@ -43,8 +43,11 @@
                 "futuresMarginPct": 0.04,
                 "futuresContracts": {
                     "TX": 125
-                }
-            }
+                },
+                "unlistedPct": 6.82
+            },
+            "unlistedPct": 8.45,
+            "unlistedAmount": 10015402119
         },
         "flowBaseline": 0.0
     },

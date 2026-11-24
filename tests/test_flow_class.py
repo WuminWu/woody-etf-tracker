@@ -34,4 +34,4 @@ def test_inflow_held_as_cash():
     hs = [_h(str(2000 + i), 100_000, 100_000) for i in range(10)]
     line = format_flow_line({"holdings": hs, "meta": {"flowBaseline": flow_baseline(hs),
                                                      "totalShares": 1087, "prevTotalShares": 1000}})
-    assert "淨申購 8.7%" in line and "暫留現金" in line
+    assert "淨申購 8.7%" in line and "新資金尚未投入股票" in line

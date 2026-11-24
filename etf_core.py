@@ -355,8 +355,15 @@ def format_flow_line(wrapper):
     flow_s = f"淨{'申購' if flow > 0 else '贖回'} {abs(flow):.1f}%" if abs(flow) >= 0.05 else ""
     if base is None or abs(base) < FLOW_MIN_PCT:
         if abs(flow) >= 2 and base is not None:
-            return (f"🔀 今日{flow_s}，但持股股數大多沒有同步調整"
-                    f"（{'新資金暫留現金' if flow > 0 else '以現金支應贖回'}），所列加減碼皆為主動")
+            # 新資金不一定在「現金」：大額申購日多半是尚未入帳的申購款，落在資產配置的「未列項目」
+            un = (meta.get("assetAllocation") or {}).get("unlistedPct")
+            if flow > 0:
+                why = "新資金尚未投入股票"
+                if isinstance(un, (int, float)) and un >= 1:
+                    why += f"；資產配置的未列項目 {un:.1f}% 多半是尚未入帳的申購款"
+            else:
+                why = "贖回款未以賣股支應"
+            return f"🔀 今日{flow_s}，但持股股數大多沒有同步調整（{why}），所列加減碼皆為主動"
         return ""
     cnt = {k: 0 for k in FLOW_TAGS}
     for h in hs:

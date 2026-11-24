@@ -46,8 +46,11 @@
                 },
                 "futuresContracts": {
                     "TX": 666
-                }
-            }
+                },
+                "unlistedPct": 12.86
+            },
+            "unlistedPct": 13.3,
+            "unlistedAmount": 37748360383
         },
         "flowBaseline": 0.0
     },
