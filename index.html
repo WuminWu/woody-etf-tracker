@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <link rel="stylesheet" href="style.css?v=17">
+    <link rel="stylesheet" href="style.css?v=18">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
 </head>
@@ -32,7 +32,7 @@
                             <!-- 選項由 app.js 依 etfs.json 產生 -->
                         </select>
                     </div>
-                    <img id="manager-card-img" src="manager_00981A.jpg" alt="00981A 經理人卡" style="display:none;">
+                    <button type="button" class="manager-card-btn" id="manager-card-btn" command="show-modal" commandfor="lightbox" aria-label="放大 00981A 經理人卡" hidden><img id="manager-card-img" src="manager_00981A.jpg" alt=""></button>
                 </div>
                 <p class="etf-switch-hint" id="etf-switch-hint"><i class="fa-solid fa-repeat"></i> 點擊上方名稱可切換 ETF 標的</p>
                 <p id="header-subtitle"><i class="fa-solid fa-spinner fa-spin"></i> 載入經理人與績效資訊中...</p>
@@ -53,38 +53,38 @@
         </div>
 
         <!-- Page Tabs -->
-        <nav class="page-tabs fade-in-up">
-            <button class="tab-btn active" data-tab="holdings">
-                <i class="fa-solid fa-layer-group"></i> 持股清單
+        <div class="page-tabs fade-in-up" role="tablist" aria-label="功能分頁" focusgroup="tablist nomemory">
+            <button type="button" class="tab-btn" role="tab" id="tabbtn-holdings" data-tab="holdings" aria-selected="true" focusgroupstart>
+                <i class="fa-solid fa-layer-group" aria-hidden="true"></i> 持股清單
             </button>
-            <button class="tab-btn" data-tab="cross">
-                <i class="fa-solid fa-code-compare"></i> ETF持股交叉比對
+            <button type="button" class="tab-btn" role="tab" id="tabbtn-cross" data-tab="cross" aria-selected="false">
+                <i class="fa-solid fa-code-compare" aria-hidden="true"></i> ETF持股交叉比對
             </button>
-            <button class="tab-btn" data-tab="search">
-                <i class="fa-solid fa-magnifying-glass"></i> 股票搜尋
+            <button type="button" class="tab-btn" role="tab" id="tabbtn-search" data-tab="search" aria-selected="false">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> 股票搜尋
             </button>
-            <button class="tab-btn" data-tab="common">
-                <i class="fa-solid fa-people-arrows"></i> 共同加碼/減碼
+            <button type="button" class="tab-btn" role="tab" id="tabbtn-common" data-tab="common" aria-selected="false">
+                <i class="fa-solid fa-people-arrows" aria-hidden="true"></i> 共同加碼/減碼
             </button>
-            <button class="tab-btn" data-tab="digest">
-                <i class="fa-solid fa-newspaper"></i> 每日分析
+            <button type="button" class="tab-btn" role="tab" id="tabbtn-digest" data-tab="digest" aria-selected="false">
+                <i class="fa-solid fa-newspaper" aria-hidden="true"></i> 每日分析
             </button>
-            <button class="tab-btn" data-tab="inst">
-                <i class="fa-solid fa-building-columns"></i> 三大法人買賣超
+            <button type="button" class="tab-btn" role="tab" id="tabbtn-inst" data-tab="inst" aria-selected="false">
+                <i class="fa-solid fa-building-columns" aria-hidden="true"></i> 三大法人買賣超
             </button>
-            <button class="tab-btn" data-tab="insider">
-                <i class="fa-solid fa-user-tie"></i> 大股東申報
+            <button type="button" class="tab-btn" role="tab" id="tabbtn-insider" data-tab="insider" aria-selected="false">
+                <i class="fa-solid fa-user-tie" aria-hidden="true"></i> 大股東申報
             </button>
-            <button class="tab-btn" data-tab="chips">
-                <i class="fa-solid fa-chart-pie"></i> 大戶籌碼
+            <button type="button" class="tab-btn" role="tab" id="tabbtn-chips" data-tab="chips" aria-selected="false">
+                <i class="fa-solid fa-chart-pie" aria-hidden="true"></i> 大戶籌碼
             </button>
-            <button class="tab-btn" data-tab="bias">
-                <i class="fa-solid fa-chart-line"></i> 乖離率紀錄
+            <button type="button" class="tab-btn" role="tab" id="tabbtn-bias" data-tab="bias" aria-selected="false">
+                <i class="fa-solid fa-chart-line" aria-hidden="true"></i> 乖離率紀錄
             </button>
-        </nav>
+        </div>
 
         <!-- Tab: Holdings -->
-        <section class="dashboard-content fade-in-up delay-1" id="tab-holdings">
+        <section class="dashboard-content fade-in-up delay-1" id="tab-holdings" role="tabpanel" aria-labelledby="tabbtn-holdings">
             <div class="card glass-panel">
                 <div class="card-header">
                     <h2><i class="fa-solid fa-layer-group"></i> ETF持股明細</h2>
@@ -110,10 +110,10 @@
                                 <th class="align-right" title="ETF 新建倉當日收盤價起算、加碼加權平均（2026/4/22 前既有持股無紀錄）"><i class="fa-solid fa-cart-shopping"></i> 成本價</th>
                                 <th class="align-right" title="現價相對成本價"><i class="fa-solid fa-percent"></i> 報酬</th>
                                 <th><i class="fa-solid fa-coins"></i> 股數</th>
-                                <th class="align-right"><i class="fa-solid fa-scale-balanced"></i> 比例</th>
-                                <th class="align-right" id="th-status" style="cursor:pointer;" title="點擊切換排序"><i class="fa-solid fa-tag"></i> 狀態 <i class="fa-solid fa-sort" style="opacity:0.3"></i></th>
-                                <th class="align-right" id="th-diff-shares" style="cursor:pointer;" title="點擊切換排序"><i class="fa-solid fa-arrow-trend-up"></i> 加/減碼股數 <i class="fa-solid fa-sort" style="opacity:0.3"></i></th>
-                                <th class="align-right" id="th-diff-amount" style="cursor: pointer;" title="點擊切換排序"><i class="fa-solid fa-sack-dollar"></i> 加/減碼金額 <i class="fa-solid fa-sort"></i></th>
+                                <th scope="col" class="align-right" id="th-weight" aria-sort="descending"><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i> 比例</th>
+                                <th scope="col" class="align-right sortable" id="th-status"><button type="button" class="th-sort-btn" title="點擊切換排序"><i class="fa-solid fa-tag" aria-hidden="true"></i> 狀態 <i class="fa-solid fa-sort sort-icon" aria-hidden="true"></i></button></th>
+                                <th scope="col" class="align-right sortable" id="th-diff-shares"><button type="button" class="th-sort-btn" title="點擊切換排序"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> 加/減碼股數 <i class="fa-solid fa-sort sort-icon" aria-hidden="true"></i></button></th>
+                                <th scope="col" class="align-right sortable" id="th-diff-amount"><button type="button" class="th-sort-btn" title="點擊切換排序"><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i> 加/減碼金額 <i class="fa-solid fa-sort sort-icon" aria-hidden="true"></i></button></th>
                             </tr>
                         </thead>
                         <tbody id="holdings-body"></tbody>
@@ -136,7 +136,7 @@
         </section>
 
         <!-- Tab: Cross Compare -->
-        <section class="dashboard-content fade-in-up delay-1" id="tab-cross" style="display:none;">
+        <section class="dashboard-content fade-in-up delay-1" id="tab-cross" role="tabpanel" aria-labelledby="tabbtn-cross" hidden>
             <div class="card glass-panel">
                 <div class="card-header">
                     <h2><i class="fa-solid fa-code-compare"></i> ETF持股交叉比對</h2>
@@ -153,9 +153,7 @@
                                 <th>序號</th>
                                 <th>股票</th>
                                 <th><i class="fa-solid fa-layer-group"></i> 持有 ETF 與比例</th>
-                                <th class="align-right" id="th-cross-etf-count" style="cursor:pointer;" title="點擊切換排序">
-                                    <i class="fa-solid fa-hashtag"></i> 持有 ETF 數 <i class="fa-solid fa-sort-down"></i>
-                                </th>
+                                <th scope="col" class="align-right sortable" id="th-cross-etf-count" aria-sort="descending"><button type="button" class="th-sort-btn" title="點擊切換排序"><i class="fa-solid fa-hashtag" aria-hidden="true"></i> 持有 ETF 數 <i class="fa-solid fa-sort sort-icon" aria-hidden="true"></i></button></th>
                             </tr>
                         </thead>
                         <tbody id="cross-body"></tbody>
@@ -165,7 +163,7 @@
         </section>
 
         <!-- Tab: Stock Search -->
-        <section class="dashboard-content fade-in-up delay-1" id="tab-search" style="display:none;">
+        <section class="dashboard-content fade-in-up delay-1" id="tab-search" role="tabpanel" aria-labelledby="tabbtn-search" hidden>
             <div class="search-layout">
                 <!-- Left Column -->
                 <div class="search-left-panel glass-panel card">
@@ -178,7 +176,7 @@
                     <div class="search-input-wrapper">
                         <i class="fa-solid fa-search search-icon"></i>
                         <input type="text" id="stock-search-input" class="search-input" placeholder="輸入代號或名稱...">
-                        <button id="clear-search-btn" class="clear-btn" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
+                        <button type="button" id="clear-search-btn" class="clear-btn" aria-label="清除搜尋" style="display:none;"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                     </div>
                     <div id="search-status" class="search-status">
                         準備就緒，輸入關鍵字開始搜尋。
@@ -212,7 +210,7 @@
         </section>
 
         <!-- Tab: Common Add/Reduce -->
-        <section class="dashboard-content fade-in-up delay-1" id="tab-common" style="display:none;">
+        <section class="dashboard-content fade-in-up delay-1" id="tab-common" role="tabpanel" aria-labelledby="tabbtn-common" hidden>
             <div class="card glass-panel">
                 <div class="card-header">
                     <h2><i class="fa-solid fa-people-arrows"></i> 共同加碼/減碼</h2>
@@ -311,7 +309,7 @@
         </section>
 
         <!-- Tab: Daily Digest -->
-        <section class="dashboard-content fade-in-up delay-1" id="tab-digest" style="display:none;">
+        <section class="dashboard-content fade-in-up delay-1" id="tab-digest" role="tabpanel" aria-labelledby="tabbtn-digest" hidden>
             <div class="card glass-panel">
                 <div class="card-header">
                     <h2><i class="fa-solid fa-newspaper"></i> 主動 ETF 經理人都在買什麼</h2>
@@ -338,7 +336,7 @@
         </section>
 
         <!-- Tab: 三大法人買賣超（institutional.py 每日產生 institutional/*.json）-->
-        <section class="dashboard-content fade-in-up delay-1" id="tab-inst" style="display:none;">
+        <section class="dashboard-content fade-in-up delay-1" id="tab-inst" role="tabpanel" aria-labelledby="tabbtn-inst" hidden>
             <div class="card glass-panel">
                 <div class="card-header">
                     <h2><i class="fa-solid fa-building-columns"></i> 三大法人買賣超</h2>
@@ -511,7 +509,7 @@
         </section>
 
         <!-- Tab: Insider Transfer（大股東申報交易，另一個專案：tw-insider-transfer，以 iframe 嵌入） -->
-        <section class="dashboard-content fade-in-up delay-1" id="tab-insider" style="display:none;">
+        <section class="dashboard-content fade-in-up delay-1" id="tab-insider" role="tabpanel" aria-labelledby="tabbtn-insider" hidden>
             <div class="card glass-panel insider-panel">
                 <div class="card-header">
                     <h2><i class="fa-solid fa-user-tie"></i> 大股東申報交易</h2>
@@ -524,7 +522,7 @@
         </section>
 
         <!-- Tab: 大戶籌碼觀察表（另一個專案：tw-big-holder-chips，以 iframe 嵌入） -->
-        <section class="dashboard-content fade-in-up delay-1" id="tab-chips" style="display:none;">
+        <section class="dashboard-content fade-in-up delay-1" id="tab-chips" role="tabpanel" aria-labelledby="tabbtn-chips" hidden>
             <div class="card glass-panel insider-panel">
                 <div class="card-header">
                     <h2><i class="fa-solid fa-chart-pie"></i> 大戶籌碼觀察表</h2>
@@ -537,7 +535,7 @@
         </section>
 
         <!-- Tab: 乖離率紀錄（另一個專案：market-bias-vix，以 iframe 嵌入） -->
-        <section class="dashboard-content fade-in-up delay-1" id="tab-bias" style="display:none;">
+        <section class="dashboard-content fade-in-up delay-1" id="tab-bias" role="tabpanel" aria-labelledby="tabbtn-bias" hidden>
             <div class="card glass-panel insider-panel">
                 <div class="card-header">
                     <h2><i class="fa-solid fa-chart-line"></i> 乖離率紀錄</h2>
@@ -550,25 +548,30 @@
         </section>
     </main>
 
-    <!-- Stock History Modal -->
-    <div id="history-modal-overlay" class="modal-overlay" style="display:none;">
-        <div class="modal-box glass-panel" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <h3 id="history-modal-title"><i class="fa-solid fa-clock-rotate-left"></i> 加減碼紀錄</h3>
-                <button class="modal-close" id="history-modal-close"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="modal-body" id="history-modal-body">
-                <p style="color:var(--text-secondary);text-align:center;padding:1rem;">載入中...</p>
-            </div>
+    <!-- 加減碼紀錄 / 變動 ETF 清單 / 無資料提示（共用；app.js 以 showModal() 開啟） -->
+    <dialog id="history-modal" class="modal-box" aria-labelledby="history-modal-title" closedby="any">
+        <div class="modal-header">
+            <h1 id="history-modal-title"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> 加減碼紀錄</h1>
+            <form method="dialog">
+                <button class="modal-close" aria-label="關閉"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </form>
         </div>
-    </div>
+        <div class="modal-body" id="history-modal-body">
+            <p style="color:var(--text-secondary);text-align:center;padding:1rem;">載入中...</p>
+        </div>
+    </dialog>
 
-    <!-- Lightbox for manager card -->
-    <div id="lightbox-overlay" style="display:none;" onclick="this.style.display='none'">
+    <!-- 經理人卡片放大圖 -->
+    <dialog id="lightbox" class="lightbox" aria-label="00981A 經理人卡" closedby="any">
+        <form method="dialog">
+            <button class="lightbox-close" aria-label="關閉">✕</button>
+        </form>
         <img id="lightbox-img" src="manager_00981A.jpg" alt="00981A 經理人卡">
-        <div id="lightbox-close">✕</div>
-    </div>
+    </dialog>
 
-    <script src="app.js?v=57"></script>
+    <!-- 排序結果朗讀（螢幕閱讀器用，畫面上不顯示） -->
+    <div id="sort-status" class="visually-hidden" role="status"></div>
+
+    <script src="app.js?v=58"></script>
 </body>
 </html>

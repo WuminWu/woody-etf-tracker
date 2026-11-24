@@ -87,27 +87,43 @@ body {
     object-position: top;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
     transition: opacity 0.3s ease, transform 0.3s ease;
-    cursor: default;
-    flex-shrink: 0;
+    display: block;
 }
 
-#manager-card-img:hover {
-    transform: scale(1.06);
+/* 經理人卡縮圖：外層是 <button>（可用鍵盤開啟放大圖） */
+.manager-card-btn {
+    padding: 0;
+    border: 0;
+    background: none;
+    border-radius: 8px;
     cursor: zoom-in;
+    flex-shrink: 0;
+    line-height: 0;
+}
+.manager-card-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 3px;
+}
+@media (prefers-reduced-motion: no-preference) {
+    .manager-card-btn:hover #manager-card-img {
+        transform: scale(1.06);
+    }
 }
 
-/* Lightbox */
-#lightbox-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: rgba(0, 0, 0, 0.85);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(6px);
-    animation: lightboxFadeIn 0.2s ease;
+/* Lightbox（經理人卡片放大圖，原生 <dialog id="lightbox">） */
+dialog.lightbox {
+    margin: auto;            /* 全域 * { margin: 0 } 會讓 <dialog> 失去置中 */
+    padding: 0;
+    border: 0;
+    background: none;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: visible;
     cursor: zoom-out;
+}
+dialog.lightbox::backdrop {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(6px);
 }
 
 @keyframes lightboxFadeIn {
@@ -116,13 +132,12 @@ body {
 }
 
 #lightbox-img {
+    display: block;
     max-height: 90vh;
     max-width: 90vw;
     width: auto;
     border-radius: 16px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-    animation: lightboxZoomIn 0.25s ease;
-    cursor: default;
 }
 
 @keyframes lightboxZoomIn {
@@ -130,19 +145,29 @@ body {
     to   { transform: scale(1);    opacity: 1; }
 }
 
-#lightbox-close {
+@media (prefers-reduced-motion: no-preference) {
+    dialog.lightbox[open] #lightbox-img { animation: lightboxZoomIn 0.25s ease; }
+    dialog.lightbox[open]::backdrop { animation: lightboxFadeIn 0.2s ease; }
+}
+
+.lightbox-close {
     position: fixed;
     top: 1.2rem;
     right: 1.5rem;
+    padding: 0.25rem 0.5rem;
+    border: 0;
+    background: none;
     color: #fff;
     font-size: 1.8rem;
+    font-family: inherit;
     cursor: pointer;
     line-height: 1;
     opacity: 0.7;
     transition: opacity 0.2s;
 }
 
-#lightbox-close:hover {
+.lightbox-close:hover,
+.lightbox-close:focus-visible {
     opacity: 1;
 }
 
@@ -311,7 +336,9 @@ tbody tr {
 
 tbody tr:hover {
     background-color: rgba(255, 255, 255, 0.03);
-    transform: scale(1.01);
+}
+@media (prefers-reduced-motion: no-preference) {
+    tbody tr:hover { transform: scale(1.01); }
 }
 
 tbody tr:last-child td {
@@ -395,14 +422,24 @@ tbody tr:last-child td {
 }
 
 /* Utility Animations */
-.fade-in-up {
-    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    opacity: 0;
-    transform: translateY(20px);
-}
+/* 進場動畫只在使用者沒有要求「減少動態效果」時播放；否則直接顯示最終狀態 */
+@media (prefers-reduced-motion: no-preference) {
+    .fade-in-up {
+        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0;
+        transform: translateY(20px);
+    }
 
-.delay-1 {
-    animation-delay: 0.2s;
+    .delay-1 {
+        animation-delay: 0.2s;
+    }
+
+    /* 表格列逐列淡入；延遲由 app.js 以 --enter-delay 指定 */
+    .row-enter {
+        animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) var(--enter-delay, 0s) forwards;
+        opacity: 0;
+        transform: translateY(10px);
+    }
 }
 
 @keyframes fadeInUp {
@@ -532,6 +569,7 @@ tbody tr:last-child td {
 }
 
 .tab-btn {
+    position: relative;
     padding: 0.6rem 1.4rem;
     border-radius: 2rem;
     border: 1px solid var(--glass-border);
@@ -550,10 +588,22 @@ tbody tr:last-child td {
     border-color: rgba(255,255,255,0.2);
 }
 
-.tab-btn.active {
+/* 選中狀態只看 aria-selected，畫面與螢幕閱讀器永遠一致 */
+.tab-btn[aria-selected="true"] {
     background: linear-gradient(135deg, rgba(59,130,246,0.3), rgba(139,92,246,0.3));
     border-color: rgba(139,92,246,0.5);
     color: var(--text-primary);
+}
+/* 不只靠顏色區分（WCAG 1.4.1）：選中分頁加底線；用 border 畫，高對比模式也看得到 */
+.tab-btn[aria-selected="true"]::after {
+    content: "";
+    position: absolute;
+    inset: auto 1.1rem 0.3rem;
+    border-block-end: 2px solid currentColor;
+}
+.tab-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
 }
 
 /* 大股東申報交易（iframe 嵌入另一個網站，高度由對方 postMessage 通知） */
@@ -806,38 +856,38 @@ tbody tr:last-child td {
     }
 }
 
-}
-
-/* Stock History Modal */
-.modal-overlay {
-    position: fixed !important;
-    inset: 0 !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    z-index: 999999 !important;
-    background: rgba(0, 0, 0, 0.75) !important;
-    backdrop-filter: blur(6px);
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-}
-.modal-overlay.is-open {
-    display: flex !important;
-    animation: lightboxFadeIn 0.2s ease;
-}
-
-.modal-box {
-    width: 100%;
-    max-width: 560px;
+/* Stock History Modal（原生 <dialog id="history-modal">） */
+dialog.modal-box {
+    margin: auto;            /* 全域 * { margin: 0 } 會讓 <dialog> 失去置中 */
+    width: min(560px, 100% - 2rem);
+    max-width: none;
     max-height: 85vh;
+    padding: 1.5rem;
+    color: var(--text-primary);
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+/* display 只在開啟時設定，否則會蓋掉 <dialog> 關閉時的隱藏 */
+dialog.modal-box[open] {
     display: flex;
     flex-direction: column;
-    padding: 1.5rem;
-    animation: lightboxZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* 在視窗內或背景上捲動時，不要連帶捲動後面的頁面 */
+dialog.modal-box:modal {
+    overscroll-behavior: contain;
+}
+dialog.modal-box::backdrop {
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
+    overflow: hidden;
+    overscroll-behavior: contain;
+}
+@media (prefers-reduced-motion: no-preference) {
+    dialog.modal-box[open] { animation: lightboxZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+    dialog.modal-box[open]::backdrop { animation: lightboxFadeIn 0.2s ease; }
 }
 
 .modal-header {
@@ -849,7 +899,8 @@ tbody tr:last-child td {
     margin-bottom: 1rem;
 }
 
-.modal-header h3 {
+.modal-header h1 {
+    margin: 0;
     font-size: 1.05rem;
     font-weight: 600;
     color: var(--text-primary);
@@ -989,4 +1040,45 @@ tbody tr:last-child td {
     #tab-inst .card { padding: 1rem 0.6rem; }
     .inst-table th, .inst-table td { padding: 0.45rem 0.4rem; font-size: 0.82rem; }
     .inst-search { min-width: 0; flex: 1 1 100%; }
+}
+
+/* 帶 hidden 屬性的元素一律隱藏（.dashboard-content 等有自己的 display，會蓋掉瀏覽器預設） */
+[hidden] { display: none !important; }
+
+/* 可排序表頭：<th aria-sort> 裡放 <button>，按鈕填滿整格 */
+th:has(> .th-sort-btn) { padding: 0; }
+.th-sort-btn {
+    display: block;          /* 與一般 th 相同的文字換行方式，欄寬不變 */
+    text-align: inherit;
+    width: 100%;
+    min-height: 24px;
+    padding: 1.2rem 1rem;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    cursor: pointer;
+}
+.th-sort-btn:hover { color: var(--text-primary); }
+.th-sort-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+    border-radius: 0.5rem;
+}
+/* 箭頭圖示只依 aria-sort 決定：未排序淡色雙箭頭、遞減、遞增 */
+.sort-icon { opacity: 0.3; }
+th[aria-sort] .sort-icon { opacity: 1; }
+th[aria-sort="descending"] .sort-icon::before { content: "\f0dd"; }
+th[aria-sort="ascending"] .sort-icon::before { content: "\f0de"; }
+
+/* 只給螢幕閱讀器（不可用 display:none，否則不會朗讀） */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }

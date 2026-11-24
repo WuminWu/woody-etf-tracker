@@ -38,95 +38,61 @@ document.addEventListener('DOMContentLoaded', async () => {
         ETF_REGISTRY = r.ok ? await r.json() : [];
     } catch (e) { ETF_REGISTRY = []; }
 
-    // ── Tab switching ──────────────────────────────────────────
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabHoldings = document.getElementById('tab-holdings');
-    const tabCross    = document.getElementById('tab-cross');
-    const tabSearch   = document.getElementById('tab-search');
-    const tabCommon   = document.getElementById('tab-common');
-    const tabDigest   = document.getElementById('tab-digest');
-    const tabInsider  = document.getElementById('tab-insider');
-    const tabChips    = document.getElementById('tab-chips');
-    const tabBias     = document.getElementById('tab-bias');
-    const tabInst     = document.getElementById('tab-inst');
+    // ── Tab switching（WAI-ARIA tabs：role=tab / aria-selected / tabpanel + hidden）──
+    // 切換分頁會抓資料，所以採「按下才切換」（方向鍵只移動焦點，Enter / 空白鍵才選取）。
+    const tabBtns = [...document.querySelectorAll('.tab-btn')];
+    const tabList = document.querySelector('.page-tabs');
     const appHeader   = document.querySelector('.app-header');
     const ytdRankingBar = document.getElementById('ytd-ranking-bar');
 
+    // 每個分頁：是否顯示 ETF 標頭 / YTD 排名列，以及切到該頁時要做的事（函式在後面定義，執行時才取用）
+    const TAB_CONFIG = {
+        holdings: { header: true,  ytd: true,  load: () => {} },
+        cross:    { header: false, ytd: true,  load: () => loadCrossData(true) },      // 強制重抓最新持股
+        search:   { header: false, ytd: true,  load: () => loadCrossData(true) },      // 強制重抓最新持股
+        common:   { header: false, ytd: true,  load: () => loadCommonActions(true) },  // 每次切換都強制重新抓
+        digest:   { header: false, ytd: false, load: () => loadDigests(true) },
+        inst:     { header: false, ytd: false, load: () => loadInst(true) },
+        insider:  { header: false, ytd: false, load: () => loadInsider() },
+        chips:    { header: false, ytd: false, load: () => loadChips() },
+        bias:     { header: false, ytd: false, load: () => loadBias() },
+    };
+
+    // 瀏覽器原生支援 focusgroup 時由它處理方向鍵與 Tab 停留點；否則自己做 roving tabindex
+    const nativeFocusgroup = Object.hasOwn(HTMLElement.prototype, 'focusGroup');
+
     let activeTab = 'holdings';
 
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            tabBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            activeTab = btn.dataset.tab;
+    const selectTab = (btn) => {
+        activeTab = btn.dataset.tab;
+        for (const b of tabBtns) {
+            const selected = b === btn;
+            b.ariaSelected = String(selected);
+            b.toggleAttribute('focusgroupstart', selected);
+            if (!nativeFocusgroup) b.tabIndex = selected ? 0 : -1;
+            const panel = document.getElementById('tab-' + b.dataset.tab);
+            if (panel) panel.hidden = !selected;
+        }
+        const cfg = TAB_CONFIG[activeTab];
+        appHeader.hidden = !cfg.header;
+        if (ytdRankingBar) ytdRankingBar.hidden = !cfg.ytd;
+        cfg.load();
+    };
 
-            const hideAll = () => {
-                tabHoldings.style.display = 'none';
-                tabCross.style.display = 'none';
-                tabSearch.style.display = 'none';
-                if (tabCommon) tabCommon.style.display = 'none';
-                if (tabDigest) tabDigest.style.display = 'none';
-                if (tabInsider) tabInsider.style.display = 'none';
-                if (tabChips) tabChips.style.display = 'none';
-                if (tabBias) tabBias.style.display = 'none';
-                if (tabInst) tabInst.style.display = 'none';
-            };
-            if (activeTab === 'holdings') {
-                hideAll();
-                tabHoldings.style.display = '';
-                appHeader.style.display = '';
-                if (ytdRankingBar) ytdRankingBar.style.display = '';
-            } else if (activeTab === 'cross') {
-                hideAll();
-                tabCross.style.display = '';
-                appHeader.style.display = 'none';
-                if (ytdRankingBar) ytdRankingBar.style.display = '';
-                loadCrossData(true);   // 強制重抓最新持股
-            } else if (activeTab === 'search') {
-                hideAll();
-                tabSearch.style.display = '';
-                appHeader.style.display = 'none';
-                if (ytdRankingBar) ytdRankingBar.style.display = '';
-                loadCrossData(true);   // 強制重抓最新持股
-            } else if (activeTab === 'common') {
-                hideAll();
-                tabCommon.style.display = '';
-                appHeader.style.display = 'none';
-                if (ytdRankingBar) ytdRankingBar.style.display = '';
-                loadCommonActions(true);   // 每次切換到此 tab 都強制重新抓
-            } else if (activeTab === 'digest') {
-                hideAll();
-                tabDigest.style.display = '';
-                appHeader.style.display = 'none';
-                if (ytdRankingBar) ytdRankingBar.style.display = 'none';
-                loadDigests(true);
-            } else if (activeTab === 'inst') {
-                hideAll();
-                tabInst.style.display = '';
-                appHeader.style.display = 'none';
-                if (ytdRankingBar) ytdRankingBar.style.display = 'none';
-                loadInst(true);
-            } else if (activeTab === 'insider') {
-                hideAll();
-                tabInsider.style.display = '';
-                appHeader.style.display = 'none';
-                if (ytdRankingBar) ytdRankingBar.style.display = 'none';
-                loadInsider();
-            } else if (activeTab === 'chips') {
-                hideAll();
-                tabChips.style.display = '';
-                appHeader.style.display = 'none';
-                if (ytdRankingBar) ytdRankingBar.style.display = 'none';
-                loadChips();
-            } else if (activeTab === 'bias') {
-                hideAll();
-                tabBias.style.display = '';
-                appHeader.style.display = 'none';
-                if (ytdRankingBar) ytdRankingBar.style.display = 'none';
-                loadBias();
-            }
+    tabBtns.forEach(btn => btn.addEventListener('click', () => selectTab(btn)));
+
+    if (!nativeFocusgroup) {
+        tabBtns.forEach(b => { b.tabIndex = b.ariaSelected === 'true' ? 0 : -1; });
+        tabList.addEventListener('keydown', (e) => {
+            const i = tabBtns.indexOf(document.activeElement);
+            if (i < 0) return;
+            const n = tabBtns.length;
+            const next = { ArrowRight: (i + 1) % n, ArrowLeft: (i - 1 + n) % n, Home: 0, End: n - 1 }[e.key];
+            if (next === undefined) return;
+            e.preventDefault();
+            tabBtns[next].focus();
         });
-    });
+    }
 
     // ── Insider tab（大股東申報交易）──────────────────────────
     // 另一個專案（WuminWu/tw-insider-transfer）部署在自己的 Cloudflare Pages，這裡用 iframe 嵌入。
@@ -357,9 +323,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log('[ETF Tracker] row clicked:', holding.code, holding.name, 'currentEtfId=', currentEtfId);
                 openHistoryModal(holding.code, holding.name);
             });
-            tr.style.animation = `fadeInUp 0.3s cubic-bezier(0.16,1,0.3,1) ${Math.min(0.1 + index * 0.02, 1)}s forwards`;
-            tr.style.opacity = '0';
-            tr.style.transform = 'translateY(10px)';
+            tr.classList.add('row-enter');   // 進場動畫（CSS 只在使用者未要求減少動態時播放）
+            tr.style.setProperty('--enter-delay', `${Math.min(0.1 + index * 0.02, 1)}s`);
 
             const weightDisplay = (() => {
                 const prev = holding.yestWeight, curr = holding.todayWeight;
@@ -431,32 +396,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         })
         .catch(() => { costBasisData = {}; });
 
-    const resetHeaderIcons = () => {
-        thDiffAmount.innerHTML  = '<i class="fa-solid fa-sack-dollar"></i> 加/減碼金額 <i class="fa-solid fa-sort" style="opacity:0.3"></i>';
-        thStatus.innerHTML      = '<i class="fa-solid fa-tag"></i> 狀態 <i class="fa-solid fa-sort" style="opacity:0.3"></i>';
-        thDiffShares.innerHTML  = '<i class="fa-solid fa-arrow-trend-up"></i> 加/減碼股數 <i class="fa-solid fa-sort" style="opacity:0.3"></i>';
+    // 排序狀態只寫在 <th aria-sort>；箭頭圖示由 CSS 依 aria-sort 切換（見 style.css 的 .sort-icon）
+    const thWeight = document.getElementById('th-weight');
+    const sortStatus = document.getElementById('sort-status');
+    const setAriaSort = (headers, active, dir) => {
+        for (const th of headers) {
+            if (th === active) th.setAttribute('aria-sort', dir === 1 ? 'descending' : 'ascending');
+            else th.removeAttribute('aria-sort');
+        }
     };
+    // 使用者按排序鈕後朗讀一次結果（role="status"）；資料重繪時不朗讀
+    const announceSort = (th) => {
+        if (!sortStatus || !th) return;
+        const dir = th.getAttribute('aria-sort') === 'ascending' ? '由小到大' : '由大到小';
+        sortStatus.textContent = `已依「${th.textContent.trim()}」${dir}排序`;
+    };
+
+    const sortHeaders = () => [thWeight, thStatus, thDiffShares, thDiffAmount];
+    // 切換 ETF / 日期時回到預設排序（依比例由大到小）
+    const resetHeaderIcons = () => setAriaSort(sortHeaders(), thWeight, 1);
 
     const applySortAndRender = () => {
-        let sorted = [...globalData];
-        resetHeaderIcons();
-
-        if (sortMode === 'amount') {
-            sorted.sort((a, b) => diffAmountDir === 1 ? b.diffAmount - a.diffAmount : a.diffAmount - b.diffAmount);
-            thDiffAmount.innerHTML = `<i class="fa-solid fa-sack-dollar"></i> 加/減碼金額 <i class="fa-solid fa-sort-${diffAmountDir === 1 ? 'down' : 'up'}"></i>`;
-        } else if (sortMode === 'shares') {
-            sorted.sort((a, b) => diffSharesDir === 1 ? b.diffShares - a.diffShares : a.diffShares - b.diffShares);
-            thDiffShares.innerHTML = `<i class="fa-solid fa-arrow-trend-up"></i> 加/減碼股數 <i class="fa-solid fa-sort-${diffSharesDir === 1 ? 'down' : 'up'}"></i>`;
-        } else if (sortMode === 'status') {
-            sorted.sort((a, b) => statusDir === 1 ? statusRank(b) - statusRank(a) : statusRank(a) - statusRank(b));
-            thStatus.innerHTML = `<i class="fa-solid fa-tag"></i> 狀態 <i class="fa-solid fa-sort-${statusDir === 1 ? 'down' : 'up'}"></i>`;
-        } else {
-            sorted.sort((a, b) => b.todayWeight - a.todayWeight);
-        }
-        renderTable(sorted);
+        const sorters = {
+            amount: [thDiffAmount, diffAmountDir, (a, b) => b.diffAmount - a.diffAmount],
+            shares: [thDiffShares, diffSharesDir, (a, b) => b.diffShares - a.diffShares],
+            status: [thStatus,     statusDir,     (a, b) => statusRank(b) - statusRank(a)],
+            weight: [thWeight,     1,             (a, b) => b.todayWeight - a.todayWeight],
+        };
+        const [th, dir, desc] = sorters[sortMode] || sorters.weight;
+        setAriaSort(sortHeaders(), th, dir);
+        renderTable(globalData.toSorted((a, b) => dir * desc(a, b)));
     };
 
-    thDiffAmount.addEventListener('click', () => {
+    thDiffAmount.querySelector('button').addEventListener('click', () => {
         if (sortMode === 'amount') {
             if (diffAmountDir === 1) { diffAmountDir = -1; }
             else { sortMode = 'weight'; diffAmountDir = 1; }
@@ -464,9 +436,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             sortMode = 'amount'; diffAmountDir = 1;
         }
         applySortAndRender();
+        announceSort(sortMode === 'amount' ? thDiffAmount : thWeight);
     });
 
-    thDiffShares.addEventListener('click', () => {
+    thDiffShares.querySelector('button').addEventListener('click', () => {
         if (sortMode === 'shares') {
             if (diffSharesDir === 1) { diffSharesDir = -1; }
             else { sortMode = 'weight'; diffSharesDir = 1; }
@@ -474,9 +447,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             sortMode = 'shares'; diffSharesDir = 1;
         }
         applySortAndRender();
+        announceSort(sortMode === 'shares' ? thDiffShares : thWeight);
     });
 
-    thStatus.addEventListener('click', () => {
+    thStatus.querySelector('button').addEventListener('click', () => {
         if (sortMode === 'status') {
             if (statusDir === 1) { statusDir = -1; }
             else { sortMode = 'weight'; statusDir = 1; }
@@ -484,6 +458,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             sortMode = 'status'; statusDir = 1;
         }
         applySortAndRender();
+        announceSort(sortMode === 'status' ? thStatus : thWeight);
     });
 
     // ── ETF 配息設定（etfs.json 的 dist；來源說明在各筆 note）──────────
@@ -579,7 +554,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p style="font-size:1rem;color:var(--text-primary);margin-bottom:0.5rem;">${etfId} 於 ${date} 沒有持股資料</p>
                 <p style="font-size:0.82rem;opacity:0.7;">該 ETF 可能尚未發行、或為週末/假日。<br>請改選其他日期。</p>
             </div>`;
-        modalOverlay.style.display = 'flex';
+        openModal();
     };
 
     const renderFromSnapshot = (etfId, block, date) => {
@@ -614,8 +589,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elDistNext) elDistNext.textContent = '';
 
         // 隱藏經理人卡（歷史模式）
-        const managerCardImg = document.getElementById('manager-card-img');
-        if (managerCardImg) managerCardImg.style.display = 'none';
+        const managerCardBtn = document.getElementById('manager-card-btn');
+        if (managerCardBtn) managerCardBtn.hidden = true;
 
         applySortAndRender();
     };
@@ -750,28 +725,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     elAA.style.display = 'none';
                 }
                 // 00981A 專屬經理人卡片圖
-                const managerCardImg = document.getElementById('manager-card-img');
-                if (managerCardImg) {
-                    managerCardImg.style.display = etfId === '00981A' ? 'inline-block' : 'none';
-                    // 點擊放大 lightbox（只綁定一次）
-                    if (!managerCardImg._lightboxBound) {
-                        managerCardImg._lightboxBound = true;
-                        managerCardImg.addEventListener('click', () => {
-                            const overlay = document.getElementById('lightbox-overlay');
-                            if (overlay) overlay.style.display = 'flex';
-                        });
-                    }
-                }
-                // ESC 關閉 lightbox（只綁定一次）
-                if (!window._lightboxEscBound) {
-                    window._lightboxEscBound = true;
-                    document.addEventListener('keydown', e => {
-                        if (e.key === 'Escape') {
-                            const overlay = document.getElementById('lightbox-overlay');
-                            if (overlay) overlay.style.display = 'none';
-                        }
-                    });
-                }
+                const managerCardBtn = document.getElementById('manager-card-btn');
+                if (managerCardBtn) managerCardBtn.hidden = etfId !== '00981A';
 
                 // 配息資訊
                 showRisk(etfId);
@@ -916,10 +871,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     let globalStockMap = new Map();
 
     const thCrossCount = document.getElementById('th-cross-etf-count');
-    thCrossCount.addEventListener('click', () => {
+    thCrossCount.querySelector('button').addEventListener('click', () => {
         crossSortAsc = !crossSortAsc;
-        thCrossCount.innerHTML = `<i class="fa-solid fa-hashtag"></i> 持有 ETF 數 <i class="fa-solid fa-sort-${crossSortAsc ? 'up' : 'down'}"></i>`;
+        thCrossCount.setAttribute('aria-sort', crossSortAsc ? 'ascending' : 'descending');
         renderCrossTable(crossData);
+        announceSort(thCrossCount);
     });
 
     const renderCrossTable = (rows) => {
@@ -930,9 +886,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         crossBody.replaceChildren();
         sorted.forEach((row, index) => {
             const tr = document.createElement('tr');
-            tr.style.animation = `fadeInUp 0.3s cubic-bezier(0.16,1,0.3,1) ${Math.min(0.05 + index * 0.015, 0.8)}s forwards`;
-            tr.style.opacity = '0';
-            tr.style.transform = 'translateY(10px)';
+            tr.classList.add('row-enter');   // 進場動畫（CSS 只在使用者未要求減少動態時播放）
+            tr.style.setProperty('--enter-delay', `${Math.min(0.05 + index * 0.015, 0.8)}s`);
 
             const sortedEtfs = row.etfs.toSorted((a, b) => b.weight - a.weight);
             const etfTags = sortedEtfs.map(e => `
@@ -1033,9 +988,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         sortedEtfs.forEach((etf, index) => {
             const tr = document.createElement('tr');
-            tr.style.animation = `fadeInUp 0.3s cubic-bezier(0.16,1,0.3,1) ${Math.min(0.05 + index * 0.015, 0.8)}s forwards`;
-            tr.style.opacity = '0';
-            tr.style.transform = 'translateY(10px)';
+            tr.classList.add('row-enter');   // 進場動畫（CSS 只在使用者未要求減少動態時播放）
+            tr.style.setProperty('--enter-delay', `${Math.min(0.05 + index * 0.015, 0.8)}s`);
 
             const weightDisplay = (() => {
                 const prev = etf.yestWeight, curr = etf.weight;
@@ -1126,9 +1080,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         rows.forEach((row, index) => {
             const tr = document.createElement('tr');
-            tr.style.animation = `fadeInUp 0.3s cubic-bezier(0.16,1,0.3,1) ${Math.min(0.05 + index * 0.015, 0.8)}s forwards`;
-            tr.style.opacity = '0';
-            tr.style.transform = 'translateY(10px)';
+            tr.classList.add('row-enter');   // 進場動畫（CSS 只在使用者未要求減少動態時播放）
+            tr.style.setProperty('--enter-delay', `${Math.min(0.05 + index * 0.015, 0.8)}s`);
             const tags = row.etfs.map(e => {
                 const prev = e.yestWeight, curr = e.todayWeight;
                 let weightHtml = '';
@@ -1175,9 +1128,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fmt = n => Number(Math.abs(Math.round(n))).toLocaleString('zh-TW');
         rows.forEach((r, index) => {
             const tr = document.createElement('tr');
-            tr.style.animation = `fadeInUp 0.3s cubic-bezier(0.16,1,0.3,1) ${Math.min(0.05 + index * 0.012, 0.8)}s forwards`;
-            tr.style.opacity = '0';
-            tr.style.transform = 'translateY(10px)';
+            tr.classList.add('row-enter');   // 進場動畫（CSS 只在使用者未要求減少動態時播放）
+            tr.style.setProperty('--enter-delay', `${Math.min(0.05 + index * 0.012, 0.8)}s`);
 
             const isAdd = side === 'add';
             const amount = isAdd ? r.addAmount : r.reduceAmount;
@@ -1721,65 +1673,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ── Stock History Modal ────────────────────────────────────
-    // 動態建立 modal 並 inline 所有關鍵樣式，避免依賴 CSS / HTML 快取狀態
-    const ensureModal = () => {
-        // 移除舊版（若存在）以保證 inline style 一致
-        const existing = document.getElementById('history-modal-overlay');
-        if (existing) existing.remove();
-
-        const overlay = document.createElement('div');
-        overlay.id = 'history-modal-overlay';
-        overlay.setAttribute('style', [
-            'position:fixed',
-            'top:0', 'left:0', 'right:0', 'bottom:0',
-            'width:100vw', 'height:100vh',
-            'z-index:2147483647',
-            'background:rgba(0,0,0,0.75)',
-            'backdrop-filter:blur(6px)',
-            '-webkit-backdrop-filter:blur(6px)',
-            'display:none',
-            'align-items:center',
-            'justify-content:center',
-            'padding:1rem',
-            'opacity:1',
-            'visibility:visible',
-        ].join(';'));
-
-        overlay.innerHTML = `
-            <div id="history-modal-box" style="
-                width:100%;max-width:560px;max-height:85vh;
-                display:flex;flex-direction:column;padding:1.5rem;
-                background:rgba(30,41,59,0.95);
-                backdrop-filter:blur(16px);
-                border:1px solid rgba(255,255,255,0.08);
-                border-radius:1.5rem;
-                box-shadow:0 20px 60px rgba(0,0,0,0.8);
-                opacity:1;
-            " onclick="event.stopPropagation()">
-                <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:0.75rem;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:1rem;">
-                    <h3 id="history-modal-title" style="font-size:1.05rem;font-weight:600;color:#f8fafc;margin:0;"><i class="fa-solid fa-clock-rotate-left"></i> 加減碼紀錄</h3>
-                    <button id="history-modal-close" style="
-                        width:32px;height:32px;border-radius:50%;
-                        background:rgba(255,255,255,0.05);
-                        border:1px solid rgba(255,255,255,0.08);
-                        color:#94a3b8;cursor:pointer;
-                        display:flex;align-items:center;justify-content:center;
-                        font-size:1rem;
-                    "><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <div id="history-modal-body" style="flex:1;overflow-y:auto;color:#f8fafc;">
-                    <p style="color:#94a3b8;text-align:center;padding:1rem;">載入中...</p>
-                </div>
-            </div>`;
-        document.body.appendChild(overlay);
-        return overlay;
-    };
-    const modalOverlay = ensureModal();
+    // ── Stock History Modal（原生 <dialog>，見 index.html #history-modal）──────────
+    // showModal() 由瀏覽器處理：焦點限制在視窗內、Esc / 返回手勢關閉、背景頁面不可操作、關閉後焦點回原處。
+    const modalDialog = document.getElementById('history-modal');
     const modalTitle = document.getElementById('history-modal-title');
     const modalBody = document.getElementById('history-modal-body');
-    const modalClose = document.getElementById('history-modal-close');
-    console.log('[ETF Tracker] modal ready:', !!modalOverlay, !!modalTitle, !!modalBody);
+    const openModal = () => { if (!modalDialog.open) modalDialog.showModal(); };
+    // closedby="any"（點背景關閉）Safari 尚未支援：只在缺少時補上，並以游標座標判斷，避免點到視窗內邊距也被關掉
+    const lightDismissFallback = (dialog) => {
+        if ('closedBy' in HTMLDialogElement.prototype) return;
+        const outside = (e) => {
+            const r = dialog.getBoundingClientRect();
+            return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+        };
+        let pressedOutside = false;
+        dialog.addEventListener('pointerdown', (e) => { pressedOutside = outside(e); });
+        dialog.addEventListener('pointerup', (e) => { if (pressedOutside && outside(e)) dialog.close(); });
+    };
+    lightDismissFallback(modalDialog);
+
+    // 經理人卡片放大圖（原生 <dialog>）：按鈕以 command="show-modal" 宣告式開啟（見 index.html）；
+    // 點圖片或背景任何地方都關閉（沿用舊行為），Esc 由瀏覽器處理
+    const lightbox = document.getElementById('lightbox');
+    if (lightbox) {
+        lightbox.addEventListener('click', () => lightbox.close());
+        // 不支援 Invoker Commands 的瀏覽器（Safari 26.2 以前等）才補 click；支援的瀏覽器若也綁會重複觸發
+        if (!('commandForElement' in HTMLButtonElement.prototype)) {
+            document.getElementById('manager-card-btn')?.addEventListener('click', () => lightbox.showModal());
+        }
+    }
 
     const loadHistory = () => {
         if (historyData) return Promise.resolve(historyData);
@@ -1791,31 +1713,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return historyPromise;
     };
 
-    const closeModal = () => {
-        modalOverlay.style.display = 'none';
-    };
-    if (modalClose) modalClose.addEventListener('click', closeModal);
-    if (modalOverlay) modalOverlay.addEventListener('click', e => {
-        if (e.target === modalOverlay) closeModal();
-    });
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape' && modalOverlay.style.display !== 'none') closeModal();
-    });
-
     const fmt = n => Number(Math.abs(n)).toLocaleString('zh-TW');
 
     const openHistoryModal = (code, name) => {
-        console.log('[ETF Tracker] openHistoryModal called:', code, name);
-        try {
-            modalTitle.innerHTML = `<i class="fa-solid fa-clock-rotate-left"></i> ${code} ${name} <span style="color:var(--text-secondary);font-size:0.82em;font-weight:400;margin-left:0.4em;">@ ${currentEtfId}</span>`;
-            modalBody.innerHTML = '<p style="color:var(--text-secondary);text-align:center;padding:1rem;"><i class="fa-solid fa-spinner fa-spin"></i> 載入中...</p>';
-            modalOverlay.style.display = 'flex';
-            const cs = getComputedStyle(modalOverlay);
-            console.log('[ETF Tracker] modal displayed, display=', cs.display, 'visibility=', cs.visibility, 'opacity=', cs.opacity, 'z-index=', cs.zIndex);
-        } catch (err) {
-            console.error('[ETF Tracker] modal open error:', err);
-            return;
-        }
+        modalTitle.innerHTML = `<i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> ${code} ${name} <span style="color:var(--text-secondary);font-size:0.82em;font-weight:400;margin-left:0.4em;">@ ${currentEtfId}</span>`;
+        modalBody.innerHTML = '<p style="color:var(--text-secondary);text-align:center;padding:1rem;"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> 載入中...</p>';
+        openModal();
 
         loadHistory().then(data => {
             const records = data?.[currentEtfId]?.[code] || [];
@@ -1911,7 +1814,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <tbody>${rowsHtml}</tbody>
             </table>`;
 
-        modalOverlay.style.display = 'flex';
+        openModal();
     };
 
 });
