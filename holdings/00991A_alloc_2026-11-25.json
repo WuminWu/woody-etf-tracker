@@ -1,0 +1,12 @@
+{
+ "source": "fhtrust",
+ "dataDate": "2026-11-25",
+ "netAsset": 69102302306,
+ "stockPct": 84.29,
+ "cashPct": 15.92,
+ "cashAmount": 10999680429,
+ "futuresMarginPct": 0.3,
+ "netReceivablePct": -0.47,
+ "futures": [],
+ "hasFutures": false
+}
