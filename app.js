@@ -716,12 +716,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }).join('、');
                         futNote = `<div style="margin-top:5px;font-size:0.82em;color:#a855f7;"><i class="fa-solid fa-bolt"></i> 期貨曝險：${list}（名目本金，${aa.futures.some(f => (f.contracts || 0) < 0 || (f.weight || 0) < 0) ? '含空單' : '做多'}${aa.futures.every(f => /^(TX|MTX|TMF|MXF|TXF)/i.test(f.code || '')) ? '台股' : ''}）</div>`;
                     }
+                    // 大額申購隔天：前一日未列項目（未入帳申購款）轉入現金 → 註明現金大增不是主動拉高
+                    let settledNote = '';
+                    const si = aa.settledInflow;
+                    if (si) {
+                        settledNote = `<div style="margin-top:5px;font-size:0.82em;color:#22c55e;"><i class="fa-solid fa-coins"></i> 現金增加 ${(si.cashIncrease / 1e8).toFixed(1)}億主要是前一日的申購款入帳（未列項目 ${si.prevUnlistedPct}% → ${si.unlistedPct}%，減少 ${(si.unlistedDecrease / 1e8).toFixed(1)}億），不是經理人主動拉高現金</div>`;
+                    }
                     elAA.innerHTML =
                         `<div style="font-size:0.82em;color:var(--text-secondary);margin:2px 0 4px;">
                            <i class="fa-solid fa-chart-pie"></i> 資產配置（佔淨值）</div>
                          <div style="display:flex;gap:2px;height:13px;border-radius:6px;overflow:hidden;max-width:560px;">${bar}</div>
                          <div style="margin-top:5px;font-size:0.82em;color:var(--text-secondary);line-height:1.9;">${legend}</div>
-                         ${futNote}`;
+                         ${settledNote}${futNote}`;
                     elAA.style.display = '';
                 } else if (elAA) {
                     elAA.style.display = 'none';

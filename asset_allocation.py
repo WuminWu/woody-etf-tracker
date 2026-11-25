@@ -192,7 +192,44 @@ def attach_delta(alloc, prev_alloc):
         d["futuresContracts"] = cd
     if d:
         alloc["delta"] = d
+    s = _settled_inflow(alloc, prev_alloc)
+    if s:
+        alloc["settledInflow"] = s
     return alloc
+
+
+# 前一日未列項目佔淨值至少這麼多，才判斷「申購款隔日入帳」
+SETTLE_MIN_PCT = 2.0
+
+
+def _settled_inflow(alloc, prev_alloc):
+    """大額申購隔天：前一日「未列項目」（尚未入帳的申購款）大幅縮小、現金同時大增 → 申購款已入帳。
+
+    例：00981A 11/24 未列項目 13.30%（377.5億）→ 11/25 −0.51%，同日現金 95.2 → 456.3億（+361.1億）。
+    只有 ezmoney（統一投信系）有 unlistedAmount / cashAmount；其他來源回傳 None。
+    回傳 {cashIncrease, unlistedDecrease（元）, prevUnlistedPct, unlistedPct}。
+    """
+    pu, cu = prev_alloc.get("unlistedPct"), alloc.get("unlistedPct")
+    pa, ca = prev_alloc.get("unlistedAmount"), alloc.get("unlistedAmount")
+    pc, cc = prev_alloc.get("cashAmount"), alloc.get("cashAmount")
+    if not all(isinstance(x, (int, float)) for x in (pu, cu, pa, ca, pc, cc)):
+        return None
+    drop, cash_up = pa - ca, cc - pc
+    # 未列項目至少消掉一半、現金增加至少是消掉金額的一半，才算「轉入現金」
+    if pu < SETTLE_MIN_PCT or drop < pa * 0.5 or cash_up < drop * 0.5:
+        return None
+    return {"cashIncrease": int(cash_up), "unlistedDecrease": int(drop),
+            "prevUnlistedPct": pu, "unlistedPct": cu}
+
+
+def format_settled_line(alloc):
+    """申購款隔日入帳的說明列；沒有則回傳 ""。"""
+    s = (alloc or {}).get("settledInflow")
+    if not s:
+        return ""
+    return (f"💰 現金增加 {s['cashIncrease'] / 1e8:,.1f}億主要是前一日的申購款入帳"
+            f"（未列項目 {s['prevUnlistedPct']}% → {s['unlistedPct']}%，"
+            f"減少 {s['unlistedDecrease'] / 1e8:,.1f}億），不是經理人主動拉高現金")
 
 
 def _fmt_pp(delta):
@@ -268,6 +305,9 @@ def format_alloc_lines(alloc):
     lines = []
     if parts:
         lines.append("🧩 資產配置（括號為較前一日 pp 變化）：" + "｜".join(parts))
+    sl = format_settled_line(alloc)
+    if sl:
+        lines.append(sl)
     futs = alloc.get("futures") or []
     fdelta = delta.get("futures") or {}
     cdelta = delta.get("futuresContracts") or {}

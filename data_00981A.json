@@ -50,6 +50,12 @@
                 "futuresContracts": {
                     "TX": 0
                 }
+            },
+            "settledInflow": {
+                "cashIncrease": 36107403181,
+                "unlistedDecrease": 39125784197,
+                "prevUnlistedPct": 13.3,
+                "unlistedPct": -0.51
             }
         },
         "flowBaseline": 0.0
