@@ -1,0 +1,12 @@
+{
+ "source": "cathay",
+ "dataDate": "2026-11-26",
+ "netAsset": 28963314459,
+ "stockPct": 83.33,
+ "cashPct": 15.66,
+ "cashAmount": 4536394677,
+ "futuresMarginPct": 2.96,
+ "netReceivablePct": -1.01,
+ "futures": [],
+ "hasFutures": false
+}

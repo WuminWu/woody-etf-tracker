@@ -1,0 +1,19 @@
+{
+ "source": "fundassets",
+ "dataDate": "2026-11-26",
+ "netAsset": 8716396706,
+ "stockPct": 97.75,
+ "futuresNotionalPct": 0.82,
+ "futures": [
+  {
+   "code": "TX",
+   "name": "台指期貨",
+   "contracts": 9,
+   "weight": 0.72,
+   "month": "2026/12"
+  }
+ ],
+ "hasFutures": true,
+ "cashPct": 2.25,
+ "cashEstimated": true
+}

@@ -1,0 +1,10 @@
+{
+ "source": "tsit",
+ "dataDate": "2026-11-26",
+ "netAsset": 70,
+ "stockPct": 90.77,
+ "cashPct": 9.23,
+ "cashAmount": 599948902,
+ "futures": [],
+ "hasFutures": false
+}

@@ -1,0 +1,302 @@
+[
+  {
+    "code": "SPCX US",
+    "name": "太空探索科技公司",
+    "shares": 184000,
+    "weight": 8.265
+  },
+  {
+    "code": "PLTR US",
+    "name": "帕蘭提爾科技公司",
+    "shares": 115500,
+    "weight": 6.66
+  },
+  {
+    "code": "MSFT US",
+    "name": "微軟公司",
+    "shares": 33150,
+    "weight": 5.725
+  },
+  {
+    "code": "AMZN US",
+    "name": "亞馬遜公司",
+    "shares": 52500,
+    "weight": 4.523
+  },
+  {
+    "code": "PANW US",
+    "name": "Palo Alto Networks Inc",
+    "shares": 33600,
+    "weight": 4.218
+  },
+  {
+    "code": "NET US",
+    "name": "Cloudflare公司",
+    "shares": 41592,
+    "weight": 4.153
+  },
+  {
+    "code": "CRWD US",
+    "name": "Crowdstrike控股公司",
+    "shares": 55000,
+    "weight": 4.058
+  },
+  {
+    "code": "2454",
+    "name": "聯發科技",
+    "shares": 98000,
+    "weight": 3.798
+  },
+  {
+    "code": "LLY US",
+    "name": "禮來公司",
+    "shares": 7100,
+    "weight": 3.484
+  },
+  {
+    "code": "TSM US",
+    "name": "台灣積體電路製造股份有限公司",
+    "shares": 27000,
+    "weight": 3.258
+  },
+  {
+    "code": "ANET US",
+    "name": "Arista網路公司",
+    "shares": 48000,
+    "weight": 2.775
+  },
+  {
+    "code": "SNOW US",
+    "name": "Snowflake公司",
+    "shares": 27500,
+    "weight": 2.595
+  },
+  {
+    "code": "FROG US",
+    "name": "JFrog有限公司",
+    "shares": 68500,
+    "weight": 2.532
+  },
+  {
+    "code": "NVDA US",
+    "name": "輝達公司",
+    "shares": 46000,
+    "weight": 2.421
+  },
+  {
+    "code": "OKTA US",
+    "name": "Okta公司",
+    "shares": 33000,
+    "weight": 2.347
+  },
+  {
+    "code": "GOOGL US",
+    "name": "Alphabet公司",
+    "shares": 23000,
+    "weight": 2.214
+  },
+  {
+    "code": "NTRA US",
+    "name": "那提拉公司",
+    "shares": 20600,
+    "weight": 2.188
+  },
+  {
+    "code": "MRNA US",
+    "name": "莫德納公司",
+    "shares": 27300,
+    "weight": 2.125
+  },
+  {
+    "code": "AMD US",
+    "name": "超微半導體公司",
+    "shares": 14100,
+    "weight": 2.018
+  },
+  {
+    "code": "BE US",
+    "name": "布魯姆能源公司",
+    "shares": 37000,
+    "weight": 1.994
+  },
+  {
+    "code": "TTWO US",
+    "name": "Take-Two互動軟體公司",
+    "shares": 24000,
+    "weight": 1.923
+  },
+  {
+    "code": "COHR US",
+    "name": "高意公司",
+    "shares": 25700,
+    "weight": 1.777
+  },
+  {
+    "code": "6857 JP",
+    "name": "愛德萬測試",
+    "shares": 33000,
+    "weight": 1.735
+  },
+  {
+    "code": "ANT US",
+    "name": "Anthropic PBC",
+    "shares": 48000,
+    "weight": 1.401
+  },
+  {
+    "code": "2383",
+    "name": "台光電子",
+    "shares": 38000,
+    "weight": 1.356
+  },
+  {
+    "code": "3017",
+    "name": "奇鋐科技",
+    "shares": 50000,
+    "weight": 1.353
+  },
+  {
+    "code": "9983 JP",
+    "name": "迅銷有限公司",
+    "shares": 7000,
+    "weight": 1.335
+  },
+  {
+    "code": "REGN US",
+    "name": "Regeneron Pharmaceuticals In",
+    "shares": 3800,
+    "weight": 1.315
+  },
+  {
+    "code": "ZS US",
+    "name": "Zscaler公司",
+    "shares": 15000,
+    "weight": 1.221
+  },
+  {
+    "code": "4004 JP",
+    "name": "Resonac控股公司",
+    "shares": 47000,
+    "weight": 1.134
+  },
+  {
+    "code": "3711",
+    "name": "日月光投",
+    "shares": 185000,
+    "weight": 0.96
+  },
+  {
+    "code": "GILD US",
+    "name": "吉利德科學公司",
+    "shares": 14000,
+    "weight": 0.872
+  },
+  {
+    "code": "8035 JP",
+    "name": "東京威力科創有限公司",
+    "shares": 46000,
+    "weight": 0.797
+  },
+  {
+    "code": "NTSK US",
+    "name": "Netskope Inc",
+    "shares": 81000,
+    "weight": 0.755
+  },
+  {
+    "code": "TSLA US",
+    "name": "特斯拉公司",
+    "shares": 5000,
+    "weight": 0.67
+  },
+  {
+    "code": "AAPL US",
+    "name": "蘋果公司",
+    "shares": 5000,
+    "weight": 0.627
+  },
+  {
+    "code": "BNY US",
+    "name": "紐約梅隆銀行",
+    "shares": 10000,
+    "weight": 0.519
+  },
+  {
+    "code": "4502 JP",
+    "name": "武田藥品有限公司",
+    "shares": 25000,
+    "weight": 0.408
+  },
+  {
+    "code": "META US",
+    "name": "Meta平台公司",
+    "shares": 1500,
+    "weight": 0.322
+  },
+  {
+    "code": "NEE US",
+    "name": "新紀元能源公司",
+    "shares": 10000,
+    "weight": 0.301
+  },
+  {
+    "code": "MRK US",
+    "name": "默克藥廠",
+    "shares": 6000,
+    "weight": 0.297
+  },
+  {
+    "code": "581A JP",
+    "name": "GO公司",
+    "shares": 50000,
+    "weight": 0.276
+  },
+  {
+    "code": "TSEM US",
+    "name": "塔爾半導體有限公司",
+    "shares": 4446,
+    "weight": 0.191
+  },
+  {
+    "code": "TXN US",
+    "name": "德州儀器公司",
+    "shares": 2000,
+    "weight": 0.19
+  },
+  {
+    "code": "6223",
+    "name": "旺矽科技",
+    "shares": 3000,
+    "weight": 0.12
+  },
+  {
+    "code": "AVGO US",
+    "name": "博通公司",
+    "shares": 1000,
+    "weight": 0.106
+  },
+  {
+    "code": "V US",
+    "name": "威士卡",
+    "shares": 500,
+    "weight": 0.075
+  },
+  {
+    "code": "6098 JP",
+    "name": "瑞可利控股有限公司",
+    "shares": 1000,
+    "weight": 0.038
+  },
+  {
+    "code": "TEM US",
+    "name": "Tempus AI公司",
+    "shares": 1000,
+    "weight": 0.019
+  },
+  {
+    "code": "LITE US",
+    "name": "魯門特姆控股公司",
+    "shares": 100,
+    "weight": 0.017
+  }
+]

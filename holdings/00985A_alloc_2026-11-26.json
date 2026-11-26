@@ -1,0 +1,12 @@
+{
+ "source": "fundassets",
+ "dataDate": "2026-11-26",
+ "netAsset": 25281813551,
+ "stockPct": 93.32,
+ "cashPct": 9.32,
+ "cashAmount": 2356201255,
+ "futuresMarginPct": 1.62,
+ "netReceivablePct": -4.25,
+ "futures": [],
+ "hasFutures": false
+}
