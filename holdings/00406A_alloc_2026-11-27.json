@@ -1,0 +1,38 @@
+{
+ "source": "ctbc",
+ "dataDate": "2026-11-27",
+ "netAsset": 174155965826,
+ "stockPct": 82.77,
+ "cashPct": 10.26,
+ "cashAmount": 17862282555,
+ "futuresMarginPct": 10.38,
+ "netReceivablePct": -2.17,
+ "futuresNotionalPct": 23.27,
+ "futures": [
+  {
+   "code": "TX",
+   "name": "臺股期貨",
+   "contracts": 5150,
+   "weight": 23.27,
+   "month": "202612"
+  }
+ ],
+ "hasFutures": true,
+ "options": [
+  {
+   "code": "TXU",
+   "name": "臺指選擇權第一週週五到期契約（買權）",
+   "contracts": -7200,
+   "weight": -4.69,
+   "month": "202612"
+  },
+  {
+   "code": "TX1",
+   "name": "臺指選擇權第一週週三到期契約（買權）",
+   "contracts": -20000,
+   "weight": -13.89,
+   "month": "202612"
+  }
+ ],
+ "optionsPct": -18.58
+}
